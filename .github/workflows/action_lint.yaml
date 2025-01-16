@@ -1,9 +1,9 @@
-name: ci-github-actions
+name: pr-github-workflow-lint
 
 on:
   pull_request:
     paths:
-      - .github/**.yml
+      - .github/*.yml #
 permissions:
   contents: read
 
