@@ -5,11 +5,11 @@ import (
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	"github.com/onsi/gomega/types"
 	"github.com/solo-io/gloo/install/utils/kuberesource"
 	"github.com/solo-io/gloo/pkg/utils/kubeutils"
 	"github.com/solo-io/gloo/projects/gateway2/api/v1alpha1"
 	"github.com/solo-io/gloo/projects/gateway2/wellknown"
-	"github.com/solo-io/gloo/test/gomega/matchers"
 	glootestutils "github.com/solo-io/gloo/test/testutils"
 	. "github.com/solo-io/k8s-utils/manifesttestutils"
 	corev1 "k8s.io/api/core/v1"
@@ -17,6 +17,20 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/utils/pointer"
 )
+
+// containMapElements produces a matcher that will only match if all provided map elements
+// are completely accounted for. The actual value is expected to not be nil or empty since
+// there are other, more appropriate matchers for those cases.
+func containMapElements[keyT comparable, valT any](m map[keyT]valT) types.GomegaMatcher {
+	subMatchers := []types.GomegaMatcher{
+		Not(BeNil()),
+		Not(BeEmpty()),
+	}
+	for k, v := range m {
+		subMatchers = append(subMatchers, HaveKeyWithValue(k, v))
+	}
+	return And(subMatchers...)
+}
 
 var _ = Describe("Kubernetes Gateway API integration", func() {
 	allTests := func(rendererTestCase renderTestCase) {
@@ -89,7 +103,7 @@ var _ = Describe("Kubernetes Gateway API integration", func() {
 				Expect(*gwpKube.GetIstio().GetIstioProxyContainer().GetIstioMetaMeshId()).To(Equal("cluster.local"))
 				Expect(*gwpKube.GetIstio().GetIstioProxyContainer().GetIstioMetaClusterId()).To(Equal("Kubernetes"))
 
-				Expect(gwpKube.GetPodTemplate().GetExtraLabels()).To(matchers.ContainMapElements(map[string]string{"gloo": "kube-gateway"}))
+				Expect(gwpKube.GetPodTemplate().GetExtraLabels()).To(containMapElements(map[string]string{"gloo": "kube-gateway"}))
 
 				Expect(*gwpKube.GetSdsContainer().GetImage().GetPullPolicy()).To(Equal(corev1.PullIfNotPresent))
 				Expect(*gwpKube.GetSdsContainer().GetImage().GetRegistry()).To(Equal("quay.io/solo-io"))
@@ -202,8 +216,8 @@ var _ = Describe("Kubernetes Gateway API integration", func() {
 					Expect(*gwpKube.GetEnvoyContainer().GetSecurityContext().RunAsUser).To(Equal(int64(777)))
 					Expect(gwpKube.GetEnvoyContainer().GetSecurityContext().Capabilities.Drop).To(ContainElement(corev1.Capability("ALL")))
 					Expect(gwpKube.GetEnvoyContainer().GetSecurityContext().Capabilities.Add).To(ContainElement(corev1.Capability("NET_BIND_SERVICE")))
-					Expect(gwpKube.GetEnvoyContainer().GetResources().Requests).To(matchers.ContainMapElements(envoyRequests))
-					Expect(gwpKube.GetEnvoyContainer().GetResources().Limits).To(matchers.ContainMapElements(envoyLimits))
+					Expect(gwpKube.GetEnvoyContainer().GetResources().Requests).To(containMapElements(envoyRequests))
+					Expect(gwpKube.GetEnvoyContainer().GetResources().Limits).To(containMapElements(envoyLimits))
 
 					Expect(*gwpKube.GetIstio().GetIstioProxyContainer().GetImage().GetPullPolicy()).To(Equal(corev1.PullNever))
 					Expect(*gwpKube.GetIstio().GetIstioProxyContainer().GetImage().GetRegistry()).To(Equal("istio-override-registry"))
@@ -221,7 +235,7 @@ var _ = Describe("Kubernetes Gateway API integration", func() {
 					Expect(*gwpKube.GetIstio().GetIstioProxyContainer().GetIstioMetaMeshId()).To(Equal("cluster.local"))
 					Expect(*gwpKube.GetIstio().GetIstioProxyContainer().GetIstioMetaClusterId()).To(Equal("Kubernetes"))
 
-					Expect(gwpKube.GetPodTemplate().GetExtraLabels()).To(matchers.ContainMapElements(map[string]string{"gloo": "kube-gateway"}))
+					Expect(gwpKube.GetPodTemplate().GetExtraLabels()).To(containMapElements(map[string]string{"gloo": "kube-gateway"}))
 
 					Expect(*gwpKube.GetSdsContainer().GetImage().GetPullPolicy()).To(Equal(corev1.PullNever))
 					Expect(*gwpKube.GetSdsContainer().GetImage().GetRegistry()).To(Equal("sds-override-registry"))
@@ -235,15 +249,15 @@ var _ = Describe("Kubernetes Gateway API integration", func() {
 					Expect(*gwpKube.GetSdsContainer().GetSecurityContext().RunAsUser).To(Equal(int64(999)))
 					Expect(gwpKube.GetSdsContainer().GetSecurityContext().Capabilities).To(BeNil())
 					Expect(*gwpKube.GetSdsContainer().GetBootstrap().GetLogLevel()).To(Equal("debug"))
-					Expect(gwpKube.GetSdsContainer().GetResources().Requests).To(matchers.ContainMapElements(sdsRequests))
-					Expect(gwpKube.GetSdsContainer().GetResources().Limits).To(matchers.ContainMapElements(sdsLimits))
+					Expect(gwpKube.GetSdsContainer().GetResources().Requests).To(containMapElements(sdsRequests))
+					Expect(gwpKube.GetSdsContainer().GetResources().Limits).To(containMapElements(sdsLimits))
 
 					Expect(*gwpKube.GetService().GetType()).To(Equal(corev1.ServiceTypeClusterIP))
-					Expect(gwpKube.GetService().GetExtraLabels()).To(matchers.ContainMapElements(map[string]string{"svclabel1": "x"}))
-					Expect(gwpKube.GetService().GetExtraAnnotations()).To(matchers.ContainMapElements(map[string]string{"svcanno1": "y"}))
+					Expect(gwpKube.GetService().GetExtraLabels()).To(containMapElements(map[string]string{"svclabel1": "x"}))
+					Expect(gwpKube.GetService().GetExtraAnnotations()).To(containMapElements(map[string]string{"svcanno1": "y"}))
 
-					Expect(gwpKube.GetServiceAccount().GetExtraLabels()).To(matchers.ContainMapElements(map[string]string{"label1": "a"}))
-					Expect(gwpKube.GetServiceAccount().GetExtraAnnotations()).To(matchers.ContainMapElements(map[string]string{"anno1": "b"}))
+					Expect(gwpKube.GetServiceAccount().GetExtraLabels()).To(containMapElements(map[string]string{"label1": "a"}))
+					Expect(gwpKube.GetServiceAccount().GetExtraAnnotations()).To(containMapElements(map[string]string{"anno1": "b"}))
 
 					Expect(*gwpKube.GetStats().GetEnabled()).To(BeFalse())
 					Expect(*gwpKube.GetStats().GetRoutePrefixRewrite()).To(Equal("/foo/bar"))
@@ -308,7 +322,7 @@ var _ = Describe("Kubernetes Gateway API integration", func() {
 					Expect(*gwpKube.GetEnvoyContainer().GetImage().GetTag()).To(Equal("envoy-override-tag"))
 
 					Expect(gwpKube.GetIstio().GetCustomSidecars()[0].Name).To(Equal("custom-sidecar"))
-					Expect(gwpKube.GetPodTemplate().GetExtraLabels()).To(matchers.ContainMapElements(map[string]string{"gloo": "kube-gateway"}))
+					Expect(gwpKube.GetPodTemplate().GetExtraLabels()).To(containMapElements(map[string]string{"gloo": "kube-gateway"}))
 
 					Expect(*gwpKube.GetSdsContainer().GetImage().GetPullPolicy()).To(Equal(corev1.PullNever))
 					Expect(*gwpKube.GetSdsContainer().GetImage().GetRegistry()).To(Equal("sds-override-registry"))
@@ -317,11 +331,11 @@ var _ = Describe("Kubernetes Gateway API integration", func() {
 					Expect(*gwpKube.GetSdsContainer().GetBootstrap().GetLogLevel()).To(Equal("debug"))
 
 					Expect(*gwpKube.GetService().GetType()).To(Equal(corev1.ServiceTypeClusterIP))
-					Expect(gwpKube.GetService().GetExtraLabels()).To(matchers.ContainMapElements(map[string]string{"svclabel1": "a"}))
-					Expect(gwpKube.GetService().GetExtraAnnotations()).To(matchers.ContainMapElements(map[string]string{"svcanno1": "b"}))
+					Expect(gwpKube.GetService().GetExtraLabels()).To(containMapElements(map[string]string{"svclabel1": "a"}))
+					Expect(gwpKube.GetService().GetExtraAnnotations()).To(containMapElements(map[string]string{"svcanno1": "b"}))
 
-					Expect(gwpKube.GetServiceAccount().GetExtraLabels()).To(matchers.ContainMapElements(map[string]string{"label1": "a"}))
-					Expect(gwpKube.GetServiceAccount().GetExtraAnnotations()).To(matchers.ContainMapElements(map[string]string{"anno1": "b"}))
+					Expect(gwpKube.GetServiceAccount().GetExtraLabels()).To(containMapElements(map[string]string{"label1": "a"}))
+					Expect(gwpKube.GetServiceAccount().GetExtraAnnotations()).To(containMapElements(map[string]string{"anno1": "b"}))
 				})
 			})
 
