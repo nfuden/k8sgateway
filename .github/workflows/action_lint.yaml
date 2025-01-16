@@ -3,7 +3,7 @@ name: pr-github-workflow-lint
 on:
   pull_request:
     paths:
-      - .github/*.yml #
+      - .github/*.yaml
 permissions:
   contents: read
 
@@ -17,5 +17,5 @@ jobs:
       - uses: actions/setup-go@v5
         with:
           go-version-file: 'go.mod'
-      - run: go install github.com/rhysd/actionlint/cmd/actionlint@latest
+      - run: go install github.com/rhysd/actionlint/cmd/actionlint@v1.7.6
       - run: actionlint
