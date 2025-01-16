@@ -1,0 +1,21 @@
+name: ci-github-actions
+
+on:
+  pull_request:
+    paths:
+      - .github/**.yml
+permissions:
+  contents: read
+
+jobs:
+  actionlint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@4
+        with:
+          sparse-checkout: .github
+      - uses: actions/setup-go@5
+        with:
+          go-version-file: 'go.mod'
+      - run: go install github.com/rhysd/actionlint/cmd/actionlint@latest
+      - run: actionlint
