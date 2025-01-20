@@ -2,7 +2,7 @@
 
 This doc explains the best practices for submitting a pull request to the [kgateway project](https://github.com/kgateway-dev/kgateway).
 It should serve as a reference for all contributors, and be useful especially useful to new and infrequent submitters.
-This document serves as a [kgateway](https://github.com/kgateway-dev/kgateway) repo extension of the org level contribution guide lines https://github.com/ilrudie/kgw-community/blob/main/CONTRIBUTING.md 
+This document serves as a [kgateway](https://github.com/kgateway-dev/kgateway) repo extension of the [org-level contribution guidelines](https://github.com/kgateway-dev/community/blob/main/CONTRIBUTING.md)
 
 
 
@@ -13,7 +13,6 @@ Merging a pull request requires the following steps to be completed before the p
 - Get all necessary approvals from reviewers and code owners
 
 
-Even if you have followed these steps, it is good practice to add a `# WORK IN PROGRESS` section to the PR and outline the work that is still to be done.
 
 ## Best Practices for Pull Requests
 Below are some best practices we have found to help PRs get reviewed quickly

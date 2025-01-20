@@ -30,5 +30,5 @@ If you encounter a bug or have a feature request, please take the following appr
 - Copy the error message from the failed job (logs are discarded after a few months). 
 
 ## Security Issues
-We take Kgateway's security very seriously. If you've found a security issue or a potential security issue in Gloo Gateway, please **DO NOT** file a public Github issue, instead see https://github.com/kgateway-dev/community/blob/main/CVE.md for how to submit.
+We take kgateway's security very seriously. If you've found a security issue or a potential security issue in kgateway, please **DO NOT** file a public Github issue, instead see https://github.com/kgateway-dev/community/blob/main/CVE.md for how to submit.
 
