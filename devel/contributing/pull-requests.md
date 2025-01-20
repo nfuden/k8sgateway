@@ -1,6 +1,6 @@
 # Pull Requests
 
-This doc explains the best practices for submitting a pull request to the [Kgateway project](https://github.com/kgateway-dev/kgateway).
+This doc explains the best practices for submitting a pull request to the [kgateway project](https://github.com/kgateway-dev/kgateway).
 It should serve as a reference for all contributors, and be useful especially useful to new and infrequent submitters.
 This document serves as a [kgateway](https://github.com/kgateway-dev/kgateway) repo extension of the org level contribution guide lines https://github.com/ilrudie/kgw-community/blob/main/CONTRIBUTING.md 
 
@@ -27,7 +27,7 @@ Small PRs are more likely to be reviewed quickly and thoroughly. If the PR takes
 #### Use Commits to Tell the Story
 Having a series of discrete commits makes it easier to understand the idea of the PR, and break up the review into smaller chunks
 
-When PRs merge in Kgateway, they are squashed into a single commit, so it is not necessary to squash your commits before merging.
+When PRs merge in kgateway, they are squashed into a single commit, so it is not necessary to squash your commits before merging.
 
 #### Avoid Squashing Previous Commits and Using Force Pushes
 This can make it difficult to understand the history of the PR, and can make it difficult to understand the changes in the future.
