@@ -1,0 +1,69 @@
+layered_runtime:
+  layers:
+  - name: static_layer
+    static_layer:
+      overload:
+        global_downstream_max_connections: 250000
+      upstream:
+        healthy_panic_threshold:
+          value: 50
+  - name: admin_layer
+    admin_layer: {}
+admin:
+  access_log_path: /dev/null
+  address:
+    socket_address:
+      address: 0.0.0.0
+      port_value: 19000
+static_resources:
+  listeners:
+    - address:
+        socket_address:
+          address: 0.0.0.0
+          port_value: 1062
+      filter_chains:
+        - filters:
+            - name: envoy.filters.network.http_connection_manager
+              typed_config:
+                "@type": type.googleapis.com/envoy.extensions.filters.network.http_connection_manager.v3.HttpConnectionManager
+                stat_prefix: ingress_http
+                route_config:
+                  virtual_hosts:
+                    - name: local_route
+                      domains:
+                        - "*"
+                      routes:
+                        - match:
+                            prefix: "/"
+                          route:
+                            cluster: httpbin
+                http_filters:
+                  - name: dynamic_modules/header_mutation
+                    typed_config:
+                      # https://www.envoyproxy.io/docs/envoy/latest/api-v3/extensions/dynamic_modules/v3/dynamic_modules.proto#envoy-v3-api-msg-extensions-dynamic-modules-v3-dynamicmoduleconfig
+                      "@type": type.googleapis.com/envoy.extensions.filters.http.dynamic_modules.v3.DynamicModuleFilter
+                      dynamic_module_config:
+                        name: rust_module
+                      filter_name: http_simple_mutations
+                      filter_config: |
+                        {
+                          "request_headers_setter": [["X-Envoy-Header", "envoy-header{{substring("ENVOYPROXY", 2, 3)}}"], ["X-Envoy-Header2", "envoy-header2"]],
+                          "response_headers_setter": [["Foo", "bar"], ["Foo2", "bar2"]]
+                        }
+                  - name: envoy.filters.http.router
+                    typed_config:
+                      "@type": type.googleapis.com/envoy.extensions.filters.http.router.v3.Router
+  clusters:
+    - name: httpbin
+      connect_timeout: 5000s
+      type: strict_dns
+      lb_policy: round_robin
+      load_assignment:
+        cluster_name: httpbin
+        endpoints:
+          - lb_endpoints:
+              - endpoint:
+                  address:
+                    socket_address:
+                      address: httpbin.org
+                      port_value: 80

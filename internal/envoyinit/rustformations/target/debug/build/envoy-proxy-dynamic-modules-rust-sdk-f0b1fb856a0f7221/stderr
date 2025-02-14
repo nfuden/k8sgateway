@@ -1,0 +1,40 @@
+Apple clang version 15.0.0 (clang-1500.1.0.2.5)
+Target: arm64-apple-darwin23.0.0
+Thread model: posix
+InstalledDir: /Library/Developer/CommandLineTools/usr/bin
+ignoring nonexistent directory "/usr/local/include"
+ignoring nonexistent directory "/usr/include"
+ignoring duplicate directory "/Library/Developer/CommandLineTools/usr/lib/clang/15.0.0/include"
+ignoring duplicate directory "/Library/Developer/CommandLineTools/usr/include"
+#include "..." search starts here:
+#include <...> search starts here:
+ /Library/Developer/CommandLineTools/usr/lib/clang/15.0.0/include
+ /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include
+ /Library/Developer/CommandLineTools/usr/include
+ /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/System/Library/Frameworks
+ /System/Library/Frameworks (framework directory)
+ /Library/Frameworks (framework directory)
+End of search list.
+Warning: can't set `wrap_comments = true`, unstable features are only available in nightly channel.
+Warning: can't set `format_code_in_doc_comments = true`, unstable features are only available in nightly channel.
+Warning: can't set `comment_width = 100`, unstable features are only available in nightly channel.
+Warning: can't set `normalize_comments = false`, unstable features are only available in nightly channel.
+Warning: can't set `normalize_doc_attributes = true`, unstable features are only available in nightly channel.
+Warning: can't set `format_strings = true`, unstable features are only available in nightly channel.
+Warning: can't set `format_macro_matchers = true`, unstable features are only available in nightly channel.
+Warning: can't set `format_macro_bodies = true`, unstable features are only available in nightly channel.
+Warning: can't set `imports_layout = HorizontalVertical`, unstable features are only available in nightly channel.
+Warning: can't set `imports_granularity = Module`, unstable features are only available in nightly channel.
+Warning: can't set `group_imports = One`, unstable features are only available in nightly channel.
+Warning: can't set `spaces_around_ranges = true`, unstable features are only available in nightly channel.
+Warning: can't set `combine_control_expr = false`, unstable features are only available in nightly channel.
+Warning: can't set `struct_field_align_threshold = 0`, unstable features are only available in nightly channel.
+Warning: can't set `enum_discrim_align_threshold = 20`, unstable features are only available in nightly channel.
+Warning: can't set `blank_lines_upper_bound = 3`, unstable features are only available in nightly channel.
+Warning: can't set `blank_lines_lower_bound = 0`, unstable features are only available in nightly channel.
+Warning: can't set `condense_wildcard_suffixes = true`, unstable features are only available in nightly channel.
+Warning: can't set `unstable_features = true`, unstable features are only available in nightly channel.
+Warning: can't set `skip_children = false`, unstable features are only available in nightly channel.
+Warning: can't set `error_on_line_overflow = true`, unstable features are only available in nightly channel.
+Warning: can't set `error_on_unformatted = false`, unstable features are only available in nightly channel.
+Warning: can't set `ignore = IgnoreList { path_set: {}, rustfmt_toml_path: "" }`, unstable features are only available in nightly channel.
