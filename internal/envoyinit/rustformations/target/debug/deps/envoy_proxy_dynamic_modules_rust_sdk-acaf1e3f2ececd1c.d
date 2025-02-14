@@ -1,0 +1,9 @@
+/Users/nfudenberg/go/src/github.com/nfuden/k8sgateway/internal/envoyinit/rustformations/target/debug/deps/libenvoy_proxy_dynamic_modules_rust_sdk-acaf1e3f2ececd1c.rmeta: /Users/nfudenberg/.cargo/git/checkouts/envoy-00f0ddd2848ca599/4a113b5/source/extensions/dynamic_modules/sdk/rust/src/lib.rs /Users/nfudenberg/.cargo/git/checkouts/envoy-00f0ddd2848ca599/4a113b5/source/extensions/dynamic_modules/sdk/rust/src/buffer.rs /Users/nfudenberg/go/src/github.com/nfuden/k8sgateway/internal/envoyinit/rustformations/target/debug/build/envoy-proxy-dynamic-modules-rust-sdk-f0b1fb856a0f7221/out/bindings.rs
+
+/Users/nfudenberg/go/src/github.com/nfuden/k8sgateway/internal/envoyinit/rustformations/target/debug/deps/envoy_proxy_dynamic_modules_rust_sdk-acaf1e3f2ececd1c.d: /Users/nfudenberg/.cargo/git/checkouts/envoy-00f0ddd2848ca599/4a113b5/source/extensions/dynamic_modules/sdk/rust/src/lib.rs /Users/nfudenberg/.cargo/git/checkouts/envoy-00f0ddd2848ca599/4a113b5/source/extensions/dynamic_modules/sdk/rust/src/buffer.rs /Users/nfudenberg/go/src/github.com/nfuden/k8sgateway/internal/envoyinit/rustformations/target/debug/build/envoy-proxy-dynamic-modules-rust-sdk-f0b1fb856a0f7221/out/bindings.rs
+
+/Users/nfudenberg/.cargo/git/checkouts/envoy-00f0ddd2848ca599/4a113b5/source/extensions/dynamic_modules/sdk/rust/src/lib.rs:
+/Users/nfudenberg/.cargo/git/checkouts/envoy-00f0ddd2848ca599/4a113b5/source/extensions/dynamic_modules/sdk/rust/src/buffer.rs:
+/Users/nfudenberg/go/src/github.com/nfuden/k8sgateway/internal/envoyinit/rustformations/target/debug/build/envoy-proxy-dynamic-modules-rust-sdk-f0b1fb856a0f7221/out/bindings.rs:
+
+# env-dep:OUT_DIR=/Users/nfudenberg/go/src/github.com/nfuden/k8sgateway/internal/envoyinit/rustformations/target/debug/build/envoy-proxy-dynamic-modules-rust-sdk-f0b1fb856a0f7221/out
