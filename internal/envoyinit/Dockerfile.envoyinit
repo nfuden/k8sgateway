@@ -10,13 +10,13 @@ WORKDIR /build
 RUN apt update && apt install -y clang
 
 # Fetch the dependencies first to leverage Docker cache.
-COPY ../../internal/envoyinit/rustformations/Cargo.toml ../../internal/envoyinit/rustformations/Cargo.lock ./
+COPY ./rustformations/Cargo.toml ./rustformations/Cargo.lock ./
 RUN mkdir src && echo "" > src/lib.rs
 RUN cargo fetch
 RUN rm -rf src
 
 # Then copy the rest of the source code and build the library.
-COPY ../../internal/envoyinit/rustformations .
+COPY ./rustformations .
 RUN cargo zigbuild --target x86_64-unknown-linux-gnu
 
 RUN cp /build/target/x86_64-unknown-linux-gnu/debug/librust_module.so /build/amd64_librust_module.so

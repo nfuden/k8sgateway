@@ -38,7 +38,7 @@ static_resources:
                           route:
                             cluster: httpbin
                 http_filters:
-                  - name: dynamic_modules/header_mutation
+                  - name: dynamic_modules/simple_mutations
                     typed_config:
                       # https://www.envoyproxy.io/docs/envoy/latest/api-v3/extensions/dynamic_modules/v3/dynamic_modules.proto#envoy-v3-api-msg-extensions-dynamic-modules-v3-dynamicmoduleconfig
                       "@type": type.googleapis.com/envoy.extensions.filters.http.dynamic_modules.v3.DynamicModuleFilter

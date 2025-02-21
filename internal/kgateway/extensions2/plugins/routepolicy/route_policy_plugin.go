@@ -20,8 +20,19 @@ import (
 	extensionsplug "github.com/kgateway-dev/kgateway/v2/internal/kgateway/extensions2/plugin"
 	"github.com/kgateway-dev/kgateway/v2/internal/kgateway/ir"
 	"github.com/kgateway-dev/kgateway/v2/internal/kgateway/plugins"
-	"github.com/kgateway-dev/kgateway/v2/internal/kgateway/utils"
 	"github.com/kgateway-dev/kgateway/v2/internal/kgateway/utils/krtutil"
+
+	exteniondynamicmodulev3 "github.com/envoyproxy/go-control-plane/envoy/extensions/dynamic_modules/v3"
+	dynamicmodulesv3 "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/http/dynamic_modules/v3"
+
+	// TODO(nfuden): remove
+	transformationpb "github.com/solo-io/envoy-gloo/go/config/filter/http/transformation/v2"
+)
+
+const transformationFilterNamePrefix = "transformation"
+
+var (
+	pluginStage = plugins.AfterStage(plugins.AuthZStage)
 )
 
 type routePolicy struct {
@@ -56,6 +67,7 @@ func (d *routePolicy) Equals(in any) bool {
 }
 
 type routePolicyPluginGwPass struct {
+	setTransformationInChain bool // TODO(nfuden): mae this multi stage
 }
 
 func (p *routePolicyPluginGwPass) ApplyHCM(ctx context.Context, pCtx *ir.HcmContext, out *envoyhttp.HttpConnectionManager) error {
@@ -80,7 +92,7 @@ func NewPlugin(ctx context.Context, commoncol *common.CommonCollections) extensi
 				Name:      policyCR.Name,
 			},
 			Policy:     policyCR,
-			PolicyIR:   &routePolicy{ct: policyCR.CreationTimestamp.Time, spec: policyCR.Spec},
+			PolicyIR:   &routePolicy{ct: policyCR.CreationTimestamp.Time, spec: toSpec(policyCR.Spec)},
 			TargetRefs: convert(policyCR.Spec.TargetRef),
 		}
 		return pol
@@ -99,6 +111,7 @@ func NewPlugin(ctx context.Context, commoncol *common.CommonCollections) extensi
 
 func toSpec(spec v1alpha1.RoutePolicySpec) routeSpecIr {
 	var ret routeSpecIr
+
 	if spec.Timeout > 0 {
 		ret.timeout = durationpb.New(time.Second * time.Duration(spec.Timeout))
 	}
@@ -109,101 +122,6 @@ func toSpec(spec v1alpha1.RoutePolicySpec) routeSpecIr {
 	}
 
 	return ret
-}
-
-func toTransform(t *v1alpha1.Transform) *transformationpb.Transformation_TransformationTemplate {
-
-	hasTransform := false
-	tt := &transformationpb.Transformation_TransformationTemplate{
-		TransformationTemplate: &transformationpb.TransformationTemplate{
-			Headers: map[string]*transformationpb.InjaTemplate{},
-		},
-	}
-	for _, h := range t.Set {
-		tt.TransformationTemplate.Headers[string(h.Name)] = &transformationpb.InjaTemplate{
-			Text: string(h.Value),
-		}
-		hasTransform = true
-	}
-
-	for _, h := range t.Add {
-		tt.TransformationTemplate.HeadersToAppend = append(tt.TransformationTemplate.HeadersToAppend, &transformationpb.TransformationTemplate_HeaderToAppend{
-			Key: string(h.Name),
-			Value: &transformationpb.InjaTemplate{
-				Text: string(h.Value),
-			},
-		})
-		hasTransform = true
-	}
-
-	tt.TransformationTemplate.HeadersToRemove = make([]string, 0, len(t.Remove))
-	for _, h := range t.Remove {
-		tt.TransformationTemplate.HeadersToRemove = append(tt.TransformationTemplate.HeadersToRemove, string(h))
-		hasTransform = true
-	}
-
-	//BODY
-	if t.Body == nil {
-		tt.TransformationTemplate.BodyTransformation = &transformationpb.TransformationTemplate_Passthrough{
-			Passthrough: &transformationpb.Passthrough{},
-		}
-	} else {
-		if t.Body.ParseAs == v1alpha1.BodyParseBehaviorAsString {
-			tt.TransformationTemplate.ParseBodyBehavior = transformationpb.TransformationTemplate_DontParse
-		}
-		if value := t.Body.Value; value != nil {
-			hasTransform = true
-			tt.TransformationTemplate.BodyTransformation = &transformationpb.TransformationTemplate_Body{
-				Body: &transformationpb.InjaTemplate{
-					Text: string(*value),
-				},
-			}
-		}
-	}
-
-	if !hasTransform {
-		return nil
-	}
-	return tt
-}
-
-func toTransformFilterConfig(t *v1alpha1.TransformationPolicy) (*anypb.Any, error) {
-	if t == nil {
-		return nil, nil
-	}
-
-	var reqt *transformationpb.Transformation
-	var respt *transformationpb.Transformation
-
-	if rtt := toTransform(t.Request); rtt != nil {
-		reqt = &transformationpb.Transformation{
-			TransformationType: rtt,
-		}
-	}
-	if rtt := toTransform(t.Response); rtt != nil {
-		respt = &transformationpb.Transformation{
-			TransformationType: rtt,
-		}
-	}
-	if reqt == nil && respt == nil {
-		return nil, nil
-	}
-	reqm := &transformationpb.RouteTransformations_RouteTransformation_RequestMatch{
-		RequestTransformation:  reqt,
-		ResponseTransformation: respt,
-	}
-
-	envoyT := &transformationpb.RouteTransformations{
-		Transformations: []*transformationpb.RouteTransformations_RouteTransformation{
-			{
-				Match: &transformationpb.RouteTransformations_RouteTransformation_RequestMatch_{
-					RequestMatch: reqm,
-				},
-			},
-		},
-	}
-
-	return utils.MessageToAny(envoyT)
 }
 
 func convert(targetRef v1alpha1.LocalPolicyTargetReference) []ir.PolicyTargetRef {
@@ -223,6 +141,7 @@ func (p *routePolicy) Name() string {
 
 // called 1 time for each listener
 func (p *routePolicyPluginGwPass) ApplyListenerPlugin(ctx context.Context, pCtx *ir.ListenerContext, out *envoy_config_listener_v3.Listener) {
+
 }
 
 func (p *routePolicyPluginGwPass) ApplyVhostPlugin(ctx context.Context, pCtx *ir.VirtualHostContext, out *envoy_config_route_v3.VirtualHost) {
@@ -234,17 +153,16 @@ func (p *routePolicyPluginGwPass) ApplyForRoute(ctx context.Context, pCtx *ir.Ro
 	if !ok {
 		return nil
 	}
-
 	if policy.spec.timeout != nil && outputRoute.GetRoute() != nil {
 		outputRoute.GetRoute().Timeout = policy.spec.timeout
 	}
 
 	if policy.spec.transform != nil {
-		if outputRoute.TypedPerFilterConfig == nil {
+		if outputRoute.GetTypedPerFilterConfig() == nil {
 			outputRoute.TypedPerFilterConfig = make(map[string]*anypb.Any)
 		}
-		outputRoute.TypedPerFilterConfig[filterStage] = policy.spec.transform
-		p.needFilter = true
+		outputRoute.GetTypedPerFilterConfig()[transformationFilterNamePrefix] = policy.spec.transform
+		p.setTransformationInChain = true
 	}
 
 	return nil
@@ -262,6 +180,32 @@ func (p *routePolicyPluginGwPass) ApplyForRouteBackend(
 // if a plugin emits new filters, they must be with a plugin unique name.
 // any filter returned from route config must be disabled, so it doesnt impact other routes.
 func (p *routePolicyPluginGwPass) HttpFilters(ctx context.Context, fcc ir.FilterChainCommon) ([]plugins.StagedHttpFilter, error) {
+	if p.setTransformationInChain {
+
+		// TODO(nfuden): support stages such as early
+		filters := []plugins.StagedHttpFilter{}
+		// first register classic
+		filters = append(filters, plugins.MustNewStagedFilter(transformationFilterNamePrefix,
+			&transformationpb.FilterTransformations{},
+			plugins.BeforeStage(plugins.AcceptedStage)))
+
+		// TODO(nfuden/yuvalk): how to do route level correctly
+		rustCfg := dynamicmodulesv3.DynamicModuleFilter{
+			DynamicModuleConfig: &exteniondynamicmodulev3.DynamicModuleConfig{
+				Name: "rust_module",
+			},
+			FilterName: "http_simple_mutations",
+			FilterConfig: `{ "request_headers_setter": [],
+			"response_headers_setter": [["x-conditional-donor", "x-donorcontent{{ substring( header(\"x-donor\"), 0, 7)}}"], ["X-emptyish", "ish"]]} `,
+		}
+
+		filters = append(filters, plugins.MustNewStagedFilter("dynamic_modules/simple_mutations",
+			&rustCfg,
+			plugins.BeforeStage(plugins.AcceptedStage)))
+
+		return filters, nil
+
+	}
 	return nil, nil
 }
 

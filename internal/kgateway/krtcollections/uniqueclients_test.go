@@ -95,12 +95,12 @@ func TestUniqueClients(t *testing.T) {
 				mock := krttest.NewMock(t, tc.inputs)
 				nodes := NewNodeMetadataCollection(krttest.GetMockCollection[*corev1.Node](mock))
 				pods = NewLocalityPodsCollection(nodes, krttest.GetMockCollection[*corev1.Pod](mock), krtutil.KrtOptions{})
-				pods.Synced().WaitUntilSynced(context.Background().Done())
+				pods.WaitUntilSynced(context.Background().Done())
 			}
 
 			cb, uccBuilder := NewUniquelyConnectedClients()
 			ucc := uccBuilder(context.Background(), krtutil.KrtOptions{}, pods)
-			ucc.Synced().WaitUntilSynced(context.Background().Done())
+			ucc.WaitUntilSynced(context.Background().Done())
 
 			// check fetch as well
 

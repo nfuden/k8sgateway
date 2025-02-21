@@ -54,7 +54,7 @@ RUN cp /build/target/x86_64-unknown-linux-gnu/debug/librust_module.so /build/amd
 
 # Finally, copy the built library to the final image.
 # TODO(nfuden): use released envoy and lock to that version like we did in the makefile
-# FROM envoyproxy/envoy-dev:4a113b5118003682833ba612202eb68628861ac6 AS envoy 
+# FROM envoyproxy/envoy-dev:87b4ae8dde4a0cd35bc8c3584ec79d3625522c4d AS envoy 
 FROM envoyproxy/envoy:v1.33.0 AS envoy
 ARG TARGETARCH
 ENV ENVOY_DYNAMIC_MODULES_SEARCH_PATH=/usr/local/lib

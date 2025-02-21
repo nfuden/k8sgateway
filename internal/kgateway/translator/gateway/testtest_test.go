@@ -74,7 +74,7 @@ func xTestRun(t *testing.T) {
 	//)
 
 	cli.RunAndWait(test.NewStop(t))
-	//	kubeRawGateways.Synced().WaitUntilSynced(ctx.Done())
+	//	kubeRawGateways.WaitUntilSynced(ctx.Done())
 
 	for _, gw := range kubeRawGateways.List() {
 		t.Log(gw.Name)

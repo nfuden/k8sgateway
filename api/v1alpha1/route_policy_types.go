@@ -71,6 +71,8 @@ type Transform struct {
 type InjaTemplate string
 
 type HeaderTransformation struct {
+
+	// +required
 	Name  gwv1.HeaderName `json:"name,omitempty"`
 	Value InjaTemplate    `json:"value,omitempty"`
 }

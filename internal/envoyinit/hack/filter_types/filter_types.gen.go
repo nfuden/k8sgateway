@@ -59,7 +59,6 @@ import (
 	_ "github.com/envoyproxy/go-control-plane/envoy/config/rbac/v3"
 	_ "github.com/envoyproxy/go-control-plane/envoy/config/route/v3"
 	_ "github.com/envoyproxy/go-control-plane/envoy/config/tap/v3"
-	_ "github.com/envoyproxy/go-control-plane/envoy/config/trace/v3"
 	_ "github.com/envoyproxy/go-control-plane/envoy/config/upstream/local_address_selector/v3"
 	_ "github.com/envoyproxy/go-control-plane/envoy/data/accesslog/v3"
 	_ "github.com/envoyproxy/go-control-plane/envoy/data/cluster/v3"
@@ -307,7 +306,7 @@ import (
 	_ "github.com/envoyproxy/go-control-plane/envoy/service/secret/v3"
 	_ "github.com/envoyproxy/go-control-plane/envoy/service/status/v3"
 	_ "github.com/envoyproxy/go-control-plane/envoy/service/tap/v3"
-	_ "github.com/envoyproxy/go-control-plane/envoy/service/trace/v3"
+
 	_ "github.com/envoyproxy/go-control-plane/envoy/type/http/v3"
 	_ "github.com/envoyproxy/go-control-plane/envoy/type/matcher/v3"
 	_ "github.com/envoyproxy/go-control-plane/envoy/type/metadata/v3"
