@@ -439,6 +439,7 @@ func getFormatterExtensions() ([]*envoycore.TypedExtensionConfig, error) {
 			TypedConfig: mdFormatterTc,
 		},
 	}, nil
+
 }
 
 func newAccessLogWithConfig(name string, config proto.Message) (*envoyaccesslog.AccessLog, error) {

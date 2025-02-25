@@ -1,0 +1,5 @@
+See if we can rely on a cleaner import over in cli pacakges
+
+This currently exists to make sure that cli unmarshalling doesnt fail due to things like missing envoy_gloo types.
+
+Envoy-gloo now publishes its go types so this may not be needed in the same place and we also are looking to get off envoy-gloo entirely so it would just be registering all go-control-plane

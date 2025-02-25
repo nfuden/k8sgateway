@@ -13,6 +13,7 @@ import (
 )
 
 func processStatic(ctx context.Context, in *v1alpha1.StaticUpstream, out *envoy_config_cluster_v3.Cluster) {
+
 	var hostname string
 	out.ClusterDiscoveryType = &envoy_config_cluster_v3.Cluster_Type{
 		Type: envoy_config_cluster_v3.Cluster_STATIC,
@@ -81,6 +82,7 @@ func processStatic(ctx context.Context, in *v1alpha1.StaticUpstream, out *envoy_
 		//		// fix issue where ipv6 addr cannot bind
 		//		out.DnsLookupFamily = envoy_config_cluster_v3.Cluster_V4_ONLY
 	}
+
 }
 
 func processEndpointsStatic(in *v1alpha1.StaticUpstream) *ir.EndpointsForUpstream {

@@ -63,6 +63,7 @@ func (p *httpListenerPolicyPluginGwPass) ApplyListenerPlugin(ctx context.Context
 }
 
 func NewPlugin(ctx context.Context, commoncol *common.CommonCollections) extensionplug.Plugin {
+
 	// need upstreams for backend refs
 	col := krtutil.SetupCollectionDynamic[v1alpha1.HTTPListenerPolicy](
 		ctx,

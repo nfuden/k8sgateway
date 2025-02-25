@@ -77,9 +77,11 @@ func (d *destrulePlugin) processEndpoints(kctx krt.HandlerContext, ctx context.C
 
 func (d *destrulePlugin) processUpstream(kctx krt.HandlerContext, ctx context.Context, ucc ir.UniqlyConnectedClient, in ir.Upstream, outCluster *envoy_config_cluster_v3.Cluster) {
 	destrule := d.destinationRulesIndex.FetchDestRulesFor(kctx, ucc.Namespace, in.CanonicalHostname, ucc.Labels)
+
 	if destrule != nil {
 		trafficPolicy := getTrafficPolicy(destrule, uint32(in.Port))
 		if outlier := trafficPolicy.GetOutlierDetection(); outlier != nil {
+
 			if getLocalityLbSetting(trafficPolicy) != nil {
 				if outCluster.GetCommonLbConfig() == nil {
 					outCluster.CommonLbConfig = &envoy_config_cluster_v3.Cluster_CommonLbConfig{}
@@ -122,8 +124,10 @@ func (d *destrulePlugin) processUpstream(kctx krt.HandlerContext, ctx context.Co
 			}
 
 			outCluster.OutlierDetection = out
+
 		}
 	}
+
 }
 
 func getPriorityInfoFromDestrule(localityLb *v1alpha3.LocalityLoadBalancerSetting) *endpoints.PriorityInfo {

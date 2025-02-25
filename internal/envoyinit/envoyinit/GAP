@@ -1,0 +1,25 @@
+Since 1.33 needed commits
+
+https://github.com/envoyproxy/envoy/commit/7eaddda880539b8f7b3992453e25027aa72721b8
+
+https://github.com/envoyproxy/envoy/commit/89351201c35c5c304e14555bbfb295c3ee741efc
+
+m1 mac builds 
+
+
+
+
+
+
+ALSO minijinja feature set is large:
+[features]
+default = [
+    "builtins",
+    "debug",
+    "deserialization",
+    "macros",
+    "multi_template",
+    "adjacent_loop_items",
+    "std_collections",
+    "serde",
+]
