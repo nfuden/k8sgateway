@@ -6,6 +6,7 @@ import (
 	"testing"
 	"time"
 
+	"go.uber.org/zap/zapcore"
 	"istio.io/istio/pkg/kube/krt"
 	"istio.io/istio/pkg/kube/krt/krttest"
 	corev1 "k8s.io/api/core/v1"
@@ -19,6 +20,7 @@ import (
 	extensionsplug "github.com/kgateway-dev/kgateway/v2/internal/kgateway/extensions2/plugin"
 	"github.com/kgateway-dev/kgateway/v2/internal/kgateway/ir"
 	"github.com/kgateway-dev/kgateway/v2/internal/kgateway/utils/krtutil"
+	"github.com/solo-io/go-utils/contextutils"
 )
 
 var (
@@ -35,6 +37,7 @@ func backends(refN, refNs string) []any {
 }
 
 func TestGetBackendSameNamespace(t *testing.T) {
+	contextutils.SetLogLevel(zapcore.DebugLevel)
 	inputs := []any{
 		svc(""),
 	}

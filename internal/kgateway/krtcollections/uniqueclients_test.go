@@ -8,6 +8,8 @@ import (
 	corev3 "github.com/envoyproxy/go-control-plane/envoy/config/core/v3"
 	envoy_service_discovery_v3 "github.com/envoyproxy/go-control-plane/envoy/service/discovery/v3"
 	. "github.com/onsi/gomega"
+	"github.com/solo-io/go-utils/contextutils"
+	"go.uber.org/zap/zapcore"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/structpb"
 	"istio.io/istio/pkg/kube/krt"
@@ -25,6 +27,8 @@ import (
 )
 
 func TestUniqueClients(t *testing.T) {
+	// TODO(nfuden): try to get off the contextutils dependency ideally this is on a context and not a global
+	contextutils.SetLogLevel(zapcore.DebugLevel)
 	testCases := []struct {
 		name     string
 		inputs   []any

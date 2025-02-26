@@ -6,6 +6,8 @@ import (
 
 	"github.com/onsi/gomega"
 	. "github.com/onsi/gomega"
+	"github.com/solo-io/go-utils/contextutils"
+	"go.uber.org/zap/zapcore"
 	"istio.io/istio/pkg/kube/krt"
 	"istio.io/istio/pkg/kube/krt/krttest"
 	corev1 "k8s.io/api/core/v1"
@@ -18,6 +20,7 @@ import (
 )
 
 func TestPods(t *testing.T) {
+	contextutils.SetLogLevel(zapcore.DebugLevel)
 	testCases := []struct {
 		name   string
 		inputs []any

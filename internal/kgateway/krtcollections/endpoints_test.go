@@ -10,6 +10,7 @@ import (
 	"github.com/onsi/gomega"
 	. "github.com/onsi/gomega"
 	"github.com/solo-io/go-utils/contextutils"
+	"go.uber.org/zap/zapcore"
 	"google.golang.org/protobuf/types/known/wrapperspb"
 	"istio.io/istio/pkg/kube/krt"
 	"istio.io/istio/pkg/kube/krt/krttest"
@@ -277,6 +278,7 @@ func TestEndpointsForUpstreamWithDifferentNameButSameEndpoints(t *testing.T) {
 }
 
 func TestEndpoints(t *testing.T) {
+	contextutils.SetLogLevel(zapcore.DebugLevel)
 	logger := zaptest.Logger(t)
 	contextutils.SetFallbackLogger(logger.Sugar())
 
