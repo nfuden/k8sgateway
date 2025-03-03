@@ -5,14 +5,14 @@ package v1alpha1
 import (
 	v1 "sigs.k8s.io/gateway-api/apis/v1"
 
-	v1alpha1 "github.com/kgateway-dev/kgateway/v2/api/v1alpha1"
+	apiv1alpha1 "github.com/kgateway-dev/kgateway/v2/api/v1alpha1"
 )
 
 // HeaderTransformationApplyConfiguration represents a declarative configuration of the HeaderTransformation type for use
 // with apply.
 type HeaderTransformationApplyConfiguration struct {
-	Name  *v1.HeaderName         `json:"name,omitempty"`
-	Value *v1alpha1.InjaTemplate `json:"value,omitempty"`
+	Name  *v1.HeaderName            `json:"name,omitempty"`
+	Value *apiv1alpha1.InjaTemplate `json:"value,omitempty"`
 }
 
 // HeaderTransformationApplyConfiguration constructs a declarative configuration of the HeaderTransformation type for use with
@@ -32,7 +32,7 @@ func (b *HeaderTransformationApplyConfiguration) WithName(value v1.HeaderName) *
 // WithValue sets the Value field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the Value field is set to the value of the last call.
-func (b *HeaderTransformationApplyConfiguration) WithValue(value v1alpha1.InjaTemplate) *HeaderTransformationApplyConfiguration {
+func (b *HeaderTransformationApplyConfiguration) WithValue(value apiv1alpha1.InjaTemplate) *HeaderTransformationApplyConfiguration {
 	b.Value = &value
 	return b
 }

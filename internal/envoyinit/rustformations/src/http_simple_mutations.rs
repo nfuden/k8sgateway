@@ -5,12 +5,21 @@ use mockall::*;
 
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+use std::hash::Hash;
 
 /// This implements the [`envoy_proxy_dynamic_modules_rust_sdk::HttpFilterConfig`] trait.
 ///
 /// The trait corresponds to a Envoy filter chain configuration.
-#[derive(Serialize, Deserialize, Debug)]
+
+#[derive(Serialize, Deserialize)]
 pub struct FilterConfig {
+    request_headers_setter: Vec<(String, String)>,
+    response_headers_setter: Vec<(String, String)>,
+    route_specific: HashMap<String, String>,
+}
+
+#[derive(Serialize, Deserialize, Clone)]
+pub struct PerRouteConfig {
     request_headers_setter: Vec<(String, String)>,
     response_headers_setter: Vec<(String, String)>,
 }
@@ -73,10 +82,31 @@ impl<EC: EnvoyHttpFilterConfig, EHF: EnvoyHttpFilter> HttpFilterConfig<EC, EHF> 
         // env.add_function("context", context);
         // env.add_function("env", env);
 
+
+        // attempt to unmarshal the route_specific strings into RouteSpecificConfigs
+        let mut specific = HashMap::new();
+        for (key, value) in self.route_specific.iter() {
+            let route_specific: PerRouteConfig = match serde_json::from_str(value) {
+                Ok(cfg) => cfg,
+                Err(err) => {
+                    eprintln!("Error parsing route specific config: {} {}", err, value);
+                    continue;
+                }
+            };
+            specific.insert(key.clone(), route_specific);
+        }
+
+    
+        // specific.extend(self.route_specific.into_iter());
+
+
         Box::new(Filter {
             request_headers_setter: self.request_headers_setter.clone(),
             // request_headers_extractions: self.request_headers_extractions.clone(),
             response_headers_setter: self.response_headers_setter.clone(),
+
+            // clone the hashmap
+            route_specific: specific, 
             env: env,
         })
     }
@@ -119,6 +149,7 @@ pub struct Filter {
     request_headers_setter: Vec<(String, String)>,
     // request_headers_extractions: Vec<(String, String)>,
     response_headers_setter: Vec<(String, String)>,
+    route_specific: HashMap<String, PerRouteConfig>,
     env: Environment<'static>,
 }
 
@@ -132,8 +163,20 @@ impl<EHF: EnvoyHttpFilter> HttpFilter<EHF> for Filter {
         if !_end_of_stream {
             return abi::envoy_dynamic_module_type_on_http_filter_request_headers_status::StopIteration;
         }
-        let mut headers = HashMap::new();
 
+        let mut setters = self.request_headers_setter.clone();
+        // use the sub route version if appropriate as we dont have valid perroute config today
+        if self.route_specific.len() > 0 {
+            // check filter state for info
+            let route_name_data = envoy_filter.get_dynamic_metadata_string("kgateway", "route").unwrap();
+            let route_name = std::str::from_utf8(route_name_data.as_slice()).unwrap();
+            setters = self.route_specific.get(route_name).unwrap().request_headers_setter.clone();
+           
+        }
+
+
+        // TODO(nfuden): find someone who knows rust to see if we really need this Hash map for serialization
+        let mut headers = HashMap::new();
         for (key, val) in envoy_filter.get_request_headers() {
             let Some(key) = std::str::from_utf8(key.as_slice()).ok() else {
                 continue;
@@ -143,9 +186,9 @@ impl<EHF: EnvoyHttpFilter> HttpFilter<EHF> for Filter {
             headers.insert(key.to_string(), value);
         }
 
-        // let serialized_headers = serde_json::to_string(&headers).unwrap();
 
-        for (key, value) in &self.request_headers_setter {
+        // let serialized_headers = serde_json::to_string(&headers).unwrap();
+        for (key, value) in &setters {
             let mut env = self.env.clone();
             env.add_template("temp", value).unwrap();
             let tmpl = env.get_template("temp").unwrap();
@@ -166,8 +209,46 @@ impl<EHF: EnvoyHttpFilter> HttpFilter<EHF> for Filter {
         envoy_filter: &mut EHF,
         _end_of_stream: bool,
     ) -> abi::envoy_dynamic_module_type_on_http_filter_response_headers_status {
-        for (key, value) in &self.response_headers_setter {
-            envoy_filter.set_response_header(key, value.as_bytes());
+        // TODO(nfuden): find someone who knows rust to see if we really need this Hash map for serialization
+        let mut headers = HashMap::new();
+        for (key, val) in envoy_filter.get_response_headers() {
+            let Some(key) = std::str::from_utf8(key.as_slice()).ok() else {
+                continue;
+            };
+            let value = std::str::from_utf8(val.as_slice()).unwrap().to_string();
+
+            headers.insert(key.to_string(), value);
+        }
+
+
+        let mut setters = self.response_headers_setter.clone();
+        // use the sub route version if appropriate as we dont have valid perroute config today
+        if self.route_specific.len() > 0 {
+            // check filter state for info
+            let route_name_data = envoy_filter.get_dynamic_metadata_string("kgateway", "route").unwrap();
+            
+            // let route_name_slice =  .as_slice();
+            let route_name = std::str::from_utf8(route_name_data.as_slice()).unwrap();
+            setters = self.route_specific.get(route_name).unwrap().response_headers_setter.clone();
+           
+
+           // add a debug to the setters
+           setters.append(&mut vec![("x-debuggs".to_string(), route_name.to_string())]);
+        }
+
+
+        for (key, value) in &setters {
+            let mut env = self.env.clone();
+            env.add_template("temp", value).unwrap();
+            let tmpl = env.get_template("temp").unwrap();
+            let rendered = tmpl.render(context!(headers => headers));
+            let mut rendered_str = "".to_string();
+            if rendered.is_ok() {
+                rendered_str = rendered.unwrap();
+            } else {
+                eprintln!("Error rendering template: {}", rendered.err().unwrap());
+            }
+            envoy_filter.set_response_header(key, rendered_str.as_bytes());
         }
         abi::envoy_dynamic_module_type_on_http_filter_response_headers_status::Continue
     }
@@ -209,10 +290,21 @@ mod tests {
                 ),
             ],
             response_headers_setter: vec![("X-Bar".to_string(), "foo".to_string())],
+            route_specific: HashMap::new(),
         };
         let mut filter = filter_conf.new_http_filter(&mut envoy_config);
 
         envoy_filter.expect_get_request_headers().returning(|| {
+            vec![
+                (EnvoyBuffer::new("host"), EnvoyBuffer::new("example.com")),
+                (
+                    EnvoyBuffer::new("x-donor"),
+                    EnvoyBuffer::new("thedonorvalue"),
+                ),
+            ]
+        });
+
+        envoy_filter.expect_get_response_headers().returning(|| {
             vec![
                 (EnvoyBuffer::new("host"), EnvoyBuffer::new("example.com")),
                 (
@@ -299,6 +391,7 @@ mod tests {
                 "{%- if true -%}supersuper{% endif %}".to_string(),
             )],
             response_headers_setter: vec![("X-Bar".to_string(), "foo".to_string())],
+            route_specific: HashMap::new(),
         };
         let mut filter = filter_conf.new_http_filter(&mut envoy_config);
 
@@ -311,6 +404,17 @@ mod tests {
                 ),
             ]
         });
+
+        envoy_filter.expect_get_response_headers().returning(|| {
+            vec![
+                (EnvoyBuffer::new("host"), EnvoyBuffer::new("example.com")),
+                (
+                    EnvoyBuffer::new("x-donor"),
+                    EnvoyBuffer::new("thedonorvalue"),
+                ),
+            ]
+        });
+
         let mut seq = Sequence::new();
         envoy_filter
             .expect_set_request_header()
