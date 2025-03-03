@@ -30,8 +30,7 @@ import (
 	"github.com/kgateway-dev/kgateway/v2/internal/kgateway/utils"
 	"github.com/kgateway-dev/kgateway/v2/internal/kgateway/utils/krtutil"
 
-	// TODO(nfuden): remove
-
+	// TODO(nfuden): remove once rustformations are able to be used in a production environment
 	transformationpb "github.com/solo-io/envoy-gloo/go/config/filter/http/transformation/v2"
 )
 
@@ -270,10 +269,10 @@ func mustMessageToAny(msgIn protoreflect.ProtoMessage) *anypb.Any {
 // if a plugin emits new filters, they must be with a plugin unique name.
 // any filter returned from route config must be disabled, so it doesnt impact other routes.
 func (p *routePolicyPluginGwPass) HttpFilters(ctx context.Context, fcc ir.FilterChainCommon) ([]plugins.StagedHttpFilter, error) {
+	filters := []plugins.StagedHttpFilter{}
 	if p.setTransformationInChain {
 
 		// TODO(nfuden): support stages such as early
-		filters := []plugins.StagedHttpFilter{}
 		// first register classic
 		filters = append(filters, plugins.MustNewStagedFilter(transformationFilterNamePrefix,
 			&transformationpb.FilterTransformations{},
@@ -299,45 +298,8 @@ func (p *routePolicyPluginGwPass) HttpFilters(ctx context.Context, fcc ir.Filter
 				Name: "rust_module",
 			},
 			FilterName:   "http_simple_mutations",
-			FilterConfig: fmt.Sprintf(`{ "request_headers_setter": [],"response_headers_setter": [], "route_specific": %s}`, string(filterConfig)),
+			FilterConfig: fmt.Sprintf(`{"route_specific": %s}`, string(filterConfig)),
 		}
-		// rustCfgAny := mustMessageToAny(&rustCfg)
-
-		// emptyComposite := mustMessageToAny(&compositev3.Composite{})
-
-		// actionCfg := mustMessageToAny(&compositev3.ExecuteFilterAction{
-		// 	TypedConfig: &corev3.TypedExtensionConfig{
-		// 		Name:        rustformationFilterNamePrefix,
-		// 		TypedConfig: rustCfgAny,
-		// 	}})
-
-		// matcherCfg := &cncftypev3.Matcher{
-		// 	OnNoMatch: &cncftypev3.Matcher_OnMatch{
-		// 		OnMatch: &cncftypev3.Matcher_OnMatch_Action{
-		// 			Action: &cncfcorev3.TypedExtensionConfig{
-		// 				Name:        "composite-action",
-		// 				TypedConfig: actionCfg,
-		// 			},
-		// 		},
-		// 	},
-		// }
-
-		// populate the OnMatch with a tree
-		// matcherCfg.MatcherType = &cncfmatcherv3.Matcher_MatcherTree_{
-		// 	MatcherTree: &cncfmatcherv3.Matcher_MatcherTree{
-		// 		// Input: ,
-		// 		TreeType: &cncfmatcherv3.Matcher_MatcherTree_ExactMatchMap{{}
-		// 	},
-
-		// }
-
-		// compositeCfg := extensionmatcherv3.ExtensionWithMatcher{
-		// 	ExtensionConfig: &corev3.TypedExtensionConfig{
-		// 		Name:        "composite",
-		// 		TypedConfig: emptyComposite,
-		// 	},
-		// 	XdsMatcher: matcherCfg,
-		// }
 
 		filters = append(filters, plugins.MustNewStagedFilter("dynamic_modules/simple_mutations",
 			&rustCfg,
@@ -349,21 +311,12 @@ func (p *routePolicyPluginGwPass) HttpFilters(ctx context.Context, fcc ir.Filter
 			&transformationpb.FilterTransformations{},
 			plugins.AfterStage(plugins.FaultStage)))
 
-		// setMetaCfgRaw := set_metadatav3.Config{
-		// 	MetadataNamespace: "kgateway",
-		// }
-		// filters = append(filters, plugins.MustNewStagedFilter(setMetadataFilterName,
-		// 	&setMetaCfgRaw, plugins.AfterStage(plugins.FaultStage)),
-		// )
-
-		// TODO(nfuden): find a cleaner way to do route level configuration
-		// filters = append(filters, plugins.MustNewStagedFilter("composite",
-		// 	&compositeCfg,
-		// 	plugins.BeforeStage(plugins.AcceptedStage)))
-		return filters, nil
-
 	}
-	return nil, nil
+
+	if len(filters) == 0 {
+		return nil, nil
+	}
+	return filters, nil
 }
 
 func (p *routePolicyPluginGwPass) UpstreamHttpFilters(ctx context.Context) ([]plugins.StagedUpstreamHttpFilter, error) {

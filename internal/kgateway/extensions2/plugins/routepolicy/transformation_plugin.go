@@ -2,7 +2,6 @@ package routepolicy
 
 import (
 	"encoding/json"
-	"fmt"
 
 	// cncfcorev3 "github.com/cncf/xds/go/xds/core/v3"
 	// cncftypev3 "github.com/cncf/xds/go/xds/type/matcher/v3"
@@ -137,29 +136,6 @@ func toRustFormationPerRouteConfig(t *v1alpha1.Transform) (map[string]interface{
 		hasTransform = true
 	}
 
-	// add := map[string]string{}
-	// for _, h := range t.Add {
-	// 	add[string(h.Name)] = string(h.Value)
-	// }
-
-	// rustformationConfigMap["headers_setter"] = fmt.Sprintf("%v", add)
-	// if len(add) > 0 {
-	// 	hasTransform = true
-	// }
-
-	// remove := t.Remove
-
-	// rustformationConfigMap["headers_remover"] = fmt.Sprintf("%v", remove)
-	// if len(remove) > 0 {
-	// 	hasTransform = true
-	// }
-
-	// tt.TransformationTemplate.HeadersToRemove = make([]string, 0, len(t.Remove))
-	// for _, h := range t.Remove {
-	// 	tt.TransformationTemplate.HeadersToRemove = append(tt.TransformationTemplate.HeadersToRemove, string(h))
-	// 	hasTransform = true
-	// }
-
 	//BODY
 	// if t.Body == nil {
 	// 	tt.TransformationTemplate.BodyTransformation = &transformationpb.TransformationTemplate_Passthrough{
@@ -178,9 +154,6 @@ func toRustFormationPerRouteConfig(t *v1alpha1.Transform) (map[string]interface{
 	// 		}
 	// 	}
 	// }
-
-	// dump full state
-	// fmt.Println("rust", hasTransform, len(t.Add), len(t.Set), len(t.Remove), len(setter), len(add))
 	return rustformationConfigMap, hasTransform
 
 }
@@ -214,7 +187,6 @@ func torustformFilterConfig(t *v1alpha1.TransformationPolicy) (*anypb.Any, strin
 
 	rustformationJson, err := json.Marshal(rustformCfgMap)
 	if err != nil {
-		fmt.Printf("failed to marshal rustformation config map: %v", err)
 		return nil, "", err
 	}
 
@@ -232,17 +204,3 @@ func torustformFilterConfig(t *v1alpha1.TransformationPolicy) (*anypb.Any, strin
 	return rustCfgAny, stringConf, nil
 
 }
-
-//    - name: dynamic_modules/header_mutation
-//      typed_config:
-//        # https://www.envoyproxy.io/docs/envoy/latest/api-v3/extensions/dynamic_modules/v3/dynamic_modules.proto#envoy-v3-api-msg-extensions-dynamic-modules-v3-dynamicmoduleconfig
-//        "@type": type.googleapis.com/envoy.extensions.filters.http.dynamic_modules.v3.DynamicModuleFilter
-//        dynamic_module_config:
-//          name: rust_module
-//        filter_name: http_simple_mutations
-//        filter_config: |
-//          {
-//            "request_headers_setter": [["X-Envoy-Header", "envoy-header{{substring("ENVOYPROXY", 2, 3)}}"], ["X-Envoy-Header2", "envoy-header2"]],
-//            "response_headers_setter": [["Foo", "bar"], ["Foo2", "bar2"]]
-//          }
-// */
