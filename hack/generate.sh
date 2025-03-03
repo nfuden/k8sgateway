@@ -64,6 +64,8 @@ go run k8s.io/code-generator/cmd/client-gen \
   --output-pkg "${OUTPUT_PKG}/${CLIENTSET_PKG_NAME}" \
   --apply-configuration-package "${APIS_PKG}/api/applyconfiguration"
 
+go generate ${ROOT_DIR}/internal/envoyinit/hack/...
+
 # fix imports of gen code
 go run golang.org/x/tools/cmd/goimports -w ${ROOT_DIR}/pkg/client
 go run golang.org/x/tools/cmd/goimports -w ${ROOT_DIR}/api
