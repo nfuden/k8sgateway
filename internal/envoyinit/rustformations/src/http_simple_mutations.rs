@@ -13,14 +13,18 @@ use std::hash::Hash;
 
 #[derive(Serialize, Deserialize)]
 pub struct FilterConfig {
+    #[serde(default)]
     request_headers_setter: Vec<(String, String)>,
+    #[serde(default)]
     response_headers_setter: Vec<(String, String)>,
     route_specific: HashMap<String, String>,
 }
 
 #[derive(Serialize, Deserialize, Clone)]
 pub struct PerRouteConfig {
+    #[serde(default)]
     request_headers_setter: Vec<(String, String)>,
+    #[serde(default)]
     response_headers_setter: Vec<(String, String)>,
 }
 
@@ -82,8 +86,8 @@ impl<EC: EnvoyHttpFilterConfig, EHF: EnvoyHttpFilter> HttpFilterConfig<EC, EHF> 
         // env.add_function("context", context);
         // env.add_function("env", env);
 
-
         // attempt to unmarshal the route_specific strings into RouteSpecificConfigs
+        // TODO(nfuden): remove this once upstream allows for real route specific configs
         let mut specific = HashMap::new();
         for (key, value) in self.route_specific.iter() {
             let route_specific: PerRouteConfig = match serde_json::from_str(value) {
@@ -96,9 +100,7 @@ impl<EC: EnvoyHttpFilterConfig, EHF: EnvoyHttpFilter> HttpFilterConfig<EC, EHF> 
             specific.insert(key.clone(), route_specific);
         }
 
-    
         // specific.extend(self.route_specific.into_iter());
-
 
         Box::new(Filter {
             request_headers_setter: self.request_headers_setter.clone(),
@@ -106,7 +108,7 @@ impl<EC: EnvoyHttpFilterConfig, EHF: EnvoyHttpFilter> HttpFilterConfig<EC, EHF> 
             response_headers_setter: self.response_headers_setter.clone(),
 
             // clone the hashmap
-            route_specific: specific, 
+            route_specific: specific,
             env: env,
         })
     }
@@ -168,12 +170,21 @@ impl<EHF: EnvoyHttpFilter> HttpFilter<EHF> for Filter {
         // use the sub route version if appropriate as we dont have valid perroute config today
         if self.route_specific.len() > 0 {
             // check filter state for info
-            let route_name_data = envoy_filter.get_dynamic_metadata_string("kgateway", "route").unwrap();
+            let route_name_data = envoy_filter
+                .get_dynamic_metadata_string("kgateway", "route")
+                .unwrap();
             let route_name = std::str::from_utf8(route_name_data.as_slice()).unwrap();
-            setters = self.route_specific.get(route_name).unwrap().request_headers_setter.clone();
-           
-        }
+            setters = self
+                .route_specific
+                .get(route_name)
+                .unwrap()
+                .request_headers_setter
+                .clone();
 
+            // TODO(nfuden)remove
+            // add a debug to the setters
+            setters.append(&mut vec![("x-debuggs".to_string(), route_name.to_string())]);
+        }
 
         // TODO(nfuden): find someone who knows rust to see if we really need this Hash map for serialization
         let mut headers = HashMap::new();
@@ -185,7 +196,6 @@ impl<EHF: EnvoyHttpFilter> HttpFilter<EHF> for Filter {
 
             headers.insert(key.to_string(), value);
         }
-
 
         // let serialized_headers = serde_json::to_string(&headers).unwrap();
         for (key, value) in &setters {
@@ -220,22 +230,27 @@ impl<EHF: EnvoyHttpFilter> HttpFilter<EHF> for Filter {
             headers.insert(key.to_string(), value);
         }
 
-
         let mut setters = self.response_headers_setter.clone();
         // use the sub route version if appropriate as we dont have valid perroute config today
         if self.route_specific.len() > 0 {
             // check filter state for info
-            let route_name_data = envoy_filter.get_dynamic_metadata_string("kgateway", "route").unwrap();
-            
+            let route_name_data = envoy_filter
+                .get_dynamic_metadata_string("kgateway", "route")
+                .unwrap();
+
             // let route_name_slice =  .as_slice();
             let route_name = std::str::from_utf8(route_name_data.as_slice()).unwrap();
-            setters = self.route_specific.get(route_name).unwrap().response_headers_setter.clone();
-           
+            setters = self
+                .route_specific
+                .get(route_name)
+                .unwrap()
+                .response_headers_setter
+                .clone();
 
-           // add a debug to the setters
-           setters.append(&mut vec![("x-debuggs".to_string(), route_name.to_string())]);
+            // TODO(nfuden)remove
+            // add a debug to the setters
+            setters.append(&mut vec![("x-debuggs".to_string(), route_name.to_string())]);
         }
-
 
         for (key, value) in &setters {
             let mut env = self.env.clone();
