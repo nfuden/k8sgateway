@@ -2,10 +2,16 @@ package routepolicy
 
 import (
 	"context"
+	"encoding/json"
+	"fmt"
+	"strconv"
 	"time"
 
+	exteniondynamicmodulev3 "github.com/envoyproxy/go-control-plane/envoy/extensions/dynamic_modules/v3"
+	dynamicmodulesv3 "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/http/dynamic_modules/v3"
 	envoyhttp "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/network/http_connection_manager/v3"
 	"google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/types/known/anypb"
 	"google.golang.org/protobuf/types/known/durationpb"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -20,16 +26,22 @@ import (
 	extensionsplug "github.com/kgateway-dev/kgateway/v2/internal/kgateway/extensions2/plugin"
 	"github.com/kgateway-dev/kgateway/v2/internal/kgateway/ir"
 	"github.com/kgateway-dev/kgateway/v2/internal/kgateway/plugins"
+	"github.com/kgateway-dev/kgateway/v2/internal/kgateway/utils"
 	"github.com/kgateway-dev/kgateway/v2/internal/kgateway/utils/krtutil"
 
-	exteniondynamicmodulev3 "github.com/envoyproxy/go-control-plane/envoy/extensions/dynamic_modules/v3"
-	dynamicmodulesv3 "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/http/dynamic_modules/v3"
-
 	// TODO(nfuden): remove
+
 	transformationpb "github.com/solo-io/envoy-gloo/go/config/filter/http/transformation/v2"
 )
 
 const transformationFilterNamePrefix = "transformation"
+const setFilterStateFilterName = "setfilterstate"
+const setMetadataFilterName = "setmetadata"
+const rustformationFilterNamePrefix = "composite/rustformation"
+
+const hackKey = "kgateway.route.hack"
+
+// const hackKey = "io.solo.transformation"
 
 var (
 	pluginStage = plugins.AfterStage(plugins.AuthZStage)
@@ -41,9 +53,11 @@ type routePolicy struct {
 }
 
 type routeSpecIr struct {
-	timeout   *durationpb.Duration
-	transform *anypb.Any
-	errors    []error
+	timeout            *durationpb.Duration
+	transform          *anypb.Any
+	rustformation      *anypb.Any
+	rustformationStash map[string]string
+	errors             []error
 }
 
 func (d *routePolicy) CreationTime() time.Time {
@@ -68,6 +82,8 @@ func (d *routePolicy) Equals(in any) bool {
 
 type routePolicyPluginGwPass struct {
 	setTransformationInChain bool // TODO(nfuden): mae this multi stage
+	// TODO(nfuden): dont abuse httplevel filter in favor of route level
+	rustformationStash map[string]string
 }
 
 func (p *routePolicyPluginGwPass) ApplyHCM(ctx context.Context, pCtx *ir.HcmContext, out *envoyhttp.HttpConnectionManager) error {
@@ -121,6 +137,20 @@ func toSpec(spec v1alpha1.RoutePolicySpec) routeSpecIr {
 		ret.errors = append(ret.errors, err)
 	}
 
+	rustformation, toStash, err := torustformFilterConfig(&spec.Transformation)
+	if err != nil {
+		ret.errors = append(ret.errors, err)
+	}
+	ret.rustformation = rustformation
+	if ret.rustformationStash == nil {
+		ret.rustformationStash = make(map[string]string)
+	}
+	ret.rustformationStash[toStash] = string(toStash)
+
+	if ret.errors != nil {
+		panic(fmt.Sprintf("failed to create d filter config %v", ret.errors))
+	}
+
 	return ret
 }
 
@@ -161,7 +191,96 @@ func (p *routePolicyPluginGwPass) ApplyForRoute(ctx context.Context, pCtx *ir.Ro
 		if outputRoute.GetTypedPerFilterConfig() == nil {
 			outputRoute.TypedPerFilterConfig = make(map[string]*anypb.Any)
 		}
-		outputRoute.GetTypedPerFilterConfig()[transformationFilterNamePrefix] = policy.spec.transform
+		if policy.spec.transform != nil {
+			fmt.Println("setting transformation in route")
+			outputRoute.GetTypedPerFilterConfig()[transformationFilterNamePrefix] = policy.spec.transform
+		}
+		if policy.spec.rustformation != nil {
+
+			// we cant do this in the route so have extra shared state
+			fmt.Println("rusting =")
+
+			// outputRoute.GetTypedPerFilterConfig()["composite"] = policy.spec.rustformation
+
+			// TODO(nfuden): get back to this path once we have valid perroute
+			// outputRoute.GetTypedPerFilterConfig()["dynamic_modules/simple_mutations"] = policy.spec.rustformation
+
+			// Hack around not having route level.
+			// Note this is really really bad and rather fragile
+			routeHash := strconv.Itoa(int(utils.HashProto(outputRoute)))
+			if p.rustformationStash == nil {
+				p.rustformationStash = make(map[string]string)
+			}
+
+			p.rustformationStash[routeHash] = string(policy.spec.rustformation.GetValue())
+
+			// setMetaCfgRaw := set_metadatav3.Config{
+			// 	MetadataNamespace: "kgateway",
+			// 	Metadata: []*set_metadatav3.Metadata{
+			// 		{
+			// 			MetadataNamespace: "kgateway",
+			// 			AllowOverwrite:    true,
+
+			// 			Value: &structpb.Struct{Fields: map[string]*structpb.Value{
+			// 				hackKey: structpb.NewStringValue(routeHash),
+			// 			}},
+			// 		},
+			// 	},
+			// }
+
+			// setCfgRaw := set_filter_statev3.Config{OnRequestHeaders: []*common_set_filter_statev3.FilterStateValue{
+			// 	&common_set_filter_statev3.FilterStateValue{
+			// 		Key:        &common_set_filter_statev3.FilterStateValue_ObjectKey{ObjectKey: hackKey},
+			// 		FactoryKey: "envoy.string",
+			// 		Value: &common_set_filter_statev3.FilterStateValue_FormatString{
+			// 			FormatString: &corev3.SubstitutionFormatString{
+			// 				Format: &corev3.SubstitutionFormatString_TextFormat{
+			// 					TextFormat: (routeHash),
+			// 				},
+			// 			},
+			// 		},
+			// 	},
+			// }}
+			// setCfg, _ := utils.MessageToAny(&setCfgRaw)
+
+			// outputRoute.GetTypedPerFilterConfig()[setFilterStateFilterName] = setCfg
+
+			meta := &transformationpb.Transformation{
+				TransformationType: &transformationpb.Transformation_TransformationTemplate{
+					TransformationTemplate: &transformationpb.TransformationTemplate{
+						ParseBodyBehavior: transformationpb.TransformationTemplate_DontParse, // Default is to try for JSON... Its kinda nice but failure is bad...
+						DynamicMetadataValues: []*transformationpb.TransformationTemplate_DynamicMetadataValue{
+							&transformationpb.TransformationTemplate_DynamicMetadataValue{
+								MetadataNamespace: "kgateway",
+								Key:               "route",
+								Value: &transformationpb.InjaTemplate{
+									Text: routeHash,
+								},
+							},
+						},
+					},
+				},
+			}
+
+			reqm := &transformationpb.RouteTransformations_RouteTransformation_RequestMatch{
+				RequestTransformation:  meta,
+				ResponseTransformation: meta,
+			}
+
+			setmetaTransform := &transformationpb.RouteTransformations{
+				Transformations: []*transformationpb.RouteTransformations_RouteTransformation{
+					{
+
+						Match: &transformationpb.RouteTransformations_RouteTransformation_RequestMatch_{
+							RequestMatch: reqm,
+						},
+					},
+				},
+			}
+			outputRoute.GetTypedPerFilterConfig()["helper/perroute/transform"], _ = utils.MessageToAny(setmetaTransform)
+
+		}
+		fmt.Println("setting transformation in chain")
 		p.setTransformationInChain = true
 	}
 
@@ -174,6 +293,11 @@ func (p *routePolicyPluginGwPass) ApplyForRouteBackend(
 	pCtx *ir.RouteBackendContext,
 ) error {
 	return nil
+}
+
+func mustMessageToAny(msgIn protoreflect.ProtoMessage) *anypb.Any {
+	anyOut, _ := utils.MessageToAny(msgIn)
+	return anyOut
 }
 
 // called 1 time per listener
@@ -189,20 +313,87 @@ func (p *routePolicyPluginGwPass) HttpFilters(ctx context.Context, fcc ir.Filter
 			&transformationpb.FilterTransformations{},
 			plugins.BeforeStage(plugins.AcceptedStage)))
 
-		// TODO(nfuden/yuvalk): how to do route level correctly
+		// ---------------
+		// | END CLASSIC |
+		// ---------------
+
+		// TODO(nfuden/yuvalk): how to do route level correctly probably contribute to dynamic module upstream
+		// smash together configuration
+		filterRouteHashConfig := map[string]string{}
+
+		for k, v := range p.rustformationStash {
+			fmt.Println("k", k, "v", v)
+			filterRouteHashConfig[k] = v
+		}
+
+		filterConfig, _ := json.Marshal(filterRouteHashConfig)
+
 		rustCfg := dynamicmodulesv3.DynamicModuleFilter{
 			DynamicModuleConfig: &exteniondynamicmodulev3.DynamicModuleConfig{
 				Name: "rust_module",
 			},
-			FilterName: "http_simple_mutations",
-			FilterConfig: `{ "request_headers_setter": [],
-			"response_headers_setter": [["x-conditional-donor", "x-donorcontent{{ substring( header(\"x-donor\"), 0, 7)}}"], ["X-emptyish", "ish"]]} `,
+			FilterName:   "http_simple_mutations",
+			FilterConfig: fmt.Sprintf(`{ "request_headers_setter": [],"response_headers_setter": [], "route_specific": %s}`, filterConfig),
 		}
+		// rustCfgAny := mustMessageToAny(&rustCfg)
+
+		// emptyComposite := mustMessageToAny(&compositev3.Composite{})
+
+		// actionCfg := mustMessageToAny(&compositev3.ExecuteFilterAction{
+		// 	TypedConfig: &corev3.TypedExtensionConfig{
+		// 		Name:        rustformationFilterNamePrefix,
+		// 		TypedConfig: rustCfgAny,
+		// 	}})
+
+		// matcherCfg := &cncftypev3.Matcher{
+		// 	OnNoMatch: &cncftypev3.Matcher_OnMatch{
+		// 		OnMatch: &cncftypev3.Matcher_OnMatch_Action{
+		// 			Action: &cncfcorev3.TypedExtensionConfig{
+		// 				Name:        "composite-action",
+		// 				TypedConfig: actionCfg,
+		// 			},
+		// 		},
+		// 	},
+		// }
+
+		// populate the OnMatch with a tree
+		// matcherCfg.MatcherType = &cncfmatcherv3.Matcher_MatcherTree_{
+		// 	MatcherTree: &cncfmatcherv3.Matcher_MatcherTree{
+		// 		// Input: ,
+		// 		TreeType: &cncfmatcherv3.Matcher_MatcherTree_ExactMatchMap{{}
+		// 	},
+
+		// }
+
+		// compositeCfg := extensionmatcherv3.ExtensionWithMatcher{
+		// 	ExtensionConfig: &corev3.TypedExtensionConfig{
+		// 		Name:        "composite",
+		// 		TypedConfig: emptyComposite,
+		// 	},
+		// 	XdsMatcher: matcherCfg,
+		// }
 
 		filters = append(filters, plugins.MustNewStagedFilter("dynamic_modules/simple_mutations",
 			&rustCfg,
 			plugins.BeforeStage(plugins.AcceptedStage)))
 
+		// filters = append(filters, plugins.MustNewStagedFilter(setFilterStateFilterName,
+		// 	&set_filter_statev3.Config{}, plugins.AfterStage(plugins.FaultStage)))
+		filters = append(filters, plugins.MustNewStagedFilter("helper/perroute/transform",
+			&transformationpb.FilterTransformations{},
+			plugins.AfterStage(plugins.FaultStage)))
+
+		// setMetaCfgRaw := set_metadatav3.Config{
+		// 	MetadataNamespace: "kgateway",
+		// }
+		// filters = append(filters, plugins.MustNewStagedFilter(setMetadataFilterName,
+		// 	&setMetaCfgRaw, plugins.AfterStage(plugins.FaultStage)),
+		// )
+
+		// TODO(nfuden): find a cleaner way to do route level configuration
+		// filters = append(filters, plugins.MustNewStagedFilter("composite",
+		// 	&compositeCfg,
+		// 	plugins.BeforeStage(plugins.AcceptedStage)))
 		return filters, nil
 
 	}

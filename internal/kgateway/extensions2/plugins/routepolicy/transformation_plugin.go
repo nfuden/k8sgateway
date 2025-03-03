@@ -1,13 +1,22 @@
 package routepolicy
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 
-	"github.com/kgateway-dev/kgateway/v2/api/v1alpha1"
-	"github.com/kgateway-dev/kgateway/v2/internal/kgateway/utils"
+	// cncfcorev3 "github.com/cncf/xds/go/xds/core/v3"
+	// cncftypev3 "github.com/cncf/xds/go/xds/type/matcher/v3"
+	// v31 "github.com/cncf/xds/go/xds/type/matcher/v3"
+	// corev3 "github.com/envoyproxy/go-control-plane/envoy/config/core/v3"
+	// extensionmatcherv3 "github.com/envoyproxy/go-control-plane/envoy/extensions/common/matching/v3"
+	exteniondynamicmodulev3 "github.com/envoyproxy/go-control-plane/envoy/extensions/dynamic_modules/v3"
+	dynamicmodulesv3 "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/http/dynamic_modules/v3"
 	transformationpb "github.com/solo-io/envoy-gloo/go/config/filter/http/transformation/v2"
 	"google.golang.org/protobuf/types/known/anypb"
+
+	"github.com/kgateway-dev/kgateway/v2/api/v1alpha1"
+	"github.com/kgateway-dev/kgateway/v2/internal/kgateway/utils"
 )
 
 func toTraditionalTransform(t *v1alpha1.Transform) *transformationpb.Transformation_TransformationTemplate {
@@ -77,10 +86,11 @@ func toTransformFilterConfig(t *v1alpha1.TransformationPolicy) (*anypb.Any, erro
 
 	toTransform := toTraditionalTransform
 	if os.Getenv("USE_RUSTFORMATION") == "true" {
-		fmt.Println("lets use rusformation")
+		fmt.Println("lets use rusformation this may mean less classic behavior is applied")
 	} else {
-		fmt.Println("using legacy transformation")
+		fmt.Println("using legacy transformation this may mean that some rustformation features are not available")
 	}
+
 	var reqt *transformationpb.Transformation
 	var respt *transformationpb.Transformation
 
@@ -116,17 +126,165 @@ func toTransformFilterConfig(t *v1alpha1.TransformationPolicy) (*anypb.Any, erro
 	return utils.MessageToAny(envoyT)
 }
 
-/*
-   - name: dynamic_modules/header_mutation
-     typed_config:
-       # https://www.envoyproxy.io/docs/envoy/latest/api-v3/extensions/dynamic_modules/v3/dynamic_modules.proto#envoy-v3-api-msg-extensions-dynamic-modules-v3-dynamicmoduleconfig
-       "@type": type.googleapis.com/envoy.extensions.filters.http.dynamic_modules.v3.DynamicModuleFilter
-       dynamic_module_config:
-         name: rust_module
-       filter_name: http_simple_mutations
-       filter_config: |
-         {
-           "request_headers_setter": [["X-Envoy-Header", "envoy-header{{substring("ENVOYPROXY", 2, 3)}}"], ["X-Envoy-Header2", "envoy-header2"]],
-           "response_headers_setter": [["Foo", "bar"], ["Foo2", "bar2"]]
-         }
-*/
+func toRustFormationPerRouteConfig(t *v1alpha1.Transform) (map[string]string, bool) {
+	// if there is no transformations present then return a
+	hasTransform := false
+	rustformationConfigMap := map[string]string{}
+	if t == nil {
+		return rustformationConfigMap, hasTransform
+	}
+
+	setter := map[string]string{}
+	for _, h := range t.Set {
+		setter[string(h.Name)] = "rust" + string(h.Value)
+	}
+
+	rustformationConfigMap["headers_setter"] = fmt.Sprintf("%v", setter)
+	if len(setter) > 0 {
+		hasTransform = true
+	}
+
+	// add := map[string]string{}
+	// for _, h := range t.Add {
+	// 	add[string(h.Name)] = string(h.Value)
+	// }
+
+	// rustformationConfigMap["headers_setter"] = fmt.Sprintf("%v", add)
+	// if len(add) > 0 {
+	// 	hasTransform = true
+	// }
+
+	// remove := t.Remove
+
+	// rustformationConfigMap["headers_remover"] = fmt.Sprintf("%v", remove)
+	// if len(remove) > 0 {
+	// 	hasTransform = true
+	// }
+
+	// tt.TransformationTemplate.HeadersToRemove = make([]string, 0, len(t.Remove))
+	// for _, h := range t.Remove {
+	// 	tt.TransformationTemplate.HeadersToRemove = append(tt.TransformationTemplate.HeadersToRemove, string(h))
+	// 	hasTransform = true
+	// }
+
+	//BODY
+	// if t.Body == nil {
+	// 	tt.TransformationTemplate.BodyTransformation = &transformationpb.TransformationTemplate_Passthrough{
+	// 		Passthrough: &transformationpb.Passthrough{},
+	// 	}
+	// } else {
+	// 	if t.Body.ParseAs == v1alpha1.BodyParseBehaviorAsString {
+	// 		tt.TransformationTemplate.ParseBodyBehavior = transformationpb.TransformationTemplate_DontParse
+	// 	}
+	// 	if value := t.Body.Value; value != nil {
+	// 		hasTransform = true
+	// 		tt.TransformationTemplate.BodyTransformation = &transformationpb.TransformationTemplate_Body{
+	// 			Body: &transformationpb.InjaTemplate{
+	// 				Text: string(*value),
+	// 			},
+	// 		}
+	// 	}
+	// }
+
+	// dump full state
+	// fmt.Println("rust", hasTransform, len(t.Add), len(t.Set), len(t.Remove), len(setter), len(add))
+	return rustformationConfigMap, hasTransform
+
+}
+
+// torustformFilterConfig converts a TransformationPolicy to a RustFormation filter config.
+// The sheape of this function currently resembles that of the traditional API
+// Feel free to change the shape and flow of this function as needed provided there are sufficient unit tests on the configuration output.
+// The most dangerous updates here will be any switch over env variables that we are working on.s
+func torustformFilterConfig(t *v1alpha1.TransformationPolicy) (*anypb.Any, string, error) {
+	if t == nil || *t == (v1alpha1.TransformationPolicy{}) {
+		return nil, "", nil
+	}
+	hasTransform := false
+	rustformCfgMap := map[string]string{}
+	if t.Request != nil {
+		requestMap, hasRequestTransform := toRustFormationPerRouteConfig(t.Request)
+		hasTransform = hasTransform || hasRequestTransform
+		for k, v := range requestMap {
+			rustformCfgMap["request_"+k] = v
+		}
+	}
+
+	if t.Response != nil {
+		requestMap, hasResponseTransform := toRustFormationPerRouteConfig(t.Response)
+		hasTransform = hasTransform || hasResponseTransform
+		for k, v := range requestMap {
+			rustformCfgMap["response_"+k] = v
+		}
+	}
+
+	if !hasTransform {
+		return nil, "", nil
+	}
+
+	rustyJson, err := json.Marshal(rustformCfgMap)
+	if err != nil {
+		fmt.Printf("failed to marshal rustformation config map: %v", err)
+		return nil, "", err
+	}
+
+	stringConf := string(rustyJson)
+
+	rustCfg := dynamicmodulesv3.DynamicModuleFilter{
+		DynamicModuleConfig: &exteniondynamicmodulev3.DynamicModuleConfig{
+			Name: "rust_module",
+		},
+		FilterName:   "http_simple_mutations",
+		FilterConfig: stringConf,
+	}
+	rustCfgAny, _ := utils.MessageToAny(&rustCfg)
+
+	return rustCfgAny, stringConf, nil
+
+	// actionCfg := mustMessageToAny((&compositev3.ExecuteFilterAction{
+	// 	TypedConfig: &corev3.TypedExtensionConfig{
+	// 		Name:        rustformationFilterNamePrefix,
+	// 		TypedConfig: rustCfgAny,
+	// 	}}))
+
+	// onMatch := &cncftypev3.Matcher_OnMatch_Action{
+	// 	Action: &cncfcorev3.TypedExtensionConfig{
+	// 		Name:        "composite-action",
+	// 		TypedConfig: actionCfg,
+	// 	},
+	// }
+
+	// // return onMatch, nil
+
+	// if actionCfg != nil && true == false {
+	// 	actionCfg = mustMessageToAny(&actionv3.SkipFilter{})
+	// }
+
+	// compositeCfg := extensionmatcherv3.ExtensionWithMatcherPerRoute{
+	// 	XdsMatcher: &v31.Matcher{
+	// 		OnNoMatch: &v31.Matcher_OnMatch{
+	// 			OnMatch: &cncftypev3.Matcher_OnMatch_Action{
+	// 				Action: &cncfcorev3.TypedExtensionConfig{
+	// 					Name:        "composite-action",
+	// 					TypedConfig: actionCfg,
+	// 				},
+	// 			},
+	// 		},
+	// 	},
+	// }
+	// return nil, nil
+}
+
+//    - name: dynamic_modules/header_mutation
+//      typed_config:
+//        # https://www.envoyproxy.io/docs/envoy/latest/api-v3/extensions/dynamic_modules/v3/dynamic_modules.proto#envoy-v3-api-msg-extensions-dynamic-modules-v3-dynamicmoduleconfig
+//        "@type": type.googleapis.com/envoy.extensions.filters.http.dynamic_modules.v3.DynamicModuleFilter
+//        dynamic_module_config:
+//          name: rust_module
+//        filter_name: http_simple_mutations
+//        filter_config: |
+//          {
+//            "request_headers_setter": [["X-Envoy-Header", "envoy-header{{substring("ENVOYPROXY", 2, 3)}}"], ["X-Envoy-Header2", "envoy-header2"]],
+//            "response_headers_setter": [["Foo", "bar"], ["Foo2", "bar2"]]
+//          }
+// */
