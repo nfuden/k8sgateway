@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"os"
 	"strconv"
 	"time"
 
@@ -53,11 +54,11 @@ type routePolicy struct {
 }
 
 type routeSpecIr struct {
-	timeout            *durationpb.Duration
-	transform          *anypb.Any
-	rustformation      *anypb.Any
-	rustformationStash map[string]string
-	errors             []error
+	timeout                    *durationpb.Duration
+	transform                  *anypb.Any
+	rustformation              *anypb.Any
+	rustformationStringToStash string
+	errors                     []error
 }
 
 func (d *routePolicy) CreationTime() time.Time {
@@ -132,9 +133,16 @@ func toSpec(spec v1alpha1.RoutePolicySpec) routeSpecIr {
 		ret.timeout = durationpb.New(time.Second * time.Duration(spec.Timeout))
 	}
 	var err error
-	ret.transform, err = toTransformFilterConfig(&spec.Transformation)
-	if err != nil {
-		ret.errors = append(ret.errors, err)
+
+	usingRustformation := os.Getenv("RUSTFORMATION") == "true"
+
+	if !usingRustformation {
+
+		ret.transform, err = toTransformFilterConfig(&spec.Transformation)
+		if err != nil {
+			ret.errors = append(ret.errors, err)
+		}
+		return ret
 	}
 
 	rustformation, toStash, err := torustformFilterConfig(&spec.Transformation)
@@ -142,14 +150,7 @@ func toSpec(spec v1alpha1.RoutePolicySpec) routeSpecIr {
 		ret.errors = append(ret.errors, err)
 	}
 	ret.rustformation = rustformation
-	if ret.rustformationStash == nil {
-		ret.rustformationStash = make(map[string]string)
-	}
-	ret.rustformationStash[toStash] = string(toStash)
-
-	if ret.errors != nil {
-		panic(fmt.Sprintf("failed to create d filter config %v", ret.errors))
-	}
+	ret.rustformationStringToStash = string(toStash)
 
 	return ret
 }
@@ -197,74 +198,39 @@ func (p *routePolicyPluginGwPass) ApplyForRoute(ctx context.Context, pCtx *ir.Ro
 		}
 		if policy.spec.rustformation != nil {
 
-			// we cant do this in the route so have extra shared state
-			fmt.Println("rusting =")
-
-			// outputRoute.GetTypedPerFilterConfig()["composite"] = policy.spec.rustformation
-
 			// TODO(nfuden): get back to this path once we have valid perroute
 			// outputRoute.GetTypedPerFilterConfig()["dynamic_modules/simple_mutations"] = policy.spec.rustformation
 
 			// Hack around not having route level.
-			// Note this is really really bad and rather fragile
+			// Note this is really really bad and rather fragile due to listener draining behaviors
 			routeHash := strconv.Itoa(int(utils.HashProto(outputRoute)))
 			if p.rustformationStash == nil {
 				p.rustformationStash = make(map[string]string)
 			}
+			// encode the configuration that would be route level and stash the serialized version in a map
+			p.rustformationStash[routeHash] = string(policy.spec.rustformationStringToStash)
 
-			p.rustformationStash[routeHash] = string(policy.spec.rustformation.GetValue())
-
-			// setMetaCfgRaw := set_metadatav3.Config{
-			// 	MetadataNamespace: "kgateway",
-			// 	Metadata: []*set_metadatav3.Metadata{
-			// 		{
-			// 			MetadataNamespace: "kgateway",
-			// 			AllowOverwrite:    true,
-
-			// 			Value: &structpb.Struct{Fields: map[string]*structpb.Value{
-			// 				hackKey: structpb.NewStringValue(routeHash),
-			// 			}},
-			// 		},
-			// 	},
-			// }
-
-			// setCfgRaw := set_filter_statev3.Config{OnRequestHeaders: []*common_set_filter_statev3.FilterStateValue{
-			// 	&common_set_filter_statev3.FilterStateValue{
-			// 		Key:        &common_set_filter_statev3.FilterStateValue_ObjectKey{ObjectKey: hackKey},
-			// 		FactoryKey: "envoy.string",
-			// 		Value: &common_set_filter_statev3.FilterStateValue_FormatString{
-			// 			FormatString: &corev3.SubstitutionFormatString{
-			// 				Format: &corev3.SubstitutionFormatString_TextFormat{
-			// 					TextFormat: (routeHash),
-			// 				},
-			// 			},
-			// 		},
-			// 	},
-			// }}
-			// setCfg, _ := utils.MessageToAny(&setCfgRaw)
-
-			// outputRoute.GetTypedPerFilterConfig()[setFilterStateFilterName] = setCfg
-
-			meta := &transformationpb.Transformation{
-				TransformationType: &transformationpb.Transformation_TransformationTemplate{
-					TransformationTemplate: &transformationpb.TransformationTemplate{
-						ParseBodyBehavior: transformationpb.TransformationTemplate_DontParse, // Default is to try for JSON... Its kinda nice but failure is bad...
-						DynamicMetadataValues: []*transformationpb.TransformationTemplate_DynamicMetadataValue{
-							&transformationpb.TransformationTemplate_DynamicMetadataValue{
-								MetadataNamespace: "kgateway",
-								Key:               "route",
-								Value: &transformationpb.InjaTemplate{
-									Text: routeHash,
+			// augment the dynamic metadata so that we can do our route hack
+			// set_dynamic_metadata filter DOES NOT have a route level configuration
+			// set_filter_state can be used but the dynamic modules cannot access it on the current version of envoy
+			// therefore use the old transformation just for rustformation
+			reqm := &transformationpb.RouteTransformations_RouteTransformation_RequestMatch{
+				RequestTransformation: &transformationpb.Transformation{
+					TransformationType: &transformationpb.Transformation_TransformationTemplate{
+						TransformationTemplate: &transformationpb.TransformationTemplate{
+							ParseBodyBehavior: transformationpb.TransformationTemplate_DontParse, // Default is to try for JSON... Its kinda nice but failure is bad...
+							DynamicMetadataValues: []*transformationpb.TransformationTemplate_DynamicMetadataValue{
+								&transformationpb.TransformationTemplate_DynamicMetadataValue{
+									MetadataNamespace: "kgateway",
+									Key:               "route",
+									Value: &transformationpb.InjaTemplate{
+										Text: routeHash,
+									},
 								},
 							},
 						},
 					},
 				},
-			}
-
-			reqm := &transformationpb.RouteTransformations_RouteTransformation_RequestMatch{
-				RequestTransformation:  meta,
-				ResponseTransformation: meta,
 			}
 
 			setmetaTransform := &transformationpb.RouteTransformations{
@@ -280,7 +246,7 @@ func (p *routePolicyPluginGwPass) ApplyForRoute(ctx context.Context, pCtx *ir.Ro
 			outputRoute.GetTypedPerFilterConfig()["helper/perroute/transform"], _ = utils.MessageToAny(setmetaTransform)
 
 		}
-		fmt.Println("setting transformation in chain")
+
 		p.setTransformationInChain = true
 	}
 
@@ -333,7 +299,7 @@ func (p *routePolicyPluginGwPass) HttpFilters(ctx context.Context, fcc ir.Filter
 				Name: "rust_module",
 			},
 			FilterName:   "http_simple_mutations",
-			FilterConfig: fmt.Sprintf(`{ "request_headers_setter": [],"response_headers_setter": [], "route_specific": %s}`, filterConfig),
+			FilterConfig: fmt.Sprintf(`{ "request_headers_setter": [],"response_headers_setter": [], "route_specific": %s}`, string(filterConfig)),
 		}
 		// rustCfgAny := mustMessageToAny(&rustCfg)
 

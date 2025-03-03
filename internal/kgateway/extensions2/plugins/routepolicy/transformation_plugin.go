@@ -3,7 +3,6 @@ package routepolicy
 import (
 	"encoding/json"
 	"fmt"
-	"os"
 
 	// cncfcorev3 "github.com/cncf/xds/go/xds/core/v3"
 	// cncftypev3 "github.com/cncf/xds/go/xds/type/matcher/v3"
@@ -48,30 +47,30 @@ func toTraditionalTransform(t *v1alpha1.Transform) *transformationpb.Transformat
 		hasTransform = true
 	}
 
-	// tt.TransformationTemplate.HeadersToRemove = make([]string, 0, len(t.Remove))
-	// for _, h := range t.Remove {
-	// 	tt.TransformationTemplate.HeadersToRemove = append(tt.TransformationTemplate.HeadersToRemove, string(h))
-	// 	hasTransform = true
-	// }
+	tt.TransformationTemplate.HeadersToRemove = make([]string, 0, len(t.Remove))
+	for _, h := range t.Remove {
+		tt.TransformationTemplate.HeadersToRemove = append(tt.TransformationTemplate.HeadersToRemove, string(h))
+		hasTransform = true
+	}
 
 	//BODY
-	// if t.Body == nil {
-	// 	tt.TransformationTemplate.BodyTransformation = &transformationpb.TransformationTemplate_Passthrough{
-	// 		Passthrough: &transformationpb.Passthrough{},
-	// 	}
-	// } else {
-	// 	if t.Body.ParseAs == v1alpha1.BodyParseBehaviorAsString {
-	// 		tt.TransformationTemplate.ParseBodyBehavior = transformationpb.TransformationTemplate_DontParse
-	// 	}
-	// 	if value := t.Body.Value; value != nil {
-	// 		hasTransform = true
-	// 		tt.TransformationTemplate.BodyTransformation = &transformationpb.TransformationTemplate_Body{
-	// 			Body: &transformationpb.InjaTemplate{
-	// 				Text: string(*value),
-	// 			},
-	// 		}
-	// 	}
-	// }
+	if t.Body == nil {
+		tt.TransformationTemplate.BodyTransformation = &transformationpb.TransformationTemplate_Passthrough{
+			Passthrough: &transformationpb.Passthrough{},
+		}
+	} else {
+		if t.Body.ParseAs == v1alpha1.BodyParseBehaviorAsString {
+			tt.TransformationTemplate.ParseBodyBehavior = transformationpb.TransformationTemplate_DontParse
+		}
+		if value := t.Body.Value; value != nil {
+			hasTransform = true
+			tt.TransformationTemplate.BodyTransformation = &transformationpb.TransformationTemplate_Body{
+				Body: &transformationpb.InjaTemplate{
+					Text: string(*value),
+				},
+			}
+		}
+	}
 
 	if !hasTransform {
 		return nil
@@ -84,22 +83,15 @@ func toTransformFilterConfig(t *v1alpha1.TransformationPolicy) (*anypb.Any, erro
 		return nil, nil
 	}
 
-	toTransform := toTraditionalTransform
-	if os.Getenv("USE_RUSTFORMATION") == "true" {
-		fmt.Println("lets use rusformation this may mean less classic behavior is applied")
-	} else {
-		fmt.Println("using legacy transformation this may mean that some rustformation features are not available")
-	}
-
 	var reqt *transformationpb.Transformation
 	var respt *transformationpb.Transformation
 
-	if rtt := toTransform(t.Request); rtt != nil {
+	if rtt := toTraditionalTransform(t.Request); rtt != nil {
 		reqt = &transformationpb.Transformation{
 			TransformationType: rtt,
 		}
 	}
-	if rtt := toTransform(t.Response); rtt != nil {
+	if rtt := toTraditionalTransform(t.Response); rtt != nil {
 		respt = &transformationpb.Transformation{
 			TransformationType: rtt,
 		}
@@ -126,20 +118,21 @@ func toTransformFilterConfig(t *v1alpha1.TransformationPolicy) (*anypb.Any, erro
 	return utils.MessageToAny(envoyT)
 }
 
-func toRustFormationPerRouteConfig(t *v1alpha1.Transform) (map[string]string, bool) {
+func toRustFormationPerRouteConfig(t *v1alpha1.Transform) (map[string]interface{}, bool) {
 	// if there is no transformations present then return a
 	hasTransform := false
-	rustformationConfigMap := map[string]string{}
+	rustformationConfigMap := map[string]interface{}{}
 	if t == nil {
 		return rustformationConfigMap, hasTransform
 	}
 
-	setter := map[string]string{}
+	// we dont currently have strongly typed objects in rustformation
+	setter := make([][2]string, 0, len(t.Set)/2)
 	for _, h := range t.Set {
-		setter[string(h.Name)] = "rust" + string(h.Value)
+		setter = append(setter, [2]string{string(h.Name), string(h.Value)})
 	}
 
-	rustformationConfigMap["headers_setter"] = fmt.Sprintf("%v", setter)
+	rustformationConfigMap["headers_setter"] = setter
 	if len(setter) > 0 {
 		hasTransform = true
 	}
@@ -201,34 +194,31 @@ func torustformFilterConfig(t *v1alpha1.TransformationPolicy) (*anypb.Any, strin
 		return nil, "", nil
 	}
 	hasTransform := false
-	rustformCfgMap := map[string]string{}
-	if t.Request != nil {
-		requestMap, hasRequestTransform := toRustFormationPerRouteConfig(t.Request)
-		hasTransform = hasTransform || hasRequestTransform
-		for k, v := range requestMap {
-			rustformCfgMap["request_"+k] = v
-		}
+	rustformCfgMap := map[string]interface{}{}
+
+	requestMap, hasRequestTransform := toRustFormationPerRouteConfig(t.Request)
+	hasTransform = hasTransform || hasRequestTransform
+	for k, v := range requestMap {
+		rustformCfgMap["request_"+k] = v
 	}
 
-	if t.Response != nil {
-		requestMap, hasResponseTransform := toRustFormationPerRouteConfig(t.Response)
-		hasTransform = hasTransform || hasResponseTransform
-		for k, v := range requestMap {
-			rustformCfgMap["response_"+k] = v
-		}
+	requestMap, hasResponseTransform := toRustFormationPerRouteConfig(t.Response)
+	hasTransform = hasTransform || hasResponseTransform
+	for k, v := range requestMap {
+		rustformCfgMap["response_"+k] = v
 	}
 
 	if !hasTransform {
 		return nil, "", nil
 	}
 
-	rustyJson, err := json.Marshal(rustformCfgMap)
+	rustformationJson, err := json.Marshal(rustformCfgMap)
 	if err != nil {
 		fmt.Printf("failed to marshal rustformation config map: %v", err)
 		return nil, "", err
 	}
 
-	stringConf := string(rustyJson)
+	stringConf := string(rustformationJson)
 
 	rustCfg := dynamicmodulesv3.DynamicModuleFilter{
 		DynamicModuleConfig: &exteniondynamicmodulev3.DynamicModuleConfig{
@@ -241,38 +231,6 @@ func torustformFilterConfig(t *v1alpha1.TransformationPolicy) (*anypb.Any, strin
 
 	return rustCfgAny, stringConf, nil
 
-	// actionCfg := mustMessageToAny((&compositev3.ExecuteFilterAction{
-	// 	TypedConfig: &corev3.TypedExtensionConfig{
-	// 		Name:        rustformationFilterNamePrefix,
-	// 		TypedConfig: rustCfgAny,
-	// 	}}))
-
-	// onMatch := &cncftypev3.Matcher_OnMatch_Action{
-	// 	Action: &cncfcorev3.TypedExtensionConfig{
-	// 		Name:        "composite-action",
-	// 		TypedConfig: actionCfg,
-	// 	},
-	// }
-
-	// // return onMatch, nil
-
-	// if actionCfg != nil && true == false {
-	// 	actionCfg = mustMessageToAny(&actionv3.SkipFilter{})
-	// }
-
-	// compositeCfg := extensionmatcherv3.ExtensionWithMatcherPerRoute{
-	// 	XdsMatcher: &v31.Matcher{
-	// 		OnNoMatch: &v31.Matcher_OnMatch{
-	// 			OnMatch: &cncftypev3.Matcher_OnMatch_Action{
-	// 				Action: &cncfcorev3.TypedExtensionConfig{
-	// 					Name:        "composite-action",
-	// 					TypedConfig: actionCfg,
-	// 				},
-	// 			},
-	// 		},
-	// 	},
-	// }
-	// return nil, nil
 }
 
 //    - name: dynamic_modules/header_mutation
