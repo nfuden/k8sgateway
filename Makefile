@@ -257,10 +257,16 @@ package-kgateway-chart: ## Package the new kgateway helm chart for testing
 clean:
 	rm -rf _output
 	rm -rf _test
-	rm -rf docs/site*
-	rm -rf docs/themes
-	rm -rf docs/resources
 	git clean -f -X install
+
+# Clean generated code
+# see hack/generate.sh for source of truth of dirs to clean
+.PHONY: clean-gen
+clean-gen:
+	rm -rf api/applyconfiguration
+	rm -rf pkg/generated/openapi
+	rm -rf pkg/client
+	rm -rf install/helm/kgateway/crds
 
 .PHONY: clean-tests
 clean-tests:
@@ -287,17 +293,9 @@ verify: generate-all  ## Verify that generated code is up to date
 .PHONY: generate-all
 generate-all: generated-code
 
-# Run codegen with debug logs
-# DEBUG=1 controls the debug level in the logger used by solo-kit
-# ref: https://github.com/solo-io/solo-kit/blob/main/pkg/code-generator/codegen/generator.go#L14
-# ref: https://github.com/solo-io/go-utils/blob/main/log/log.go#L14
-.PHONY: generate-all-debug
-generate-all-debug: export DEBUG = 1
-generate-all-debug: generate-all
-
 # Generates all required code, cleaning and formatting as well; this target is executed in CI
 .PHONY: generated-code
-generated-code: go-generate-all getter-check mod-tidy
+generated-code: clean-gen go-generate-all getter-check mod-tidy
 generated-code: update-licenses
 # generated-code: generate-crd-reference-docs
 generated-code: fmt
@@ -695,7 +693,7 @@ $(TEST_ASSET_DIR)/conformance/conformance_test.go:
 	cat $(shell go list -json -m sigs.k8s.io/gateway-api | jq -r '.Dir')/conformance/conformance_test.go >> $@
 	go fmt $@
 
-CONFORMANCE_SUPPORTED_FEATURES ?= -supported-features=Gateway,ReferenceGrant,HTTPRoute,HTTPRouteQueryParamMatching,HTTPRouteMethodMatching,HTTPRouteResponseHeaderModification,HTTPRoutePortRedirect,HTTPRouteHostRewrite,HTTPRouteSchemeRedirect,HTTPRoutePathRedirect,HTTPRouteHostRewrite,HTTPRoutePathRewrite,HTTPRouteRequestMirror
+CONFORMANCE_SUPPORTED_FEATURES ?= -supported-features=Gateway,ReferenceGrant,HTTPRoute,HTTPRouteQueryParamMatching,HTTPRouteMethodMatching,HTTPRouteResponseHeaderModification,HTTPRoutePortRedirect,HTTPRouteHostRewrite,HTTPRouteSchemeRedirect,HTTPRoutePathRedirect,HTTPRouteHostRewrite,HTTPRoutePathRewrite,HTTPRouteRequestMirror,TLSRoute
 CONFORMANCE_SUPPORTED_PROFILES ?= -conformance-profiles=GATEWAY-HTTP
 CONFORMANCE_GATEWAY_CLASS ?= kgateway
 CONFORMANCE_REPORT_ARGS ?= -report-output=$(TEST_ASSET_DIR)/conformance/$(VERSION)-report.yaml -organization=kgateway-dev -project=kgateway -version=$(VERSION) -url=github.com/kgateway-dev/kgateway -contact=github.com/kgateway-dev/kgateway/issues/new/choose

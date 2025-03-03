@@ -89,4 +89,6 @@ type BodyTransformation struct {
 	// +kubebuilder:default=AsString
 	ParseAs BodyParseBehavior `json:"parseAs,omitempty"`
 	Value   *InjaTemplate     `json:"value,omitempty"`
+	Timeout int               `json:"timeout,omitempty"`
+	AI      *AIRoutePolicy    `json:"ai,omitempty"`
 }

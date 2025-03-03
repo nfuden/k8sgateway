@@ -9,8 +9,10 @@ import (
 // BodyTransformationApplyConfiguration represents a declarative configuration of the BodyTransformation type for use
 // with apply.
 type BodyTransformationApplyConfiguration struct {
-	ParseAs *apiv1alpha1.BodyParseBehavior `json:"parseAs,omitempty"`
-	Value   *apiv1alpha1.InjaTemplate      `json:"value,omitempty"`
+	ParseAs *apiv1alpha1.BodyParseBehavior   `json:"parseAs,omitempty"`
+	Value   *apiv1alpha1.InjaTemplate        `json:"value,omitempty"`
+	Timeout *int                             `json:"timeout,omitempty"`
+	AI      *AIRoutePolicyApplyConfiguration `json:"ai,omitempty"`
 }
 
 // BodyTransformationApplyConfiguration constructs a declarative configuration of the BodyTransformation type for use with
@@ -32,5 +34,21 @@ func (b *BodyTransformationApplyConfiguration) WithParseAs(value apiv1alpha1.Bod
 // If called multiple times, the Value field is set to the value of the last call.
 func (b *BodyTransformationApplyConfiguration) WithValue(value apiv1alpha1.InjaTemplate) *BodyTransformationApplyConfiguration {
 	b.Value = &value
+	return b
+}
+
+// WithTimeout sets the Timeout field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the Timeout field is set to the value of the last call.
+func (b *BodyTransformationApplyConfiguration) WithTimeout(value int) *BodyTransformationApplyConfiguration {
+	b.Timeout = &value
+	return b
+}
+
+// WithAI sets the AI field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the AI field is set to the value of the last call.
+func (b *BodyTransformationApplyConfiguration) WithAI(value *AIRoutePolicyApplyConfiguration) *BodyTransformationApplyConfiguration {
+	b.AI = value
 	return b
 }
