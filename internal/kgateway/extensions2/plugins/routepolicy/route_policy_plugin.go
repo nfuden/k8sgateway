@@ -192,59 +192,60 @@ func (p *routePolicyPluginGwPass) ApplyForRoute(ctx context.Context, pCtx *ir.Ro
 			outputRoute.TypedPerFilterConfig = make(map[string]*anypb.Any)
 		}
 		if policy.spec.transform != nil {
-			fmt.Println("setting transformation in route")
 			outputRoute.GetTypedPerFilterConfig()[transformationFilterNamePrefix] = policy.spec.transform
 		}
-		if policy.spec.rustformation != nil {
+		p.setTransformationInChain = true
+	}
+	if policy.spec.rustformation != nil {
+		if outputRoute.GetTypedPerFilterConfig() == nil {
+			outputRoute.TypedPerFilterConfig = make(map[string]*anypb.Any)
+		}
+		// TODO(nfuden): get back to this path once we have valid perroute
+		// outputRoute.GetTypedPerFilterConfig()["dynamic_modules/simple_mutations"] = policy.spec.rustformation
 
-			// TODO(nfuden): get back to this path once we have valid perroute
-			// outputRoute.GetTypedPerFilterConfig()["dynamic_modules/simple_mutations"] = policy.spec.rustformation
+		// Hack around not having route level.
+		// Note this is really really bad and rather fragile due to listener draining behaviors
+		routeHash := strconv.Itoa(int(utils.HashProto(outputRoute)))
+		if p.rustformationStash == nil {
+			p.rustformationStash = make(map[string]string)
+		}
+		// encode the configuration that would be route level and stash the serialized version in a map
+		p.rustformationStash[routeHash] = string(policy.spec.rustformationStringToStash)
 
-			// Hack around not having route level.
-			// Note this is really really bad and rather fragile due to listener draining behaviors
-			routeHash := strconv.Itoa(int(utils.HashProto(outputRoute)))
-			if p.rustformationStash == nil {
-				p.rustformationStash = make(map[string]string)
-			}
-			// encode the configuration that would be route level and stash the serialized version in a map
-			p.rustformationStash[routeHash] = string(policy.spec.rustformationStringToStash)
-
-			// augment the dynamic metadata so that we can do our route hack
-			// set_dynamic_metadata filter DOES NOT have a route level configuration
-			// set_filter_state can be used but the dynamic modules cannot access it on the current version of envoy
-			// therefore use the old transformation just for rustformation
-			reqm := &transformationpb.RouteTransformations_RouteTransformation_RequestMatch{
-				RequestTransformation: &transformationpb.Transformation{
-					TransformationType: &transformationpb.Transformation_TransformationTemplate{
-						TransformationTemplate: &transformationpb.TransformationTemplate{
-							ParseBodyBehavior: transformationpb.TransformationTemplate_DontParse, // Default is to try for JSON... Its kinda nice but failure is bad...
-							DynamicMetadataValues: []*transformationpb.TransformationTemplate_DynamicMetadataValue{
-								&transformationpb.TransformationTemplate_DynamicMetadataValue{
-									MetadataNamespace: "kgateway",
-									Key:               "route",
-									Value: &transformationpb.InjaTemplate{
-										Text: routeHash,
-									},
+		// augment the dynamic metadata so that we can do our route hack
+		// set_dynamic_metadata filter DOES NOT have a route level configuration
+		// set_filter_state can be used but the dynamic modules cannot access it on the current version of envoy
+		// therefore use the old transformation just for rustformation
+		reqm := &transformationpb.RouteTransformations_RouteTransformation_RequestMatch{
+			RequestTransformation: &transformationpb.Transformation{
+				TransformationType: &transformationpb.Transformation_TransformationTemplate{
+					TransformationTemplate: &transformationpb.TransformationTemplate{
+						ParseBodyBehavior: transformationpb.TransformationTemplate_DontParse, // Default is to try for JSON... Its kinda nice but failure is bad...
+						DynamicMetadataValues: []*transformationpb.TransformationTemplate_DynamicMetadataValue{
+							&transformationpb.TransformationTemplate_DynamicMetadataValue{
+								MetadataNamespace: "kgateway",
+								Key:               "route",
+								Value: &transformationpb.InjaTemplate{
+									Text: routeHash,
 								},
 							},
 						},
 					},
 				},
-			}
+			},
+		}
 
-			setmetaTransform := &transformationpb.RouteTransformations{
-				Transformations: []*transformationpb.RouteTransformations_RouteTransformation{
-					{
+		setmetaTransform := &transformationpb.RouteTransformations{
+			Transformations: []*transformationpb.RouteTransformations_RouteTransformation{
+				{
 
-						Match: &transformationpb.RouteTransformations_RouteTransformation_RequestMatch_{
-							RequestMatch: reqm,
-						},
+					Match: &transformationpb.RouteTransformations_RouteTransformation_RequestMatch_{
+						RequestMatch: reqm,
 					},
 				},
-			}
-			outputRoute.GetTypedPerFilterConfig()["helper/perroute/transform"], _ = utils.MessageToAny(setmetaTransform)
-
+			},
 		}
+		outputRoute.GetTypedPerFilterConfig()["helper/perroute/transform"], _ = utils.MessageToAny(setmetaTransform)
 
 		p.setTransformationInChain = true
 	}
