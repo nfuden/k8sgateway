@@ -18,16 +18,24 @@ import (
 
 	envoy_config_listener_v3 "github.com/envoyproxy/go-control-plane/envoy/config/listener/v3"
 	envoy_config_route_v3 "github.com/envoyproxy/go-control-plane/envoy/config/route/v3"
+	envoy_ext_proc_v3 "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/http/ext_proc/v3"
+	envoyhttp "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/network/http_connection_manager/v3"
+	"github.com/solo-io/go-utils/contextutils"
+	"google.golang.org/protobuf/types/known/durationpb"
 	"istio.io/istio/pkg/kube/krt"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 
 	"github.com/kgateway-dev/kgateway/v2/api/v1alpha1"
 	"github.com/kgateway-dev/kgateway/v2/internal/kgateway/extensions2/common"
 	extensionplug "github.com/kgateway-dev/kgateway/v2/internal/kgateway/extensions2/plugin"
 	extensionsplug "github.com/kgateway-dev/kgateway/v2/internal/kgateway/extensions2/plugin"
+	"github.com/kgateway-dev/kgateway/v2/internal/kgateway/extensions2/pluginutils"
 	"github.com/kgateway-dev/kgateway/v2/internal/kgateway/ir"
+	"github.com/kgateway-dev/kgateway/v2/internal/kgateway/krtcollections"
 	"github.com/kgateway-dev/kgateway/v2/internal/kgateway/plugins"
 	"github.com/kgateway-dev/kgateway/v2/internal/kgateway/utils"
 	"github.com/kgateway-dev/kgateway/v2/internal/kgateway/utils/krtutil"
+	"github.com/kgateway-dev/kgateway/v2/internal/kgateway/wellknown"
 
 	// TODO(nfuden): remove once rustformations are able to be used in a production environment
 	transformationpb "github.com/solo-io/envoy-gloo/go/config/filter/http/transformation/v2"
@@ -41,8 +49,9 @@ var (
 )
 
 type routePolicy struct {
-	ct   time.Time
-	spec routeSpecIr
+	ct       time.Time
+	spec     routeSpecIr
+	AISecret *ir.Secret
 }
 
 type routeSpecIr struct {
@@ -78,6 +87,7 @@ type routePolicyPluginGwPass struct {
 	// TODO(nfuden): dont abuse httplevel filter in favor of route level
 	rustformationStash map[string]string
 	ir.UnimplementedProxyTranslationPass
+	setAIFilter bool
 }
 
 func (p *routePolicyPluginGwPass) ApplyHCM(ctx context.Context, pCtx *ir.HcmContext, out *envoyhttp.HttpConnectionManager) error {
@@ -93,6 +103,8 @@ func NewPlugin(ctx context.Context, commoncol *common.CommonCollections) extensi
 		commoncol.KrtOpts.ToOptions("RoutePolicy")...,
 	)
 	gk := v1alpha1.RoutePolicyGVK.GroupKind()
+	translate := buildTranslateFunc(ctx, commoncol.Secrets)
+	// RoutePolicy IR will have TypedConfig -> implement backendroute method to add prompt guard, etc.
 	policyCol := krt.NewCollection(col, func(krtctx krt.HandlerContext, policyCR *v1alpha1.RoutePolicy) *ir.PolicyWrapper {
 		var pol = &ir.PolicyWrapper{
 			ObjectSource: ir.ObjectSource{
@@ -102,7 +114,7 @@ func NewPlugin(ctx context.Context, commoncol *common.CommonCollections) extensi
 				Name:      policyCR.Name,
 			},
 			Policy:     policyCR,
-			PolicyIR:   &routePolicy{ct: policyCR.CreationTimestamp.Time, spec: toSpec(policyCR.Spec)},
+			PolicyIR:   translate(krtctx, policyCR),
 			TargetRefs: convert(policyCR.Spec.TargetRef),
 		}
 		return pol
@@ -117,34 +129,6 @@ func NewPlugin(ctx context.Context, commoncol *common.CommonCollections) extensi
 			},
 		},
 	}
-}
-
-func toSpec(spec v1alpha1.RoutePolicySpec) routeSpecIr {
-	var ret routeSpecIr
-
-	if spec.Timeout > 0 {
-		ret.timeout = durationpb.New(time.Second * time.Duration(spec.Timeout))
-	}
-	var err error
-
-	usingRustformation := os.Getenv("RUSTFORMATION") == "true"
-
-	if !usingRustformation {
-		ret.transform, err = toTransformFilterConfig(&spec.Transformation)
-		if err != nil {
-			ret.errors = append(ret.errors, err)
-		}
-		return ret
-	}
-
-	rustformation, toStash, err := torustformFilterConfig(&spec.Transformation)
-	if err != nil {
-		ret.errors = append(ret.errors, err)
-	}
-	ret.rustformation = rustformation
-	ret.rustformationStringToStash = string(toStash)
-
-	return ret
 }
 
 func convert(targetRef v1alpha1.LocalPolicyTargetReference) []ir.PolicyTargetRef {
@@ -243,6 +227,18 @@ func (p *routePolicyPluginGwPass) ApplyForRoute(ctx context.Context, pCtx *ir.Ro
 		p.setTransformationInChain = true
 	}
 
+	// TODO: err/warn/ignore if targetRef is set on non-AI Backend
+
+	return nil
+}
+
+// ApplyForBackend applies regardless if policy is attached
+func (p *routePolicyPluginGwPass) ApplyForBackend(
+	ctx context.Context,
+	pCtx *ir.RouteBackendContext,
+	in ir.HttpBackend,
+	out *envoy_config_route_v3.Route,
+) error {
 	return nil
 }
 
@@ -251,6 +247,27 @@ func (p *routePolicyPluginGwPass) ApplyForRouteBackend(
 	policy ir.PolicyIR,
 	pCtx *ir.RouteBackendContext,
 ) error {
+	extprocSettingsProto := pCtx.GetTypedConfig(wellknown.AIExtProcFilterName)
+	if extprocSettingsProto == nil {
+		return nil
+	}
+	extprocSettings, ok := extprocSettingsProto.(*envoy_ext_proc_v3.ExtProcPerRoute)
+	if !ok {
+		// TODO: internal error
+		return nil
+	}
+
+	rtPolicy, ok := policy.(*routePolicy)
+	if !ok {
+		return nil
+	}
+
+	err := p.processAIRoutePolicy(ctx, rtPolicy.spec.AI, pCtx, extprocSettings, rtPolicy.AISecret)
+	if err != nil {
+		// TODO: report error on status
+		return err
+	}
+
 	return nil
 }
 
@@ -313,4 +330,79 @@ func (p *routePolicyPluginGwPass) NetworkFilters(ctx context.Context) ([]plugins
 // called 1 time (per envoy proxy). replaces GeneratedResources
 func (p *routePolicyPluginGwPass) ResourcesToAdd(ctx context.Context) ir.Resources {
 	return ir.Resources{}
+}
+
+func buildTranslateFunc(ctx context.Context, secrets *krtcollections.SecretIndex) func(krtctx krt.HandlerContext, i *v1alpha1.RoutePolicy) *routePolicy {
+	return func(krtctx krt.HandlerContext, policyCR *v1alpha1.RoutePolicy) *routePolicy {
+		policyIr := routePolicy{ct: policyCR.CreationTimestamp.Time}
+
+		outSpec := routeSpecIr{}
+
+		if policyCR.Spec.Timeout > 0 {
+			outSpec.timeout = durationpb.New(time.Second * time.Duration(policyCR.Spec.Timeout))
+		}
+
+		// Augment with AI secrets as needed
+		policyIr.AISecret = aiSecretForSpec(ctx, secrets, krtctx, policyCR)
+
+		// Apply transformation specific translation
+		transformationForSpec(policyCR.Spec, outSpec)
+
+		for _, err := range outSpec.errors {
+			contextutils.LoggerFrom(ctx).Error(policyCR.GetNamespace(), policyCR.GetName(), err)
+		}
+		policyIr.spec = outSpec
+
+		return &policyIr
+	}
+}
+
+// aiSecret checks for the presence of the OpenAI Moderation which may require a secret reference
+// will log an error if the secret is needed but not found
+func aiSecretForSpec(
+	ctx context.Context, secrets *krtcollections.SecretIndex,
+	krtctx krt.HandlerContext, policyCR *v1alpha1.RoutePolicy) *ir.Secret {
+
+	if policyCR.Spec.AI == nil ||
+		policyCR.Spec.AI.PromptGuard == nil ||
+		policyCR.Spec.AI.PromptGuard.Request == nil ||
+		policyCR.Spec.AI.PromptGuard.Request.Moderation == nil {
+		return nil
+	}
+
+	secretRef := policyCR.Spec.AI.PromptGuard.Request.Moderation.OpenAIModeration.AuthToken.SecretRef
+	if secretRef == nil {
+		// no secret ref is set
+		return nil
+	}
+
+	// Retrieve and assign the secret
+	secret, err := pluginutils.GetSecretIr(secrets, krtctx, secretRef.Name, policyCR.GetNamespace())
+	if err != nil {
+		contextutils.LoggerFrom(ctx).Error(err)
+		return nil
+	}
+	return secret
+}
+
+// transformationForSpec translates the transformation spec into and onto the IR policy
+func transformationForSpec(spec v1alpha1.RoutePolicySpec, out routeSpecIr) {
+	usingRustformation := os.Getenv("RUSTFORMATION") == "true"
+	var err error
+	if !usingRustformation {
+		out.transform, err = toTransformFilterConfig(&spec.Transformation)
+		if err != nil {
+			out.errors = append(out.errors, err)
+		}
+		return
+	}
+
+	rustformation, toStash, err := torustformFilterConfig(&spec.Transformation)
+	if err != nil {
+		out.errors = append(out.errors, err)
+	}
+	out.rustformation = rustformation
+	out.rustformationStringToStash = string(toStash)
+
+	return out
 }
