@@ -53,6 +53,7 @@ type routePolicy struct {
 
 type routeSpecIr struct {
 	timeout                    *durationpb.Duration
+	AI                         *v1alpha1.AI
 	transform                  *anypb.Any
 	rustformation              *anypb.Any
 	rustformationStringToStash string
@@ -339,6 +340,8 @@ func buildTranslateFunc(ctx context.Context, secrets *krtcollections.SecretIndex
 			outSpec.timeout = durationpb.New(time.Second * time.Duration(policyCR.Spec.Timeout))
 		}
 
+		// Pass along the AI spec as is
+		outSpec.AI = policyCR.Spec.AI
 		// Augment with AI secrets as needed
 		policyIr.AISecret = aiSecretForSpec(ctx, secrets, krtctx, policyCR)
 
@@ -391,7 +394,6 @@ func transformationForSpec(spec v1alpha1.RoutePolicySpec, out routeSpecIr) {
 		if err != nil {
 			out.errors = append(out.errors, err)
 		}
-		return
 	}
 
 	rustformation, toStash, err := torustformFilterConfig(&spec.Transformation)
@@ -400,6 +402,4 @@ func transformationForSpec(spec v1alpha1.RoutePolicySpec, out routeSpecIr) {
 	}
 	out.rustformation = rustformation
 	out.rustformationStringToStash = string(toStash)
-
-	return out
 }
