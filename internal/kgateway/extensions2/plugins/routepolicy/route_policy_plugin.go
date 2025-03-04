@@ -53,7 +53,7 @@ type routePolicy struct {
 
 type routeSpecIr struct {
 	timeout                    *durationpb.Duration
-	AI                         *v1alpha1.AI
+	AI                         *v1alpha1.AIRoutePolicy
 	transform                  *anypb.Any
 	rustformation              *anypb.Any
 	rustformationStringToStash string
