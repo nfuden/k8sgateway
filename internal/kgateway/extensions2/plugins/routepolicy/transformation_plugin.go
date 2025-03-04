@@ -48,7 +48,7 @@ func toTraditionalTransform(t *v1alpha1.Transform) *transformationpb.Transformat
 
 	tt.TransformationTemplate.HeadersToRemove = make([]string, 0, len(t.Remove))
 	for _, h := range t.Remove {
-		tt.TransformationTemplate.HeadersToRemove = append(tt.TransformationTemplate.HeadersToRemove, string(h))
+		tt.TransformationTemplate.HeadersToRemove = append(tt.TransformationTemplate.GetHeadersToRemove(), string(h))
 		hasTransform = true
 	}
 

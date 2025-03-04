@@ -10,9 +10,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-//  GENERATED FILE -- DO NOT EDIT
-
-//  generated from filter_types.go and go-control-plane imports
+// GENERATED FILE -- DO NOT EDIT
 
 package filter_types
 
