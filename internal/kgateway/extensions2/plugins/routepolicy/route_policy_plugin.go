@@ -14,16 +14,12 @@ import (
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
 	"google.golang.org/protobuf/types/known/durationpb"
+	"istio.io/istio/pkg/kube/krt"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 
 	envoy_config_listener_v3 "github.com/envoyproxy/go-control-plane/envoy/config/listener/v3"
 	envoy_config_route_v3 "github.com/envoyproxy/go-control-plane/envoy/config/route/v3"
 	envoy_ext_proc_v3 "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/http/ext_proc/v3"
-	envoyhttp "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/network/http_connection_manager/v3"
-	"github.com/solo-io/go-utils/contextutils"
-	"google.golang.org/protobuf/types/known/durationpb"
-	"istio.io/istio/pkg/kube/krt"
-	"k8s.io/apimachinery/pkg/runtime/schema"
 
 	"github.com/kgateway-dev/kgateway/v2/api/v1alpha1"
 	"github.com/kgateway-dev/kgateway/v2/internal/kgateway/extensions2/common"
@@ -39,6 +35,7 @@ import (
 
 	// TODO(nfuden): remove once rustformations are able to be used in a production environment
 	transformationpb "github.com/solo-io/envoy-gloo/go/config/filter/http/transformation/v2"
+	"github.com/solo-io/go-utils/contextutils"
 )
 
 const transformationFilterNamePrefix = "transformation"
