@@ -84,6 +84,7 @@ type routePolicyPluginGwPass struct {
 	setTransformationInChain bool // TODO(nfuden): mae this multi stage
 	// TODO(nfuden): dont abuse httplevel filter in favor of route level
 	rustformationStash map[string]string
+	ir.UnimplementedProxyTranslationPass
 }
 
 func (p *routePolicyPluginGwPass) ApplyHCM(ctx context.Context, pCtx *ir.HcmContext, out *envoyhttp.HttpConnectionManager) error {
@@ -318,10 +319,6 @@ func (p *routePolicyPluginGwPass) HttpFilters(ctx context.Context, fcc ir.Filter
 		return nil, nil
 	}
 	return filters, nil
-}
-
-func (p *routePolicyPluginGwPass) UpstreamHttpFilters(ctx context.Context) ([]plugins.StagedUpstreamHttpFilter, error) {
-	return nil, nil
 }
 
 func (p *routePolicyPluginGwPass) NetworkFilters(ctx context.Context) ([]plugins.StagedNetworkFilter, error) {
