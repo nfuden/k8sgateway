@@ -81,7 +81,6 @@ func processStatic(ctx context.Context, in *v1alpha1.StaticBackend, out *envoy_c
 		//		// fix issue where ipv6 addr cannot bind
 		//		out.DnsLookupFamily = envoy_config_cluster_v3.Cluster_V4_ONLY
 	}
-
 }
 
 func processEndpointsStatic(in *v1alpha1.StaticBackend) *ir.EndpointsForBackend {

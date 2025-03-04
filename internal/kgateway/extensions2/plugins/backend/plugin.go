@@ -102,7 +102,6 @@ func registerTypes(ourCli versioned.Interface) {
 }
 
 func NewPlugin(ctx context.Context, commoncol *common.CommonCollections) extensionsplug.Plugin {
-
 	registerTypes(commoncol.OurClient)
 
 	col := krt.WrapClient(kclient.New[*v1alpha1.Backend](commoncol.Client), commoncol.KrtOpts.ToOptions("Backends")...)
@@ -211,7 +210,6 @@ func hostname(in *v1alpha1.Backend) string {
 
 func processEndpoints(up *v1alpha1.Backend) *ir.EndpointsForBackend {
 	spec := up.Spec
-
 	switch {
 	case spec.Type == v1alpha1.BackendTypeStatic:
 		return processEndpointsStatic(spec.Static)
