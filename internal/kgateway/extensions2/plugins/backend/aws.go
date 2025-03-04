@@ -107,7 +107,6 @@ func (p *backendPlugin) processBackendAws(
 	pCtx *ir.RouteBackendContext,
 	dest *backendDestination,
 ) error {
-
 	functionName := dest.FunctionName
 	if p.needFilter == nil {
 		p.needFilter = make(map[string]bool)

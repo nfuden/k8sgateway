@@ -82,7 +82,7 @@ func TestIntegration(t *testing.T) {
 
 	t.Run("http_header_mutations", func(t *testing.T) {
 		require.Eventually(t, func() bool {
-			req, err := http.NewRequest("GET", "http://localhost:1062/headers", nil)
+			req, err := http.NewRequest(http.MethodGet, "http://localhost:1062/headers", nil)
 			require.NoError(t, err)
 
 			resp, err := http.DefaultClient.Do(req)

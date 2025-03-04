@@ -116,5 +116,4 @@ func (s *testingSuite) TestGatewayWithTransformedRoute() {
 			),
 			tc.resp)
 	}
-
 }

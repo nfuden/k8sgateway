@@ -81,7 +81,6 @@ func (d *destrulePlugin) processUpstream(kctx krt.HandlerContext, ctx context.Co
 	if destrule != nil {
 		trafficPolicy := getTrafficPolicy(destrule, uint32(in.Port))
 		if outlier := trafficPolicy.GetOutlierDetection(); outlier != nil {
-
 			if getLocalityLbSetting(trafficPolicy) != nil {
 				if outCluster.GetCommonLbConfig() == nil {
 					outCluster.CommonLbConfig = &envoy_config_cluster_v3.Cluster_CommonLbConfig{}
