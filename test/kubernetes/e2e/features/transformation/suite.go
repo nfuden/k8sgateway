@@ -6,6 +6,7 @@ import (
 
 	"github.com/stretchr/testify/suite"
 	appsv1 "k8s.io/api/apps/v1"
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
@@ -137,7 +138,7 @@ func (s *testingSuite) TestGatewayRustformationsWithTransformedRoute() {
 
 	controllerDeploy := controllerDeploymentOriginal.DeepCopy()
 	// add the environment variable RUSTFORMATIONS to the controller deployment
-	controllerDeploy.Spec.Template.Spec.Containers[0].Env = append(controllerDeploy.Spec.Template.Spec.Containers[0].Env, appsv1.EnvVar{
+	controllerDeploy.Spec.Template.Spec.Containers[0].Env = append(controllerDeploy.Spec.Template.Spec.Containers[0].Env, corev1.EnvVar{
 		Name:  "RUSTFORMATIONS",
 		Value: "true",
 	})
