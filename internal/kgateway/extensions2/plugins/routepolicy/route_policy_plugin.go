@@ -12,7 +12,6 @@ import (
 	dynamicmodulesv3 "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/http/dynamic_modules/v3"
 	envoyhttp "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/network/http_connection_manager/v3"
 	"google.golang.org/protobuf/proto"
-	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/types/known/anypb"
 	"google.golang.org/protobuf/types/known/durationpb"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -35,13 +34,7 @@ import (
 )
 
 const transformationFilterNamePrefix = "transformation"
-const setFilterStateFilterName = "setfilterstate"
-const setMetadataFilterName = "setmetadata"
-const rustformationFilterNamePrefix = "composite/rustformation"
-
-const hackKey = "kgateway.route.hack"
-
-// const hackKey = "io.solo.transformation"
+const rustformationFilterNamePrefix = "dynamic_modules/simple_mutations"
 
 var (
 	pluginStage = plugins.AfterStage(plugins.AuthZStage)
@@ -137,7 +130,6 @@ func toSpec(spec v1alpha1.RoutePolicySpec) routeSpecIr {
 	usingRustformation := os.Getenv("RUSTFORMATION") == "true"
 
 	if !usingRustformation {
-
 		ret.transform, err = toTransformFilterConfig(&spec.Transformation)
 		if err != nil {
 			ret.errors = append(ret.errors, err)
@@ -202,7 +194,7 @@ func (p *routePolicyPluginGwPass) ApplyForRoute(ctx context.Context, pCtx *ir.Ro
 			outputRoute.TypedPerFilterConfig = make(map[string]*anypb.Any)
 		}
 		// TODO(nfuden): get back to this path once we have valid perroute
-		// outputRoute.GetTypedPerFilterConfig()["dynamic_modules/simple_mutations"] = policy.spec.rustformation
+		// outputRoute.GetTypedPerFilterConfig()[rustformationFilterNamePrefix] = policy.spec.rustformation
 
 		// Hack around not having route level.
 		// Note this is really really bad and rather fragile due to listener draining behaviors
@@ -262,18 +254,12 @@ func (p *routePolicyPluginGwPass) ApplyForRouteBackend(
 	return nil
 }
 
-func mustMessageToAny(msgIn protoreflect.ProtoMessage) *anypb.Any {
-	anyOut, _ := utils.MessageToAny(msgIn)
-	return anyOut
-}
-
 // called 1 time per listener
 // if a plugin emits new filters, they must be with a plugin unique name.
 // any filter returned from route config must be disabled, so it doesnt impact other routes.
 func (p *routePolicyPluginGwPass) HttpFilters(ctx context.Context, fcc ir.FilterChainCommon) ([]plugins.StagedHttpFilter, error) {
 	filters := []plugins.StagedHttpFilter{}
 	if p.setTransformationInChain {
-
 		// TODO(nfuden): support stages such as early
 		// first register classic
 		filters = append(filters, plugins.MustNewStagedFilter(transformationFilterNamePrefix,
@@ -303,7 +289,7 @@ func (p *routePolicyPluginGwPass) HttpFilters(ctx context.Context, fcc ir.Filter
 			FilterConfig: fmt.Sprintf(`{"route_specific": %s}`, string(filterConfig)),
 		}
 
-		filters = append(filters, plugins.MustNewStagedFilter("dynamic_modules/simple_mutations",
+		filters = append(filters, plugins.MustNewStagedFilter(rustformationFilterNamePrefix,
 			&rustCfg,
 			plugins.BeforeStage(plugins.AcceptedStage)))
 
@@ -314,7 +300,6 @@ func (p *routePolicyPluginGwPass) HttpFilters(ctx context.Context, fcc ir.Filter
 			plugins.AfterStage(plugins.FaultStage)))
 
 	}
-
 	if len(filters) == 0 {
 		return nil, nil
 	}

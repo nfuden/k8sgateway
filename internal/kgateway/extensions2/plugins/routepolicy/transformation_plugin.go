@@ -155,7 +155,6 @@ func toRustFormationPerRouteConfig(t *v1alpha1.Transform) (map[string]interface{
 	// 	}
 	// }
 	return rustformationConfigMap, hasTransform
-
 }
 
 // torustformFilterConfig converts a TransformationPolicy to a RustFormation filter config.
@@ -191,7 +190,6 @@ func torustformFilterConfig(t *v1alpha1.TransformationPolicy) (*anypb.Any, strin
 	}
 
 	stringConf := string(rustformationJson)
-
 	rustCfg := dynamicmodulesv3.DynamicModuleFilter{
 		DynamicModuleConfig: &exteniondynamicmodulev3.DynamicModuleConfig{
 			Name: "rust_module",
@@ -202,5 +200,4 @@ func torustformFilterConfig(t *v1alpha1.TransformationPolicy) (*anypb.Any, strin
 	rustCfgAny, _ := utils.MessageToAny(&rustCfg)
 
 	return rustCfgAny, stringConf, nil
-
 }

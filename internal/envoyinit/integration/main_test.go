@@ -25,7 +25,7 @@ func requireEnvoyYaml(t *testing.T, tmpdir string) (yamlPath string) {
 	replacedYaml := strings.ReplaceAll(originalEnvoyYaml, "/tmp/", tmpdir)
 	require.NoError(t, os.WriteFile(yamlPath, []byte(replacedYaml), 0644))
 	fmt.Println("Envoy config:", replacedYaml)
-	return
+	return replacedYaml
 }
 
 func TestIntegration(t *testing.T) {
