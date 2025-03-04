@@ -33,6 +33,7 @@ type RoutePolicySpec struct {
 	TargetRef LocalPolicyTargetReference `json:"targetRef,omitempty"`
 	// +kubebuilder:validation:Minimum=1
 	Timeout        int                  `json:"timeout,omitempty"`
+	AI             *AIRoutePolicy       `json:"ai,omitempty"`
 	Transformation TransformationPolicy `json:"transformation,omitempty"`
 }
 
@@ -71,7 +72,6 @@ type Transform struct {
 type InjaTemplate string
 
 type HeaderTransformation struct {
-
 	// +required
 	Name  gwv1.HeaderName `json:"name,omitempty"`
 	Value InjaTemplate    `json:"value,omitempty"`
@@ -89,6 +89,4 @@ type BodyTransformation struct {
 	// +kubebuilder:default=AsString
 	ParseAs BodyParseBehavior `json:"parseAs,omitempty"`
 	Value   *InjaTemplate     `json:"value,omitempty"`
-	Timeout int               `json:"timeout,omitempty"`
-	AI      *AIRoutePolicy    `json:"ai,omitempty"`
 }

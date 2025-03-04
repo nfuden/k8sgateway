@@ -1135,22 +1135,9 @@ func schema_kgateway_v2_api_v1alpha1_BodyTransformation(ref common.ReferenceCall
 							Format: "",
 						},
 					},
-					"timeout": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"integer"},
-							Format: "int32",
-						},
-					},
-					"ai": {
-						SchemaProps: spec.SchemaProps{
-							Ref: ref("github.com/kgateway-dev/kgateway/v2/api/v1alpha1.AIRoutePolicy"),
-						},
-					},
 				},
 			},
 		},
-		Dependencies: []string{
-			"github.com/kgateway-dev/kgateway/v2/api/v1alpha1.AIRoutePolicy"},
 	}
 }
 
@@ -3237,6 +3224,11 @@ func schema_kgateway_v2_api_v1alpha1_RoutePolicySpec(ref common.ReferenceCallbac
 							Format: "int32",
 						},
 					},
+					"ai": {
+						SchemaProps: spec.SchemaProps{
+							Ref: ref("github.com/kgateway-dev/kgateway/v2/api/v1alpha1.AIRoutePolicy"),
+						},
+					},
 					"transformation": {
 						SchemaProps: spec.SchemaProps{
 							Default: map[string]interface{}{},
@@ -3247,7 +3239,7 @@ func schema_kgateway_v2_api_v1alpha1_RoutePolicySpec(ref common.ReferenceCallbac
 			},
 		},
 		Dependencies: []string{
-			"github.com/kgateway-dev/kgateway/v2/api/v1alpha1.LocalPolicyTargetReference", "github.com/kgateway-dev/kgateway/v2/api/v1alpha1.TransformationPolicy"},
+			"github.com/kgateway-dev/kgateway/v2/api/v1alpha1.AIRoutePolicy", "github.com/kgateway-dev/kgateway/v2/api/v1alpha1.LocalPolicyTargetReference", "github.com/kgateway-dev/kgateway/v2/api/v1alpha1.TransformationPolicy"},
 	}
 }
 

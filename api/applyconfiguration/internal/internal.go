@@ -266,15 +266,9 @@ var schemaYAML = typed.YAMLObject(`types:
 - name: com.github.kgateway-dev.kgateway.v2.api.v1alpha1.BodyTransformation
   map:
     fields:
-    - name: ai
-      type:
-        namedType: com.github.kgateway-dev.kgateway.v2.api.v1alpha1.AIRoutePolicy
     - name: parseAs
       type:
         scalar: string
-    - name: timeout
-      type:
-        scalar: numeric
     - name: value
       type:
         scalar: string
@@ -975,6 +969,9 @@ var schemaYAML = typed.YAMLObject(`types:
 - name: com.github.kgateway-dev.kgateway.v2.api.v1alpha1.RoutePolicySpec
   map:
     fields:
+    - name: ai
+      type:
+        namedType: com.github.kgateway-dev.kgateway.v2.api.v1alpha1.AIRoutePolicy
     - name: targetRef
       type:
         namedType: com.github.kgateway-dev.kgateway.v2.api.v1alpha1.LocalPolicyTargetReference
