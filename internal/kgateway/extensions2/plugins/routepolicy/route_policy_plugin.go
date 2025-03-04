@@ -41,10 +41,6 @@ import (
 const transformationFilterNamePrefix = "transformation"
 const rustformationFilterNamePrefix = "dynamic_modules/simple_mutations"
 
-var (
-	pluginStage = plugins.AfterStage(plugins.AuthZStage)
-)
-
 type routePolicy struct {
 	ct       time.Time
 	spec     routeSpecIr
@@ -313,7 +309,6 @@ func (p *routePolicyPluginGwPass) HttpFilters(ctx context.Context, fcc ir.Filter
 		filters = append(filters, plugins.MustNewStagedFilter("helper/perroute/transform",
 			&transformationpb.FilterTransformations{},
 			plugins.AfterStage(plugins.FaultStage)))
-
 	}
 	if len(filters) == 0 {
 		return nil, nil
@@ -362,7 +357,6 @@ func buildTranslateFunc(ctx context.Context, secrets *krtcollections.SecretIndex
 func aiSecretForSpec(
 	ctx context.Context, secrets *krtcollections.SecretIndex,
 	krtctx krt.HandlerContext, policyCR *v1alpha1.RoutePolicy) *ir.Secret {
-
 	if policyCR.Spec.AI == nil ||
 		policyCR.Spec.AI.PromptGuard == nil ||
 		policyCR.Spec.AI.PromptGuard.Request == nil ||

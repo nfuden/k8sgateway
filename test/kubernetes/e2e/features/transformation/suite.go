@@ -117,7 +117,6 @@ func (s *testingSuite) TestGatewayWithTransformedRoute() {
 }
 
 func (s *testingSuite) TestGatewayRustformationsWithTransformedRoute() {
-
 	manifests := []string{
 		testdefaults.CurlPodManifest,
 		simpleServiceManifest,
