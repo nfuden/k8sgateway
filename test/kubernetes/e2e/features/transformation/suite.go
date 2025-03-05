@@ -180,7 +180,7 @@ func (s *testingSuite) TestGatewayRustformationsWithTransformedRoute() {
 		LabelSelector: "app.kubernetes.io/name=kgateway",
 	})
 
-	adminClient, close, err := envoyadmincli.NewPortForwardedClient(s.ctx, proxyObjectMeta.Name, proxyObjectMeta.Namespace)
+	adminClient, close, err := envoyadmincli.NewPortForwardedClient(s.ctx, "deploy/"+proxyObjectMeta.Name, proxyObjectMeta.Namespace)
 	s.Assert().NoError(err, "get admin cli for envoy")
 
 	s.testInstallation.Assertions.Gomega.Eventually(func(g gomega.Gomega) {
