@@ -1,3 +1,6 @@
+// based on https://github.com/envoyproxy/dynamic-modules-examples/blob/main/integration/main_test.go
+// by https://github.com/mathetake
+
 package main
 
 import (
