@@ -2,6 +2,7 @@ package transformation
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"time"
 
@@ -143,12 +144,17 @@ func (s *testingSuite) TestGatewayRustformationsWithTransformedRoute() {
 
 	controllerDeploy := controllerDeploymentOriginal.DeepCopy()
 	// add the environment variable RUSTFORMATIONS to the controller deployment
-	controllerDeploy.Spec.Template.Spec.Containers[0].Env = append(controllerDeploy.Spec.Template.Spec.Containers[0].Env, corev1.EnvVar{
+
+	env := append(controllerDeploy.Spec.Template.Spec.Containers[0].Env, corev1.EnvVar{
 		Name:  "RUSTFORMATIONS",
 		Value: "true",
 	})
+	containers := controllerDeploy.Spec.Template.Spec.Containers
+	containers[0].Env = env
+	controllerDeploy.Spec.Template.Spec.Containers = containers
+
 	// patch the actual deployment with the new environment variable
-	err = s.testInstallation.ClusterContext.Client.Patch(s.ctx, controllerDeploy, client.MergeFrom(controllerDeploy))
+	err = s.testInstallation.ClusterContext.Client.Patch(s.ctx, controllerDeploy, client.MergeFrom(controllerDeploymentOriginal))
 	s.Assert().NoError(err, "patching controller deployment")
 
 	s.T().Cleanup(func() {
@@ -180,28 +186,22 @@ func (s *testingSuite) TestGatewayRustformationsWithTransformedRoute() {
 		LabelSelector: "app.kubernetes.io/name=kgateway",
 	})
 
-	adminClient, close, err := envoyadmincli.NewPortForwardedClient(s.ctx, "deploy/"+proxyObjectMeta.Name, proxyObjectMeta.Namespace)
+	adminClient, closeFwd, err := envoyadmincli.NewPortForwardedClient(s.ctx, "deploy/"+proxyObjectMeta.Name, proxyObjectMeta.Namespace)
 	s.Assert().NoError(err, "get admin cli for envoy")
 
 	s.testInstallation.Assertions.Gomega.Eventually(func(g gomega.Gomega) {
 		listener, err := adminClient.GetSingleListenerFromDynamicListeners(context.Background(), "http")
-		s.Assert().NoError(err, "get listener")
+		g.Expect(err).ToNot(gomega.HaveOccurred(), "failed to get listener")
 
-		dynamicModuleLoaded := false
-		for _, filter := range listener.FilterChains[0].Filters {
-			// use a weak filter name check for cyclic imports
-			// also we dont intend for this to be long term so dont worry about pulling it out to wellknown or something like that for now
-			if strings.Contains(filter.Name, "dynamic_modules") {
-				dynamicModuleLoaded = true
-				break
-			}
-		}
-		g.Expect(dynamicModuleLoaded).To(gomega.BeTrue(), "dynamic module not loaded")
+		// use a weak filter name check for cyclic imports
+		// also we dont intend for this to be long term so dont worry about pulling it out to wellknown or something like that for now
+		dynamicModuleLoaded := strings.Contains(listener.String(), "dynamic_modules/")
+		g.Expect(dynamicModuleLoaded).To(gomega.BeTrue(), fmt.Sprintf("dynamic module not loaded: %v", listener.String()))
 	}).
 		WithTimeout(time.Second*20).
 		WithPolling(time.Second).Should(gomega.Succeed(), "failed to load in dynamic modules")
 
-	close()
+	closeFwd()
 
 	testCasess := []struct {
 		name string
