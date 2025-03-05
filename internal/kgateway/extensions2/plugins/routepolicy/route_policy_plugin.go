@@ -71,6 +71,7 @@ func (d *routePolicy) Equals(in any) bool {
 	if !proto.Equal(d.spec.transform, d2.spec.transform) {
 		return false
 	}
+	if !proto.Equal(d.spec.AI, d2.spec.AI) {
 
 	return true
 }
