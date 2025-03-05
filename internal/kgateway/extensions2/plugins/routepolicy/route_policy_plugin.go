@@ -388,6 +388,7 @@ func transformationForSpec(spec v1alpha1.RoutePolicySpec, out routeSpecIr) {
 		if err != nil {
 			out.errors = append(out.errors, err)
 		}
+		return
 	}
 
 	rustformation, toStash, err := torustformFilterConfig(&spec.Transformation)
