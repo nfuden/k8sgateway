@@ -109,6 +109,7 @@ dockers:
       - "--build-arg=ENVOY_IMAGE={{ .Env.ENVOY_IMAGE }}"
     extra_files:
       - internal/envoyinit/cmd/docker-entrypoint.sh
+      - internal/envoyinit/rustformations
   - image_templates:
       - &envoyinit_amd_image "{{ .Env.IMAGE_REGISTRY }}/{{ .Env.ENVOYINIT_IMAGE_REPO }}:{{ .Env.VERSION }}-amd64"
     use: buildx
@@ -123,6 +124,7 @@ dockers:
       - "--build-arg=ENVOY_IMAGE={{ .Env.ENVOY_IMAGE }}"
     extra_files:
       - internal/envoyinit/cmd/docker-entrypoint.sh
+      - internal/envoyinit/rustformations
 docker_manifests:
   - name_template: "{{ .Env.IMAGE_REGISTRY }}/{{ .Env.CONTROLLER_IMAGE_REPO }}:{{ .Env.VERSION }}"
     image_templates:
