@@ -65,7 +65,6 @@ impl<EC: EnvoyHttpFilterConfig, EHF: EnvoyHttpFilter> HttpFilterConfig<EC, EHF> 
         // env.add_function("base64url_decode", base64url_decode);
         // env.add_function("replace_with_random", replace_with_random);
         // env.add_function("raw_string", raw_string);
-
         //        env.add_function("word_count", word_count);
 
         // !! Envoy context accessors
@@ -106,7 +105,6 @@ impl<EC: EnvoyHttpFilterConfig, EHF: EnvoyHttpFilter> HttpFilterConfig<EC, EHF> 
             request_headers_setter: self.request_headers_setter.clone(),
             // request_headers_extractions: self.request_headers_extractions.clone(),
             response_headers_setter: self.response_headers_setter.clone(),
-
             // clone the hashmap
             route_specific: specific,
             env: env,

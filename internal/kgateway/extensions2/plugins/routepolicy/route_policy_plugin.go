@@ -71,7 +71,9 @@ func (d *routePolicy) Equals(in any) bool {
 	if !proto.Equal(d.spec.transform, d2.spec.transform) {
 		return false
 	}
-	if !proto.Equal(d.spec.AI, d2.spec.AI) {
+	if !proto.Equal(d.spec.rustformation, d2.spec.rustformation) {
+		return false
+	}
 
 	return true
 }
@@ -80,7 +82,6 @@ type routePolicyPluginGwPass struct {
 	setTransformationInChain bool // TODO(nfuden): mae this multi stage
 	// TODO(nfuden): dont abuse httplevel filter in favor of route level
 	rustformationStash map[string]string
-
 	ir.UnimplementedProxyTranslationPass
 	setAIFilter bool
 }
