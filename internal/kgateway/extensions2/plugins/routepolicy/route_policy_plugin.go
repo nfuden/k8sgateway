@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"os"
 	"strconv"
 	"time"
 
@@ -80,6 +79,7 @@ type routePolicyPluginGwPass struct {
 	setTransformationInChain bool // TODO(nfuden): mae this multi stage
 	// TODO(nfuden): dont abuse httplevel filter in favor of route level
 	rustformationStash map[string]string
+
 	ir.UnimplementedProxyTranslationPass
 	setAIFilter bool
 }
@@ -89,7 +89,11 @@ func (p *routePolicyPluginGwPass) ApplyHCM(ctx context.Context, pCtx *ir.HcmCont
 	return nil
 }
 
+var useRustformations bool
+
 func NewPlugin(ctx context.Context, commoncol *common.CommonCollections) extensionplug.Plugin {
+	useRustformations = commoncol.Settings.UseRustFormations // stash the state of the env setup for rustformation usage
+
 	col := krtutil.SetupCollectionDynamic[v1alpha1.RoutePolicy](
 		ctx,
 		commoncol.Client,
@@ -381,9 +385,8 @@ func aiSecretForSpec(
 
 // transformationForSpec translates the transformation spec into and onto the IR policy
 func transformationForSpec(spec v1alpha1.RoutePolicySpec, out routeSpecIr) {
-	usingRustformation := os.Getenv("RUSTFORMATION") == "true"
 	var err error
-	if !usingRustformation {
+	if !useRustformations {
 		out.transform, err = toTransformFilterConfig(&spec.Transformation)
 		if err != nil {
 			out.errors = append(out.errors, err)

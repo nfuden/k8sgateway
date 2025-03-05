@@ -146,7 +146,7 @@ func (s *testingSuite) TestGatewayRustformationsWithTransformedRoute() {
 	// add the environment variable RUSTFORMATIONS to the controller deployment
 
 	env := append(controllerDeploy.Spec.Template.Spec.Containers[0].Env, corev1.EnvVar{
-		Name:  "RUSTFORMATIONS",
+		Name:  "KGW_USE_RUST_FORMATIONS",
 		Value: "true",
 	})
 	containers := controllerDeploy.Spec.Template.Spec.Containers
