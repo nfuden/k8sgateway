@@ -3,7 +3,11 @@ package transformation
 import (
 	"context"
 	"net/http"
+	"time"
 
+	"strings"
+
+	"github.com/onsi/gomega"
 	"github.com/stretchr/testify/suite"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -15,6 +19,8 @@ import (
 	testmatchers "github.com/kgateway-dev/kgateway/v2/test/gomega/matchers"
 	"github.com/kgateway-dev/kgateway/v2/test/kubernetes/e2e"
 	testdefaults "github.com/kgateway-dev/kgateway/v2/test/kubernetes/e2e/defaults"
+
+	envoyadmincli "github.com/kgateway-dev/kgateway/v2/pkg/utils/envoyutils/admincli"
 )
 
 var _ e2e.NewSuiteFunc = NewTestingSuite
@@ -169,6 +175,33 @@ func (s *testingSuite) TestGatewayRustformationsWithTransformedRoute() {
 	s.testInstallation.Assertions.EventuallyPodsRunning(s.ctx, proxyObjectMeta.GetNamespace(), metav1.ListOptions{
 		LabelSelector: "app.kubernetes.io/name=gw",
 	})
+
+	s.testInstallation.Assertions.EventuallyPodsRunning(s.ctx, s.testInstallation.Metadata.InstallNamespace, metav1.ListOptions{
+		LabelSelector: "app.kubernetes.io/name=kgateway",
+	})
+
+	adminClient, close, err := envoyadmincli.NewPortForwardedClient(s.ctx, proxyObjectMeta.Name, proxyObjectMeta.Namespace)
+	s.Assert().NoError(err, "get admin cli for envoy")
+
+	s.testInstallation.Assertions.Gomega.Eventually(func(g gomega.Gomega) {
+		listener, err := adminClient.GetSingleListenerFromDynamicListeners(context.Background(), "http")
+		s.Assert().NoError(err, "get listener")
+
+		dynamicModuleLoaded := false
+		for _, filter := range listener.FilterChains[0].Filters {
+			// use a weak filter name check for cyclic imports
+			// also we dont intend for this to be long term so dont worry about pulling it out to wellknown or something like that for now
+			if strings.Contains(filter.Name, "dynamic_modules") {
+				dynamicModuleLoaded = true
+				break
+			}
+		}
+		g.Expect(dynamicModuleLoaded).To(gomega.BeTrue(), "dynamic module not loaded")
+	}).
+		WithTimeout(time.Second*20).
+		WithPolling(time.Second).Should(gomega.Succeed(), "failed to load in dynamic modules")
+
+	close()
 
 	testCasess := []struct {
 		name string
