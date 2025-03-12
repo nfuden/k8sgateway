@@ -315,7 +315,6 @@ func (p *routePolicyPluginGwPass) HttpFilters(ctx context.Context, fcc ir.Filter
 		filters = append(filters, plugins.MustNewStagedFilter(metadataRouteTransformation,
 			&transformationpb.FilterTransformations{},
 			plugins.AfterStage(plugins.FaultStage)))
-
 	}
 	if len(filters) == 0 {
 		return nil, nil
