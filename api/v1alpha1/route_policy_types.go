@@ -85,7 +85,7 @@ type InjaTemplate string
 //
 // +kubebuilder:validation:MinLength=1
 // +kubebuilder:validation:MaxLength=256
-// +kubebuilder:validation:Pattern=`^[A-Za-z0-9:!#$%&'*+\-.^_\x60|~]+$`
+// +kubebuilder:validation:Pattern=`^:?[A-Za-z0-9!#$%&'*+\-.^_\x60|~]+$`
 // +k8s:deepcopy-gen=false
 type HeaderName string
 type HeaderTransformation struct {
