@@ -71,6 +71,7 @@ rules:
 - apiGroups:
   - gateway.kgateway.dev
   resources:
+  - ExternalProviders
   - backends
   - directresponses
   - gatewayparameters
@@ -84,6 +85,7 @@ rules:
 - apiGroups:
   - gateway.kgateway.dev
   resources:
+  - ExternalProviders/status
   - backends/status
   - directresponses/status
   - gatewayparameters/status

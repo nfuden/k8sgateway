@@ -34,6 +34,7 @@ func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenA
 		"github.com/kgateway-dev/kgateway/v2/api/v1alpha1.BackendSpec":                schema_kgateway_v2_api_v1alpha1_BackendSpec(ref),
 		"github.com/kgateway-dev/kgateway/v2/api/v1alpha1.BackendStatus":              schema_kgateway_v2_api_v1alpha1_BackendStatus(ref),
 		"github.com/kgateway-dev/kgateway/v2/api/v1alpha1.BodyTransformation":         schema_kgateway_v2_api_v1alpha1_BodyTransformation(ref),
+		"github.com/kgateway-dev/kgateway/v2/api/v1alpha1.BufferSettings":             schema_kgateway_v2_api_v1alpha1_BufferSettings(ref),
 		"github.com/kgateway-dev/kgateway/v2/api/v1alpha1.CELFilter":                  schema_kgateway_v2_api_v1alpha1_CELFilter(ref),
 		"github.com/kgateway-dev/kgateway/v2/api/v1alpha1.ComparisonFilter":           schema_kgateway_v2_api_v1alpha1_ComparisonFilter(ref),
 		"github.com/kgateway-dev/kgateway/v2/api/v1alpha1.CustomLabel":                schema_kgateway_v2_api_v1alpha1_CustomLabel(ref),
@@ -45,6 +46,13 @@ func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenA
 		"github.com/kgateway-dev/kgateway/v2/api/v1alpha1.DurationFilter":             schema_kgateway_v2_api_v1alpha1_DurationFilter(ref),
 		"github.com/kgateway-dev/kgateway/v2/api/v1alpha1.EnvoyBootstrap":             schema_kgateway_v2_api_v1alpha1_EnvoyBootstrap(ref),
 		"github.com/kgateway-dev/kgateway/v2/api/v1alpha1.EnvoyContainer":             schema_kgateway_v2_api_v1alpha1_EnvoyContainer(ref),
+		"github.com/kgateway-dev/kgateway/v2/api/v1alpha1.ExtAuthProvider":            schema_kgateway_v2_api_v1alpha1_ExtAuthProvider(ref),
+		"github.com/kgateway-dev/kgateway/v2/api/v1alpha1.ExtAuthRoutePolicy":         schema_kgateway_v2_api_v1alpha1_ExtAuthRoutePolicy(ref),
+		"github.com/kgateway-dev/kgateway/v2/api/v1alpha1.ExtProcProvider":            schema_kgateway_v2_api_v1alpha1_ExtProcProvider(ref),
+		"github.com/kgateway-dev/kgateway/v2/api/v1alpha1.ExternalProvider":           schema_kgateway_v2_api_v1alpha1_ExternalProvider(ref),
+		"github.com/kgateway-dev/kgateway/v2/api/v1alpha1.ExternalProviderList":       schema_kgateway_v2_api_v1alpha1_ExternalProviderList(ref),
+		"github.com/kgateway-dev/kgateway/v2/api/v1alpha1.ExternalProviderSpec":       schema_kgateway_v2_api_v1alpha1_ExternalProviderSpec(ref),
+		"github.com/kgateway-dev/kgateway/v2/api/v1alpha1.ExternalProviderStatus":     schema_kgateway_v2_api_v1alpha1_ExternalProviderStatus(ref),
 		"github.com/kgateway-dev/kgateway/v2/api/v1alpha1.FieldDefault":               schema_kgateway_v2_api_v1alpha1_FieldDefault(ref),
 		"github.com/kgateway-dev/kgateway/v2/api/v1alpha1.FileSink":                   schema_kgateway_v2_api_v1alpha1_FileSink(ref),
 		"github.com/kgateway-dev/kgateway/v2/api/v1alpha1.FilterType":                 schema_kgateway_v2_api_v1alpha1_FilterType(ref),
@@ -94,6 +102,7 @@ func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenA
 		"github.com/kgateway-dev/kgateway/v2/api/v1alpha1.Service":                    schema_kgateway_v2_api_v1alpha1_Service(ref),
 		"github.com/kgateway-dev/kgateway/v2/api/v1alpha1.ServiceAccount":             schema_kgateway_v2_api_v1alpha1_ServiceAccount(ref),
 		"github.com/kgateway-dev/kgateway/v2/api/v1alpha1.SingleAuthToken":            schema_kgateway_v2_api_v1alpha1_SingleAuthToken(ref),
+		"github.com/kgateway-dev/kgateway/v2/api/v1alpha1.StageConfig":                schema_kgateway_v2_api_v1alpha1_StageConfig(ref),
 		"github.com/kgateway-dev/kgateway/v2/api/v1alpha1.StaticBackend":              schema_kgateway_v2_api_v1alpha1_StaticBackend(ref),
 		"github.com/kgateway-dev/kgateway/v2/api/v1alpha1.StatsConfig":                schema_kgateway_v2_api_v1alpha1_StatsConfig(ref),
 		"github.com/kgateway-dev/kgateway/v2/api/v1alpha1.StatusCodeFilter":           schema_kgateway_v2_api_v1alpha1_StatusCodeFilter(ref),
@@ -1247,6 +1256,42 @@ func schema_kgateway_v2_api_v1alpha1_BodyTransformation(ref common.ReferenceCall
 	}
 }
 
+func schema_kgateway_v2_api_v1alpha1_BufferSettings(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "BufferSettings configures how the request body should be buffered.",
+				Type:        []string{"object"},
+				Properties: map[string]spec.Schema{
+					"maxRequestBytes": {
+						SchemaProps: spec.SchemaProps{
+							Description: "MaxRequestBytes sets the maximum size of a message body to buffer. Requests exceeding this size will receive HTTP 413 and not be sent to the authorization service.",
+							Default:     0,
+							Type:        []string{"integer"},
+							Format:      "int64",
+						},
+					},
+					"allowPartialMessage": {
+						SchemaProps: spec.SchemaProps{
+							Description: "AllowPartialMessage determines if partial messages should be allowed. When true, requests will be sent to the authorization service even if they exceed maxRequestBytes.",
+							Type:        []string{"boolean"},
+							Format:      "",
+						},
+					},
+					"packAsBytes": {
+						SchemaProps: spec.SchemaProps{
+							Description: "PackAsBytes determines if the body should be sent as raw bytes. When true, the body is sent as raw bytes in the raw_body field. When false, the body is sent as UTF-8 string in the body field.",
+							Type:        []string{"boolean"},
+							Format:      "",
+						},
+					},
+				},
+				Required: []string{"maxRequestBytes"},
+			},
+		},
+	}
+}
+
 func schema_kgateway_v2_api_v1alpha1_CELFilter(ref common.ReferenceCallback) common.OpenAPIDefinition {
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
@@ -1598,6 +1643,301 @@ func schema_kgateway_v2_api_v1alpha1_EnvoyContainer(ref common.ReferenceCallback
 		},
 		Dependencies: []string{
 			"github.com/kgateway-dev/kgateway/v2/api/v1alpha1.EnvoyBootstrap", "github.com/kgateway-dev/kgateway/v2/api/v1alpha1.Image", "k8s.io/api/core/v1.ResourceRequirements", "k8s.io/api/core/v1.SecurityContext"},
+	}
+}
+
+func schema_kgateway_v2_api_v1alpha1_ExtAuthProvider(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "ExtAuthProvider defines the configuration for an ExtAuth provider.",
+				Type:        []string{"object"},
+				Properties: map[string]spec.Schema{
+					"backendRef": {
+						SchemaProps: spec.SchemaProps{
+							Description: "BackendRef references the backend service that will handle the authentication.",
+							Ref:         ref("sigs.k8s.io/gateway-api/apis/v1.BackendRef"),
+						},
+					},
+				},
+				Required: []string{"backendRef"},
+			},
+		},
+		Dependencies: []string{
+			"sigs.k8s.io/gateway-api/apis/v1.BackendRef"},
+	}
+}
+
+func schema_kgateway_v2_api_v1alpha1_ExtAuthRoutePolicy(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "ExtAuthRoutePolicy configures external authentication for a route. This policy will determine the ext auth server to use and how to  talk to it. Note that most of these fields are passed along as is to Envoy. For more details on particular fields please see the Envoy ExtAuth documentation. https://raw.githubusercontent.com/envoyproxy/envoy/f910f4abea24904aff04ec33a00147184ea7cffa/api/envoy/extensions/filters/http/ext_authz/v3/ext_authz.proto",
+				Type:        []string{"object"},
+				Properties: map[string]spec.Schema{
+					"providerRef": {
+						SchemaProps: spec.SchemaProps{
+							Description: "ProviderRef references the ExternalProvider that should be used for authentication.",
+							Default:     map[string]interface{}{},
+							Ref:         ref("sigs.k8s.io/gateway-api/apis/v1.LocalObjectReference"),
+						},
+					},
+					"failureModeAllow": {
+						SchemaProps: spec.SchemaProps{
+							Description: "FailureModeAllow determines the behavior on authorization service errors. When true, requests will be allowed even if the authorization service fails or returns HTTP 5xx errors.",
+							Type:        []string{"boolean"},
+							Format:      "",
+						},
+					},
+					"withRequestBody": {
+						SchemaProps: spec.SchemaProps{
+							Description: "WithRequestBody allows the request body to be buffered and sent to the authorization service. Warning buffering has implications for streaming and therefore performance.",
+							Ref:         ref("github.com/kgateway-dev/kgateway/v2/api/v1alpha1.BufferSettings"),
+						},
+					},
+					"clearRouteCache": {
+						SchemaProps: spec.SchemaProps{
+							Description: "ClearRouteCache allows the authorization service to affect routing decisions.",
+							Type:        []string{"boolean"},
+							Format:      "",
+						},
+					},
+					"metadataContextNamespaces": {
+						VendorExtensible: spec.VendorExtensible{
+							Extensions: spec.Extensions{
+								"x-kubernetes-list-type": "set",
+							},
+						},
+						SchemaProps: spec.SchemaProps{
+							Description: "MetadataContextNamespaces specifies metadata namespaces to pass to the authorization service. Default to allowing jwt info if processing for jwt is configured.",
+							Type:        []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Default: "",
+										Type:    []string{"string"},
+										Format:  "",
+									},
+								},
+							},
+						},
+					},
+					"includePeerCertificate": {
+						SchemaProps: spec.SchemaProps{
+							Description: "IncludePeerCertificate determines if the client's X.509 certificate should be sent to the authorization service. When true, the certificate will be included if available.",
+							Type:        []string{"boolean"},
+							Format:      "",
+						},
+					},
+					"includeTLSSession": {
+						SchemaProps: spec.SchemaProps{
+							Description: "IncludeTLSSession determines if TLS session details should be sent to the authorization service. When true, the SNI name from TLSClientHello will be included if available.",
+							Type:        []string{"boolean"},
+							Format:      "",
+						},
+					},
+				},
+				Required: []string{"providerRef"},
+			},
+		},
+		Dependencies: []string{
+			"github.com/kgateway-dev/kgateway/v2/api/v1alpha1.BufferSettings", "sigs.k8s.io/gateway-api/apis/v1.LocalObjectReference"},
+	}
+}
+
+func schema_kgateway_v2_api_v1alpha1_ExtProcProvider(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "ExtProcProvider defines the configuration for an ExtProc provider.",
+				Type:        []string{"object"},
+				Properties: map[string]spec.Schema{
+					"backendRef": {
+						SchemaProps: spec.SchemaProps{
+							Description: "BackendRef references the backend service that will handle the processing.",
+							Ref:         ref("sigs.k8s.io/gateway-api/apis/v1.BackendRef"),
+						},
+					},
+				},
+				Required: []string{"backendRef"},
+			},
+		},
+		Dependencies: []string{
+			"sigs.k8s.io/gateway-api/apis/v1.BackendRef"},
+	}
+}
+
+func schema_kgateway_v2_api_v1alpha1_ExternalProvider(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Type: []string{"object"},
+				Properties: map[string]spec.Schema{
+					"kind": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"apiVersion": {
+						SchemaProps: spec.SchemaProps{
+							Description: "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"metadata": {
+						SchemaProps: spec.SchemaProps{
+							Default: map[string]interface{}{},
+							Ref:     ref("k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"),
+						},
+					},
+					"spec": {
+						SchemaProps: spec.SchemaProps{
+							Default: map[string]interface{}{},
+							Ref:     ref("github.com/kgateway-dev/kgateway/v2/api/v1alpha1.ExternalProviderSpec"),
+						},
+					},
+					"status": {
+						SchemaProps: spec.SchemaProps{
+							Default: map[string]interface{}{},
+							Ref:     ref("github.com/kgateway-dev/kgateway/v2/api/v1alpha1.ExternalProviderStatus"),
+						},
+					},
+				},
+			},
+		},
+		Dependencies: []string{
+			"github.com/kgateway-dev/kgateway/v2/api/v1alpha1.ExternalProviderSpec", "github.com/kgateway-dev/kgateway/v2/api/v1alpha1.ExternalProviderStatus", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
+	}
+}
+
+func schema_kgateway_v2_api_v1alpha1_ExternalProviderList(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Type: []string{"object"},
+				Properties: map[string]spec.Schema{
+					"kind": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"apiVersion": {
+						SchemaProps: spec.SchemaProps{
+							Description: "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"metadata": {
+						SchemaProps: spec.SchemaProps{
+							Default: map[string]interface{}{},
+							Ref:     ref("k8s.io/apimachinery/pkg/apis/meta/v1.ListMeta"),
+						},
+					},
+					"items": {
+						SchemaProps: spec.SchemaProps{
+							Type: []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Default: map[string]interface{}{},
+										Ref:     ref("github.com/kgateway-dev/kgateway/v2/api/v1alpha1.ExternalProvider"),
+									},
+								},
+							},
+						},
+					},
+				},
+				Required: []string{"items"},
+			},
+		},
+		Dependencies: []string{
+			"github.com/kgateway-dev/kgateway/v2/api/v1alpha1.ExternalProvider", "k8s.io/apimachinery/pkg/apis/meta/v1.ListMeta"},
+	}
+}
+
+func schema_kgateway_v2_api_v1alpha1_ExternalProviderSpec(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "ExternalProviderSpec defines the desired state of ExternalProvider.",
+				Type:        []string{"object"},
+				Properties: map[string]spec.Schema{
+					"type": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Type indicates the type of the ExternalProvider to be used.",
+							Default:     "",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"stage": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Stage configuration for where this provider should be placed in the filter chain. If not specified, the provider will be placed based on the type of the provider. For example Exauth will be place in the in AuthZStage by default.",
+							Default:     map[string]interface{}{},
+							Ref:         ref("github.com/kgateway-dev/kgateway/v2/api/v1alpha1.StageConfig"),
+						},
+					},
+					"extAuth": {
+						SchemaProps: spec.SchemaProps{
+							Description: "ExtAuth configuration for ExtAuth provider type.",
+							Ref:         ref("github.com/kgateway-dev/kgateway/v2/api/v1alpha1.ExtAuthProvider"),
+						},
+					},
+					"extProc": {
+						SchemaProps: spec.SchemaProps{
+							Description: "ExtProc configuration for ExtProc provider type.",
+							Ref:         ref("github.com/kgateway-dev/kgateway/v2/api/v1alpha1.ExtProcProvider"),
+						},
+					},
+				},
+				Required: []string{"type"},
+			},
+		},
+		Dependencies: []string{
+			"github.com/kgateway-dev/kgateway/v2/api/v1alpha1.ExtAuthProvider", "github.com/kgateway-dev/kgateway/v2/api/v1alpha1.ExtProcProvider", "github.com/kgateway-dev/kgateway/v2/api/v1alpha1.StageConfig"},
+	}
+}
+
+func schema_kgateway_v2_api_v1alpha1_ExternalProviderStatus(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "ExternalProviderStatus defines the observed state of ExternalProvider.",
+				Type:        []string{"object"},
+				Properties: map[string]spec.Schema{
+					"conditions": {
+						VendorExtensible: spec.VendorExtensible{
+							Extensions: spec.Extensions{
+								"x-kubernetes-list-map-keys": []interface{}{
+									"type",
+								},
+								"x-kubernetes-list-type": "map",
+							},
+						},
+						SchemaProps: spec.SchemaProps{
+							Description: "Conditions is the list of conditions for the ExternalProvider.",
+							Type:        []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Default: map[string]interface{}{},
+										Ref:     ref("k8s.io/apimachinery/pkg/apis/meta/v1.Condition"),
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		Dependencies: []string{
+			"k8s.io/apimachinery/pkg/apis/meta/v1.Condition"},
 	}
 }
 
@@ -3337,11 +3677,16 @@ func schema_kgateway_v2_api_v1alpha1_RoutePolicySpec(ref common.ReferenceCallbac
 							Ref:     ref("github.com/kgateway-dev/kgateway/v2/api/v1alpha1.TransformationPolicy"),
 						},
 					},
+					"extAuth": {
+						SchemaProps: spec.SchemaProps{
+							Ref: ref("github.com/kgateway-dev/kgateway/v2/api/v1alpha1.ExtAuthRoutePolicy"),
+						},
+					},
 				},
 			},
 		},
 		Dependencies: []string{
-			"github.com/kgateway-dev/kgateway/v2/api/v1alpha1.AIRoutePolicy", "github.com/kgateway-dev/kgateway/v2/api/v1alpha1.LocalPolicyTargetReference", "github.com/kgateway-dev/kgateway/v2/api/v1alpha1.TransformationPolicy"},
+			"github.com/kgateway-dev/kgateway/v2/api/v1alpha1.AIRoutePolicy", "github.com/kgateway-dev/kgateway/v2/api/v1alpha1.ExtAuthRoutePolicy", "github.com/kgateway-dev/kgateway/v2/api/v1alpha1.LocalPolicyTargetReference", "github.com/kgateway-dev/kgateway/v2/api/v1alpha1.TransformationPolicy"},
 	}
 }
 
@@ -3552,6 +3897,35 @@ func schema_kgateway_v2_api_v1alpha1_SingleAuthToken(ref common.ReferenceCallbac
 		},
 		Dependencies: []string{
 			"k8s.io/api/core/v1.LocalObjectReference"},
+	}
+}
+
+func schema_kgateway_v2_api_v1alpha1_StageConfig(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "StageConfig defines the configuration for where a provider should be placed in the filter chain.",
+				Type:        []string{"object"},
+				Properties: map[string]spec.Schema{
+					"name": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Name of the filter stage where the provider should be placed.",
+							Default:     "",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"weight": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Weight determines the relative order of providers within the same stage. Lower weights are processed first. In general ordering within a stage is considered not important.",
+							Type:        []string{"integer"},
+							Format:      "int32",
+						},
+					},
+				},
+				Required: []string{"name"},
+			},
+		},
 	}
 }
 

@@ -51,6 +51,8 @@ func ForKind(kind schema.GroupVersionKind) interface{} {
 		return &apiv1alpha1.BackendStatusApplyConfiguration{}
 	case v1alpha1.SchemeGroupVersion.WithKind("BodyTransformation"):
 		return &apiv1alpha1.BodyTransformationApplyConfiguration{}
+	case v1alpha1.SchemeGroupVersion.WithKind("BufferSettings"):
+		return &apiv1alpha1.BufferSettingsApplyConfiguration{}
 	case v1alpha1.SchemeGroupVersion.WithKind("CELFilter"):
 		return &apiv1alpha1.CELFilterApplyConfiguration{}
 	case v1alpha1.SchemeGroupVersion.WithKind("CustomLabel"):
@@ -67,6 +69,18 @@ func ForKind(kind schema.GroupVersionKind) interface{} {
 		return &apiv1alpha1.EnvoyBootstrapApplyConfiguration{}
 	case v1alpha1.SchemeGroupVersion.WithKind("EnvoyContainer"):
 		return &apiv1alpha1.EnvoyContainerApplyConfiguration{}
+	case v1alpha1.SchemeGroupVersion.WithKind("ExtAuthProvider"):
+		return &apiv1alpha1.ExtAuthProviderApplyConfiguration{}
+	case v1alpha1.SchemeGroupVersion.WithKind("ExtAuthRoutePolicy"):
+		return &apiv1alpha1.ExtAuthRoutePolicyApplyConfiguration{}
+	case v1alpha1.SchemeGroupVersion.WithKind("ExternalProvider"):
+		return &apiv1alpha1.ExternalProviderApplyConfiguration{}
+	case v1alpha1.SchemeGroupVersion.WithKind("ExternalProviderSpec"):
+		return &apiv1alpha1.ExternalProviderSpecApplyConfiguration{}
+	case v1alpha1.SchemeGroupVersion.WithKind("ExternalProviderStatus"):
+		return &apiv1alpha1.ExternalProviderStatusApplyConfiguration{}
+	case v1alpha1.SchemeGroupVersion.WithKind("ExtProcProvider"):
+		return &apiv1alpha1.ExtProcProviderApplyConfiguration{}
 	case v1alpha1.SchemeGroupVersion.WithKind("FieldDefault"):
 		return &apiv1alpha1.FieldDefaultApplyConfiguration{}
 	case v1alpha1.SchemeGroupVersion.WithKind("FileSink"):
@@ -153,6 +167,8 @@ func ForKind(kind schema.GroupVersionKind) interface{} {
 		return &apiv1alpha1.ServiceAccountApplyConfiguration{}
 	case v1alpha1.SchemeGroupVersion.WithKind("SingleAuthToken"):
 		return &apiv1alpha1.SingleAuthTokenApplyConfiguration{}
+	case v1alpha1.SchemeGroupVersion.WithKind("StageConfig"):
+		return &apiv1alpha1.StageConfigApplyConfiguration{}
 	case v1alpha1.SchemeGroupVersion.WithKind("StaticBackend"):
 		return &apiv1alpha1.StaticBackendApplyConfiguration{}
 	case v1alpha1.SchemeGroupVersion.WithKind("StatsConfig"):
