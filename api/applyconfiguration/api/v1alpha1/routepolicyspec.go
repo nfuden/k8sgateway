@@ -8,7 +8,7 @@ type RoutePolicySpecApplyConfiguration struct {
 	TargetRefs     []LocalPolicyTargetReferenceApplyConfiguration `json:"targetRefs,omitempty"`
 	AI             *AIRoutePolicyApplyConfiguration               `json:"ai,omitempty"`
 	Transformation *TransformationPolicyApplyConfiguration        `json:"transformation,omitempty"`
-	ExtAuth        *ExtAuthRoutePolicyApplyConfiguration         `json:"extAuth,omitempty"`
+	ExtAuth        *ExtAuthRoutePolicyApplyConfiguration          `json:"extAuth,omitempty"`
 }
 
 // RoutePolicySpecApplyConfiguration constructs a declarative configuration of the RoutePolicySpec type for use with
@@ -43,5 +43,13 @@ func (b *RoutePolicySpecApplyConfiguration) WithAI(value *AIRoutePolicyApplyConf
 // If called multiple times, the Transformation field is set to the value of the last call.
 func (b *RoutePolicySpecApplyConfiguration) WithTransformation(value *TransformationPolicyApplyConfiguration) *RoutePolicySpecApplyConfiguration {
 	b.Transformation = value
+	return b
+}
+
+// WithExtAuth sets the ExtAuth field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the ExtAuth field is set to the value of the last call.
+func (b *RoutePolicySpecApplyConfiguration) WithExtAuth(value *ExtAuthRoutePolicyApplyConfiguration) *RoutePolicySpecApplyConfiguration {
+	b.ExtAuth = value
 	return b
 }
