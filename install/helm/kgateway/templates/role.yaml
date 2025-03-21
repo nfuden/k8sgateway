@@ -71,6 +71,7 @@ rules:
 - apiGroups:
   - gateway.kgateway.dev
   resources:
+  - GatewayPolicies
   - backends
   - directresponses
   - gatewayparameters
@@ -84,6 +85,7 @@ rules:
 - apiGroups:
   - gateway.kgateway.dev
   resources:
+  - GatewayPolicies/status
   - backends/status
   - directresponses/status
   - gatewayparameters/status

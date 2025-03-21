@@ -421,6 +421,18 @@ var schemaYAML = typed.YAMLObject(`types:
     - name: securityContext
       type:
         namedType: io.k8s.api.core.v1.SecurityContext
+- name: com.github.kgateway-dev.kgateway.v2.api.v1alpha1.ExtAuthProvider
+  map:
+    fields:
+    - name: backendRef
+      type:
+        namedType: io.k8s.sigs.gateway-api.apis.v1.BackendRef
+- name: com.github.kgateway-dev.kgateway.v2.api.v1alpha1.ExtProcProvider
+  map:
+    fields:
+    - name: backendRef
+      type:
+        namedType: io.k8s.sigs.gateway-api.apis.v1.BackendRef
 - name: com.github.kgateway-dev.kgateway.v2.api.v1alpha1.FieldDefault
   map:
     fields:
@@ -475,6 +487,51 @@ var schemaYAML = typed.YAMLObject(`types:
     - name: traceableFilter
       type:
         scalar: boolean
+- name: com.github.kgateway-dev.kgateway.v2.api.v1alpha1.GatewayExtensionPolicy
+  map:
+    fields:
+    - name: apiVersion
+      type:
+        scalar: string
+    - name: kind
+      type:
+        scalar: string
+    - name: metadata
+      type:
+        namedType: io.k8s.apimachinery.pkg.apis.meta.v1.ObjectMeta
+      default: {}
+    - name: spec
+      type:
+        namedType: com.github.kgateway-dev.kgateway.v2.api.v1alpha1.GatewayExtensionSpec
+      default: {}
+    - name: status
+      type:
+        namedType: com.github.kgateway-dev.kgateway.v2.api.v1alpha1.GatewayExtensionPolicyStatus
+      default: {}
+- name: com.github.kgateway-dev.kgateway.v2.api.v1alpha1.GatewayExtensionPolicyStatus
+  map:
+    fields:
+    - name: conditions
+      type:
+        list:
+          elementType:
+            namedType: io.k8s.apimachinery.pkg.apis.meta.v1.Condition
+          elementRelationship: associative
+          keys:
+          - type
+- name: com.github.kgateway-dev.kgateway.v2.api.v1alpha1.GatewayExtensionSpec
+  map:
+    fields:
+    - name: extAuth
+      type:
+        namedType: com.github.kgateway-dev.kgateway.v2.api.v1alpha1.ExtAuthProvider
+    - name: extProc
+      type:
+        namedType: com.github.kgateway-dev.kgateway.v2.api.v1alpha1.ExtProcProvider
+    - name: type
+      type:
+        scalar: string
+      default: ""
 - name: com.github.kgateway-dev.kgateway.v2.api.v1alpha1.GatewayParameters
   map:
     fields:

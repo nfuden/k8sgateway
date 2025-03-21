@@ -67,12 +67,22 @@ func ForKind(kind schema.GroupVersionKind) interface{} {
 		return &apiv1alpha1.EnvoyBootstrapApplyConfiguration{}
 	case v1alpha1.SchemeGroupVersion.WithKind("EnvoyContainer"):
 		return &apiv1alpha1.EnvoyContainerApplyConfiguration{}
+	case v1alpha1.SchemeGroupVersion.WithKind("ExtAuthProvider"):
+		return &apiv1alpha1.ExtAuthProviderApplyConfiguration{}
+	case v1alpha1.SchemeGroupVersion.WithKind("ExtProcProvider"):
+		return &apiv1alpha1.ExtProcProviderApplyConfiguration{}
 	case v1alpha1.SchemeGroupVersion.WithKind("FieldDefault"):
 		return &apiv1alpha1.FieldDefaultApplyConfiguration{}
 	case v1alpha1.SchemeGroupVersion.WithKind("FileSink"):
 		return &apiv1alpha1.FileSinkApplyConfiguration{}
 	case v1alpha1.SchemeGroupVersion.WithKind("FilterType"):
 		return &apiv1alpha1.FilterTypeApplyConfiguration{}
+	case v1alpha1.SchemeGroupVersion.WithKind("GatewayExtensionPolicy"):
+		return &apiv1alpha1.GatewayExtensionPolicyApplyConfiguration{}
+	case v1alpha1.SchemeGroupVersion.WithKind("GatewayExtensionPolicyStatus"):
+		return &apiv1alpha1.GatewayExtensionPolicyStatusApplyConfiguration{}
+	case v1alpha1.SchemeGroupVersion.WithKind("GatewayExtensionSpec"):
+		return &apiv1alpha1.GatewayExtensionSpecApplyConfiguration{}
 	case v1alpha1.SchemeGroupVersion.WithKind("GatewayParameters"):
 		return &apiv1alpha1.GatewayParametersApplyConfiguration{}
 	case v1alpha1.SchemeGroupVersion.WithKind("GatewayParametersSpec"):
