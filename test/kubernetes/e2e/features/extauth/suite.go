@@ -5,14 +5,18 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/onsi/gomega"
 	"github.com/stretchr/testify/suite"
+	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/kgateway-dev/kgateway/v2/pkg/utils/kubeutils"
 	"github.com/kgateway-dev/kgateway/v2/pkg/utils/requestutils/curl"
 	testmatchers "github.com/kgateway-dev/kgateway/v2/test/gomega/matchers"
+	"github.com/kgateway-dev/kgateway/v2/test/helpers"
 	"github.com/kgateway-dev/kgateway/v2/test/kubernetes/e2e"
+	"github.com/kgateway-dev/kgateway/v2/test/kubernetes/e2e/defaults"
 	testdefaults "github.com/kgateway-dev/kgateway/v2/test/kubernetes/e2e/defaults"
 )
 
@@ -27,6 +31,11 @@ type testingSuite struct {
 	// testInstallation contains all the metadata/utilities necessary to execute a series of tests
 	// against an installation of kgateway
 	testInstallation *e2e.TestInstallation
+
+	// manifests shared by all tests
+	commonManifests []string
+	// resources from manifests shared by all tests
+	commonResources []client.Object
 }
 
 func NewTestingSuite(ctx context.Context, testInst *e2e.TestInstallation) suite.TestingSuite {
@@ -36,38 +45,63 @@ func NewTestingSuite(ctx context.Context, testInst *e2e.TestInstallation) suite.
 	}
 }
 
-// TestExtAuthPolicy tests the basic ExtAuth functionality with header-based allow/deny
-func (s *testingSuite) TestExtAuthPolicy() {
-	// Setup test resources
-	manifests := []string{
+func (s *testingSuite) SetupSuite() {
+	s.commonManifests = []string{
 		testdefaults.CurlPodManifest,
 		simpleServiceManifest,
 		gatewayWithRouteManifest,
 		extAuthServiceManifest,
 	}
-	manifestObjects := []client.Object{
-		testdefaults.CurlPod,                               // curl pod for testing
-		simpleSvc,                                          // echo service
-		proxyService, proxyServiceAccount, proxyDeployment, // proxy
-		extAuthSvc,       // extauth service
-		extAuthExtension, // extauth extension
+	s.commonResources = []client.Object{
+		// resources from curl manifest
+		testdefaults.CurlPod,
+		// resources from service manifest
+		simpleSvc,
+		// deployer-generated resources
+		proxyDeployment, proxyService, proxyServiceAccount,
+		// extauth resources
+		extAuthSvc, extAuthExtension,
 	}
 
-	// Cleanup after test
-	s.T().Cleanup(func() {
-		for _, manifest := range manifests {
-			err := s.testInstallation.Actions.Kubectl().DeleteFileSafe(s.ctx, manifest)
-			s.Require().NoError(err)
-		}
-		s.testInstallation.Assertions.EventuallyObjectsNotExist(s.ctx, manifestObjects...)
+	// set up common resources once
+	for _, manifest := range s.commonManifests {
+		err := s.testInstallation.Actions.Kubectl().ApplyFile(s.ctx, manifest)
+		s.Require().NoError(err, "can apply "+manifest)
+	}
+	s.testInstallation.Assertions.EventuallyObjectsExist(s.ctx, s.commonResources...)
+
+	// make sure pods are running
+	s.testInstallation.Assertions.EventuallyPodsRunning(s.ctx, defaults.CurlPod.GetNamespace(), metav1.ListOptions{
+		LabelSelector: defaults.CurlPodLabelSelector,
 	})
 
-	// Apply all manifests
-	for _, manifest := range manifests {
-		err := s.testInstallation.Actions.Kubectl().ApplyFile(s.ctx, manifest)
-		s.Require().NoError(err)
+	s.testInstallation.Assertions.EventuallyPodsRunning(s.ctx, proxyObjectMeta.GetNamespace(), metav1.ListOptions{
+		LabelSelector: fmt.Sprintf("app.kubernetes.io/name=%s", proxyObjectMeta.GetName()),
+	})
+
+	s.assertStatus(metav1.Condition{
+		Type:    "Accepted",
+		Status:  metav1.ConditionTrue,
+		Reason:  "Accepted",
+		Message: "Policy accepted",
+	})
+}
+
+func (s *testingSuite) TearDownSuite() {
+	// clean up common resources
+	for _, manifest := range s.commonManifests {
+		err := s.testInstallation.Actions.Kubectl().DeleteFileSafe(s.ctx, manifest)
+		s.Require().NoError(err, "can delete "+manifest)
 	}
-	s.testInstallation.Assertions.EventuallyObjectsExist(s.ctx, manifestObjects...)
+	s.testInstallation.Assertions.EventuallyObjectsNotExist(s.ctx, s.commonResources...)
+
+	s.testInstallation.Assertions.EventuallyPodsNotExist(s.ctx, proxyObjectMeta.GetNamespace(), metav1.ListOptions{
+		LabelSelector: fmt.Sprintf("app.kubernetes.io/name=%s", proxyObjectMeta.GetName()),
+	})
+}
+
+// TestExtAuthPolicy tests the basic ExtAuth functionality with header-based allow/deny
+func (s *testingSuite) TestExtAuthPolicy() {
 
 	// Wait for pods to be running
 	s.testInstallation.Assertions.EventuallyPodsRunning(s.ctx, testdefaults.CurlPod.GetNamespace(), metav1.ListOptions{
@@ -145,7 +179,7 @@ func (s *testingSuite) TestExtAuthWithRequestBody() {
 		gatewayWithRouteManifest,
 		extAuthServiceManifest,
 		extAuthExtensionManifest,
-		routePolicyWithExtAuthRequestBody,
+		// routePolicyWithExtAuthRequestBody,
 	}
 	manifestObjects := []client.Object{
 		testdefaults.CurlPod,                               // curl
@@ -227,4 +261,23 @@ func (s *testingSuite) TestExtAuthWithRequestBody() {
 				tc.resp)
 		})
 	}
+}
+
+func (s *testingSuite) assertStatus(expected metav1.Condition) {
+	currentTimeout, pollingInterval := helpers.GetTimeouts()
+	p := s.testInstallation.Assertions
+	p.Gomega.Eventually(func(g gomega.Gomega) {
+		// be := &v1alpha1.RoutePolicy{ Spec: }
+		// objKey := client.ObjectKeyFromObject(routePolicy)
+		// err := s.testInstallation.ClusterContext.Client.Get(s.ctx, objKey, be)
+		// g.Expect(err).NotTo(gomega.HaveOccurred(), "failed to get route policy %s", objKey)
+
+		actual := be.Status.Conditions
+		g.Expect(actual).To(gomega.HaveLen(1), "condition should have length of 1")
+		cond := meta.FindStatusCondition(actual, expected.Type)
+		g.Expect(cond).NotTo(gomega.BeNil())
+		g.Expect(cond.Status).To(gomega.Equal(expected.Status))
+		g.Expect(cond.Reason).To(gomega.Equal(expected.Reason))
+		g.Expect(cond.Message).To(gomega.Equal(expected.Message))
+	}, currentTimeout, pollingInterval).Should(gomega.Succeed())
 }
