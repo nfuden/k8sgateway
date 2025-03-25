@@ -5,7 +5,6 @@ go 1.24.0
 require (
 	github.com/avast/retry-go v2.4.3+incompatible
 	github.com/avast/retry-go/v4 v4.3.3
-	github.com/bsm/gomega v1.27.10
 	github.com/cncf/xds/go v0.0.0-20250121191232-2f005788dc42
 	github.com/envoyproxy/go-control-plane v0.13.5-0.20250123154839-2a6715911fec
 	github.com/envoyproxy/go-control-plane/contrib v1.32.5-0.20250207140015-90270e3c85fd

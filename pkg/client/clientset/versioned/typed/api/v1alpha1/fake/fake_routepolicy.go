@@ -23,7 +23,7 @@ func newFakeRoutePolicies(fake *FakeGatewayV1alpha1, namespace string) typedapiv
 			namespace,
 			v1alpha1.SchemeGroupVersion.WithResource("routepolicies"),
 			v1alpha1.SchemeGroupVersion.WithKind("RoutePolicy"),
-			func() *v1alpha1.RoutePolicy { return &v1alpha1.RoutePolicy{ Spec: } },
+			func() *v1alpha1.RoutePolicy { return &v1alpha1.RoutePolicy{} },
 			func() *v1alpha1.RoutePolicyList { return &v1alpha1.RoutePolicyList{} },
 			func(dst, src *v1alpha1.RoutePolicyList) { dst.ListMeta = src.ListMeta },
 			func(list *v1alpha1.RoutePolicyList) []*v1alpha1.RoutePolicy {

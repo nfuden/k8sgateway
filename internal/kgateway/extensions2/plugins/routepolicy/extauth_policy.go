@@ -1,6 +1,7 @@
 package routepolicy
 
 import (
+	envoy_core_v3 "github.com/envoyproxy/go-control-plane/envoy/config/core/v3"
 	envoy_ext_authz_v3 "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/http/ext_authz/v3"
 	"istio.io/istio/pkg/kube/krt"
 
