@@ -62,10 +62,10 @@ func SetExtensionProtocolOptions(out *envoy_config_cluster_v3.Cluster, filterNam
 // BackendToEnvoyCluster converts a name namespaced backendref and creates a valid envoy cluster name
 func BackendToEnvoyCluster(backendRef *gwv1.BackendRef) string {
 	// For non-namespaced resources, return only name
-	if backendRef.GetNamespace() == "" {
-		return backendRef.GetName()
+	if backendRef.Namespace == nil {
+		return string(backendRef.Name)
 	}
 
 	// Don't use dots in the name as it messes up prometheus stats
-	return fmt.Sprintf("%s_%s", backendRef.GetName(), backendRef.GetNamespace())
+	return fmt.Sprintf("%s_%s", backendRef.Name, *backendRef.Namespace)
 }

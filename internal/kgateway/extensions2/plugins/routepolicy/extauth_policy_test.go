@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	v1 "k8s.io/api/core/v1"
+	gwv1 "sigs.k8s.io/gateway-api/apis/v1"
 
 	envoy_config_listener_v3 "github.com/envoyproxy/go-control-plane/envoy/config/listener/v3"
 	envoy_config_route_v3 "github.com/envoyproxy/go-control-plane/envoy/config/route/v3"
@@ -21,20 +22,27 @@ import (
 func TestExtAuthForSpec(t *testing.T) {
 	truth := true
 	truthy := &truth
+
+	gExtGetter := func(name, namespace string) (*ir.GatewayExtension, error) {
+		return &ir.GatewayExtension{
+			Type: v1alpha1.GatewayExtensionTypeExtAuth,
+			ExtAuth: &v1alpha1.ExtAuthProvider{&gwv1.BackendRef{
+				BackendObjectReference: gwv1.BackendObjectReference{Name: "test-extauth"}}}}, nil
+	}
 	t.Run("creates basic ext auth configuration in one pass", func(t *testing.T) {
 
 		// Setup
-		spec := &v1alpha1.RoutePolicySpec{ExtAuth: &v1alpha1.ExtAuthRoutePolicy{
+		spec := &v1alpha1.RoutePolicy{Spec: v1alpha1.RoutePolicySpec{ExtAuth: &v1alpha1.ExtAuthRoutePolicy{
 			ExtensionRef: &v1.LocalObjectReference{
 				Name: "test-extension",
 			},
 			EmitFilterStateStats: truthy,
 		},
-		}
+		}}
 		out := &routeSpecIr{}
 
 		// Execute
-		extAuthForSpec(spec, out)
+		extAuthForSpecWithExtensionFunction(gExtGetter, spec, out)
 
 		// Verify
 		require.NotNil(t, out.extAuth)
@@ -44,17 +52,17 @@ func TestExtAuthForSpec(t *testing.T) {
 	t.Run("configures failure mode allow", func(t *testing.T) {
 		// Setup
 		truthy := true
-		spec := &v1alpha1.RoutePolicySpec{ExtAuth: &v1alpha1.ExtAuthRoutePolicy{
+		spec := &v1alpha1.RoutePolicy{Spec: v1alpha1.RoutePolicySpec{ExtAuth: &v1alpha1.ExtAuthRoutePolicy{
 			ExtensionRef: &v1.LocalObjectReference{
 				Name: "test-extension",
 			},
 			FailureModeAllow: &truthy,
 		},
-		}
+		}}
 		out := &routeSpecIr{}
 
 		// Execute
-		extAuthForSpec(spec, out)
+		extAuthForSpecWithExtensionFunction(gExtGetter, spec, out)
 
 		// Verify
 		require.NotNil(t, out.extAuth)
@@ -64,7 +72,7 @@ func TestExtAuthForSpec(t *testing.T) {
 	t.Run("configures request body settings", func(t *testing.T) {
 		truthy := true
 		// Setup
-		spec := &v1alpha1.RoutePolicySpec{ExtAuth: &v1alpha1.ExtAuthRoutePolicy{
+		spec := &v1alpha1.RoutePolicy{Spec: v1alpha1.RoutePolicySpec{ExtAuth: &v1alpha1.ExtAuthRoutePolicy{
 			ExtensionRef: &v1.LocalObjectReference{
 				Name: "test-extension",
 			},
@@ -74,11 +82,11 @@ func TestExtAuthForSpec(t *testing.T) {
 				PackAsBytes:         &truthy,
 			},
 		},
-		}
+		}}
 		out := &routeSpecIr{}
 
 		// Execute
-		extAuthForSpec(spec, out)
+		extAuthForSpecWithExtensionFunction(gExtGetter, spec, out)
 
 		// Verify
 		require.NotNil(t, out.extAuth)
@@ -90,17 +98,17 @@ func TestExtAuthForSpec(t *testing.T) {
 
 	t.Run("configures metadata context namespaces", func(t *testing.T) {
 		// Setup
-		spec := &v1alpha1.RoutePolicySpec{ExtAuth: &v1alpha1.ExtAuthRoutePolicy{
+		spec := &v1alpha1.RoutePolicy{Spec: v1alpha1.RoutePolicySpec{ExtAuth: &v1alpha1.ExtAuthRoutePolicy{
 			ExtensionRef: &v1.LocalObjectReference{
 				Name: "test-extension",
 			},
 			MetadataContextNamespaces: []string{"jwt", "custom"},
 		},
-		}
+		}}
 		out := &routeSpecIr{}
 
 		// Execute
-		extAuthForSpec(spec, out)
+		extAuthForSpecWithExtensionFunction(gExtGetter, spec, out)
 
 		// Verify
 		require.NotNil(t, out.extAuth)
@@ -110,18 +118,18 @@ func TestExtAuthForSpec(t *testing.T) {
 	t.Run("configures TLS settings", func(t *testing.T) {
 		// Setup
 		truthy := true
-		spec := &v1alpha1.RoutePolicySpec{ExtAuth: &v1alpha1.ExtAuthRoutePolicy{
+		spec := &v1alpha1.RoutePolicy{Spec: v1alpha1.RoutePolicySpec{ExtAuth: &v1alpha1.ExtAuthRoutePolicy{
 			ExtensionRef: &v1.LocalObjectReference{
 				Name: "test-extension",
 			},
 			IncludePeerCertificate: &truthy,
 			IncludeTLSSession:      &truthy,
 		},
-		}
+		}}
 		out := &routeSpecIr{}
 
 		// Execute
-		extAuthForSpec(spec, out)
+		extAuthForSpecWithExtensionFunction(gExtGetter, spec, out)
 
 		// Verify
 		require.NotNil(t, out.extAuth)

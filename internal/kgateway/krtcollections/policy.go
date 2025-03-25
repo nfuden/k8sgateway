@@ -206,7 +206,6 @@ func NewGatewayIndex(
 
 // GatewayExtensionIndex is a collection of GatewayExtension resources.
 type GatewayExtensionIndex struct {
-	policies          *PolicyIndex
 	GatewayExtensions krt.Collection[ir.GatewayExtension]
 }
 

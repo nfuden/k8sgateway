@@ -12,7 +12,6 @@ import (
 	dynamicmodulesv3 "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/http/dynamic_modules/v3"
 	envoyhttp "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/network/http_connection_manager/v3"
 	"google.golang.org/protobuf/proto"
-	"google.golang.org/protobuf/types/known/anypb"
 	skubeclient "istio.io/istio/pkg/config/schema/kubeclient"
 	"istio.io/istio/pkg/kube/kclient"
 	"istio.io/istio/pkg/kube/krt"
@@ -310,21 +309,18 @@ func (p *routePolicyPluginGwPass) ApplyForRoute(ctx context.Context, pCtx *ir.Ro
 	// ExtAuth does not allow for most information such as destination
 	// to be set at the route level so we need to smuggle info upwards.
 	if policy.spec.extAuth != nil {
-		if outputRoute.GetTypedPerFilterConfig() == nil {
-			outputRoute.TypedPerFilterConfig = make(map[string]*anypb.Any)
-		}
-
 		// Handle the enabled state
 		if policy.spec.extAuth.enabled == v1alpha1.ExtAuthDisableAll {
 			// Disable the filter for this route
-			outputRoute.GetTypedPerFilterConfig()[string(policy.spec.extAuth.providerName)], _ = utils.MessageToAny(
+			pCtx.TypedFilterConfig[string(policy.spec.extAuth.providerName)], _ = utils.MessageToAny(
 				&envoy_ext_authz_v3.ExtAuthzPerRoute{
 					Override: &envoy_ext_authz_v3.ExtAuthzPerRoute_Disabled{
 						Disabled: true,
 					},
 				})
+
 		} else {
-			outputRoute.GetTypedPerFilterConfig()[string(policy.spec.extAuth.providerName)], _ = utils.MessageToAny(
+			pCtx.TypedFilterConfig[string(policy.spec.extAuth.providerName)], _ = utils.MessageToAny(
 				&envoy_ext_authz_v3.ExtAuthzPerRoute{
 					Override: &envoy_ext_authz_v3.ExtAuthzPerRoute_Disabled{
 						Disabled: false,
@@ -496,7 +492,7 @@ func buildTranslateFunc(ctx context.Context,
 
 		// Apply ExtAuthz specific translation
 
-		extAuthForSpec(gatewayExtensions, krtctx, &policyCR.Spec, &outSpec)
+		extAuthForSpec(gatewayExtensions, krtctx, policyCR, &outSpec)
 
 		for _, err := range outSpec.errors {
 			contextutils.LoggerFrom(ctx).Error(policyCR.GetNamespace(), policyCR.GetName(), err)

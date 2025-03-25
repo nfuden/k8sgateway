@@ -1,12 +1,12 @@
 package routepolicy
 
 import (
-	envoy_core_v3 "github.com/envoyproxy/go-control-plane/envoy/config/core/v3"
 	envoy_ext_authz_v3 "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/http/ext_authz/v3"
 	"istio.io/istio/pkg/kube/krt"
 
 	"github.com/kgateway-dev/kgateway/v2/api/v1alpha1"
 	"github.com/kgateway-dev/kgateway/v2/internal/kgateway/extensions2/pluginutils"
+	"github.com/kgateway-dev/kgateway/v2/internal/kgateway/ir"
 	"github.com/kgateway-dev/kgateway/v2/internal/kgateway/krtcollections"
 )
 
@@ -17,10 +17,25 @@ type extAuthIR struct {
 }
 
 // extAuthForSpec translates the ExtAuthz spec into the Envoy configuration
-func extAuthForSpec(gatewayExtensions *krtcollections.GatewayExtensionIndex,
+func extAuthForSpec(
+	gatewayExtensions *krtcollections.GatewayExtensionIndex,
 	krtctx krt.HandlerContext,
-	routeSpec *v1alpha1.RoutePolicySpec,
+	routepolicy *v1alpha1.RoutePolicy,
 	out *routeSpecIr) {
+	getter := (func(name, namespace string) (*ir.GatewayExtension, error) {
+		return pluginutils.GetGatewayExtension(gatewayExtensions, krtctx, name, namespace)
+	})
+
+	extAuthForSpecWithExtensionFunction(getter, routepolicy, out)
+}
+
+func extAuthForSpecWithExtensionFunction(
+	gExtensionGetter func(name, namespace string) (*ir.GatewayExtension, error),
+	routepolicy *v1alpha1.RoutePolicy,
+	out *routeSpecIr) {
+
+	routeSpec := &routepolicy.Spec
+
 	if routeSpec == nil || routeSpec.ExtAuth == nil {
 		return
 	}
@@ -60,7 +75,7 @@ func extAuthForSpec(gatewayExtensions *krtcollections.GatewayExtensionIndex,
 
 	if spec.ExtensionRef != nil {
 		// service, err := commoncol.BackendIndex.GetBackendFromRef(krtctx, parentSrc, log.GrpcService.BackendRef.BackendObjectReference)
-		gExt, err := pluginutils.GetGatewayExtension(gatewayExtensions, krtctx, spec.ExtensionRef.Name, spec.ExtensionRef.Namespace)
+		gExt, err := gExtensionGetter(spec.ExtensionRef.Name, routepolicy.GetNamespace())
 		if err != nil {
 			out.errors = append(out.errors, err)
 			return
