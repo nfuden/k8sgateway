@@ -214,7 +214,7 @@ func NewGatewayExtensionIndex(
 	client kube.Client,
 	policies *PolicyIndex,
 ) *GatewayExtensionIndex {
-	geIdx := &GatewayExtensionIndex{policies: policies}
+	geIdx := &GatewayExtensionIndex{}
 	gk := wellknown.GatewayExtensionGVK.GroupKind()
 	col := krt.WrapClient(kclient.New[*v1alpha1.GatewayExtension](client), krtopts.ToOptions("GatewayExtension")...)
 	policyCol := krt.NewCollection(col, func(krtctx krt.HandlerContext, cr *v1alpha1.GatewayExtension) *ir.GatewayExtension {
