@@ -130,28 +130,6 @@ spec:
                 required:
                 - backendRef
                 type: object
-              placement:
-                properties:
-                  name:
-                    enum:
-                    - FaultStage
-                    - CorsStage
-                    - WafStage
-                    - AuthNStage
-                    - AuthZStage
-                    - RateLimitStage
-                    - AcceptedStage
-                    - OutAuthStage
-                    - RouteStage
-                    type: string
-                  priority:
-                    format: int32
-                    maximum: 20
-                    minimum: -20
-                    type: integer
-                required:
-                - name
-                type: object
               type:
                 enum:
                 - ExtAuth

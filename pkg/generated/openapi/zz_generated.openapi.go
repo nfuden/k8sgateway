@@ -2022,13 +2022,6 @@ func schema_kgateway_v2_api_v1alpha1_GatewayExtensionSpec(ref common.ReferenceCa
 							Format:      "",
 						},
 					},
-					"placement": {
-						SchemaProps: spec.SchemaProps{
-							Description: "Placement configuration for where this extension should be placed in the filter chain. If not specified, the extension will be placed based on the type of the extension. For example Exauth will be place in the in AuthZStage by default.",
-							Default:     map[string]interface{}{},
-							Ref:         ref("github.com/kgateway-dev/kgateway/v2/api/v1alpha1.Placement"),
-						},
-					},
 					"extAuth": {
 						SchemaProps: spec.SchemaProps{
 							Description: "ExtAuth configuration for ExtAuth extension type.",
@@ -2046,7 +2039,7 @@ func schema_kgateway_v2_api_v1alpha1_GatewayExtensionSpec(ref common.ReferenceCa
 			},
 		},
 		Dependencies: []string{
-			"github.com/kgateway-dev/kgateway/v2/api/v1alpha1.ExtAuthProvider", "github.com/kgateway-dev/kgateway/v2/api/v1alpha1.ExtProcProvider", "github.com/kgateway-dev/kgateway/v2/api/v1alpha1.Placement"},
+			"github.com/kgateway-dev/kgateway/v2/api/v1alpha1.ExtAuthProvider", "github.com/kgateway-dev/kgateway/v2/api/v1alpha1.ExtProcProvider"},
 	}
 }
 

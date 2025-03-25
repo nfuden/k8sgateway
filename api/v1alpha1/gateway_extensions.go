@@ -97,7 +97,7 @@ type GatewayExtensionSpec struct {
 	// If not specified, the extension will be placed based on the type of the extension.
 	// For example Exauth will be place in the in AuthZStage by default.
 	// +optional
-	Placement Placement `json:"placement"`
+	// Placement Placement `json:"placement"`
 
 	// ExtAuth configuration for ExtAuth extension type.
 	// +optional

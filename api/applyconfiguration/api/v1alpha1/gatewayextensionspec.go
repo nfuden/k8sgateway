@@ -9,10 +9,9 @@ import (
 // GatewayExtensionSpecApplyConfiguration represents a declarative configuration of the GatewayExtensionSpec type for use
 // with apply.
 type GatewayExtensionSpecApplyConfiguration struct {
-	Type      *apiv1alpha1.GatewayExtensionType  `json:"type,omitempty"`
-	Placement *PlacementApplyConfiguration       `json:"placement,omitempty"`
-	ExtAuth   *ExtAuthProviderApplyConfiguration `json:"extAuth,omitempty"`
-	ExtProc   *ExtProcProviderApplyConfiguration `json:"extProc,omitempty"`
+	Type    *apiv1alpha1.GatewayExtensionType  `json:"type,omitempty"`
+	ExtAuth *ExtAuthProviderApplyConfiguration `json:"extAuth,omitempty"`
+	ExtProc *ExtProcProviderApplyConfiguration `json:"extProc,omitempty"`
 }
 
 // GatewayExtensionSpecApplyConfiguration constructs a declarative configuration of the GatewayExtensionSpec type for use with
@@ -26,14 +25,6 @@ func GatewayExtensionSpec() *GatewayExtensionSpecApplyConfiguration {
 // If called multiple times, the Type field is set to the value of the last call.
 func (b *GatewayExtensionSpecApplyConfiguration) WithType(value apiv1alpha1.GatewayExtensionType) *GatewayExtensionSpecApplyConfiguration {
 	b.Type = &value
-	return b
-}
-
-// WithPlacement sets the Placement field in the declarative configuration to the given value
-// and returns the receiver, so that objects can be built by chaining "With" function invocations.
-// If called multiple times, the Placement field is set to the value of the last call.
-func (b *GatewayExtensionSpecApplyConfiguration) WithPlacement(value *PlacementApplyConfiguration) *GatewayExtensionSpecApplyConfiguration {
-	b.Placement = value
 	return b
 }
 

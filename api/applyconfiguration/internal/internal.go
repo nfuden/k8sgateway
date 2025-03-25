@@ -563,10 +563,6 @@ var schemaYAML = typed.YAMLObject(`types:
     - name: extProc
       type:
         namedType: com.github.kgateway-dev.kgateway.v2.api.v1alpha1.ExtProcProvider
-    - name: placement
-      type:
-        namedType: com.github.kgateway-dev.kgateway.v2.api.v1alpha1.Placement
-      default: {}
     - name: type
       type:
         scalar: string
@@ -932,16 +928,6 @@ var schemaYAML = typed.YAMLObject(`types:
     - name: model
       type:
         scalar: string
-- name: com.github.kgateway-dev.kgateway.v2.api.v1alpha1.Placement
-  map:
-    fields:
-    - name: name
-      type:
-        scalar: string
-      default: ""
-    - name: priority
-      type:
-        scalar: numeric
 - name: com.github.kgateway-dev.kgateway.v2.api.v1alpha1.Pod
   map:
     fields:
