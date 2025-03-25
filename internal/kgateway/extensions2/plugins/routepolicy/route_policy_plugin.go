@@ -150,7 +150,7 @@ func NewPlugin(ctx context.Context, commoncol *common.CommonCollections) extensi
 
 	col := krt.WrapClient(kclient.New[*v1alpha1.RoutePolicy](commoncol.Client), commoncol.KrtOpts.ToOptions("RoutePolicy")...)
 	gk := wellknown.RoutePolicyGVK.GroupKind()
-	translate := buildTranslateFunc(ctx, commoncol.Secrets)
+	translate := buildTranslateFunc(ctx, commoncol.Secrets, commoncol.GatewayExtensionIndex)
 	// RoutePolicy IR will have TypedConfig -> implement backendroute method to add prompt guard, etc.
 	policyCol := krt.NewCollection(col, func(krtctx krt.HandlerContext, policyCR *v1alpha1.RoutePolicy) *ir.PolicyWrapper {
 		pol := &ir.PolicyWrapper{
@@ -464,7 +464,10 @@ func (p *routePolicyPluginGwPass) ResourcesToAdd(ctx context.Context) ir.Resourc
 	return ir.Resources{}
 }
 
-func buildTranslateFunc(ctx context.Context, secrets *krtcollections.SecretIndex) func(krtctx krt.HandlerContext, i *v1alpha1.RoutePolicy) *routePolicy {
+func buildTranslateFunc(ctx context.Context,
+	secrets *krtcollections.SecretIndex,
+	gatewayExtensions *krtcollections.GatewayExtensionIndex,
+) func(krtctx krt.HandlerContext, i *v1alpha1.RoutePolicy) *routePolicy {
 	return func(krtctx krt.HandlerContext, policyCR *v1alpha1.RoutePolicy) *routePolicy {
 		policyIr := routePolicy{
 			ct: policyCR.CreationTimestamp.Time,
@@ -493,7 +496,7 @@ func buildTranslateFunc(ctx context.Context, secrets *krtcollections.SecretIndex
 
 		// Apply ExtAuthz specific translation
 
-		extAuthForSpec(&policyCR.Spec, &outSpec)
+		extAuthForSpec(gatewayExtensions, krtctx, &policyCR.Spec, &outSpec)
 
 		for _, err := range outSpec.errors {
 			contextutils.LoggerFrom(ctx).Error(policyCR.GetNamespace(), policyCR.GetName(), err)

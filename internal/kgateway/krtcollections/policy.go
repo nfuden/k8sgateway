@@ -239,19 +239,14 @@ func (geidx *GatewayExtensionIndex) HasSynced() bool {
 	return geidx.GatewayExtensions.HasSynced()
 }
 
-func (geidx *GatewayExtensionIndex) GetGatewayExtensionFromRef(kctx krt.HandlerContext, src ir.ObjectSource, ref ir.ObjectSource) (*ir.GatewayExtension, error) {
-	name := ref.Name
-	namespace := src.Namespace
-	if ref.Namespace != "" {
-		namespace = ref.Namespace
-	}
+func (geidx *GatewayExtensionIndex) GetGatewayExtensionFromRef(kctx krt.HandlerContext, ref types.NamespacedName) (*ir.GatewayExtension, error) {
 
 	var err error
 	gext := krt.FetchOne(kctx, geidx.GatewayExtensions, krt.FilterObjectName(
-		types.NamespacedName{Namespace: namespace, Name: name}),
+		ref),
 	)
 	if gext == nil {
-		err = &NotFoundError{NotFoundObj: ref}
+		err = &NotFoundError{NotFoundObj: ir.ObjectSource{Namespace: ref.Namespace, Name: ref.Name, Kind: "GatewayExtension"}}
 	}
 
 	return gext, err
