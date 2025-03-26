@@ -140,6 +140,7 @@ func (c *CommonCollections) InitPlugins(ctx context.Context, mergedPlugins exten
 		c.controllerName,
 		mergedPlugins,
 		c.Client,
+		c.OurClient,
 		c.RefGrants,
 		c.KrtOpts,
 	)
