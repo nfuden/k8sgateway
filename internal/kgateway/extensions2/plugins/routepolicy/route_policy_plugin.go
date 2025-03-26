@@ -117,9 +117,21 @@ func (d *routePolicy) Equals(in any) bool {
 		return false
 	}
 
-	if !proto.Equal(d.spec.extAuth.filter, d2.spec.extAuth.filter) {
-		return false
+	{
+		extAuth := d.spec.extAuth
+		if extAuth != nil {
+			if !proto.Equal(extAuth.filter, extAuth.filter) {
+				return false
+			}
+			if extAuth.providerName != extAuth.providerName {
+				return false
+			}
+			if extAuth.enablement != extAuth.enablement {
+				return false
+			}
+		}
 	}
+
 	if !proto.Equal(d.spec.localRateLimit, d2.spec.localRateLimit) {
 		return false
 	}
