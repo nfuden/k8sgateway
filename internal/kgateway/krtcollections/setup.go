@@ -75,10 +75,10 @@ func registerTypes(ourCli versioned.Interface) {
 	kubeclient.Register[*v1alpha1.GatewayExtension](
 		wellknown.GatewayExtensionGVR,
 		wellknown.GatewayExtensionGVK,
-		func(c skubeclient.ClientGetter, namespace string, o metav1.ListOptions) (runtime.Object, error) {
+		func(c kubeclient.ClientGetter, namespace string, o metav1.ListOptions) (runtime.Object, error) {
 			return ourCli.GatewayV1alpha1().GatewayExtensions(namespace).List(context.Background(), o)
 		},
-		func(c skubeclient.ClientGetter, namespace string, o metav1.ListOptions) (watch.Interface, error) {
+		func(c kubeclient.ClientGetter, namespace string, o metav1.ListOptions) (watch.Interface, error) {
 			return ourCli.GatewayV1alpha1().GatewayExtensions(namespace).Watch(context.Background(), o)
 		},
 	)
