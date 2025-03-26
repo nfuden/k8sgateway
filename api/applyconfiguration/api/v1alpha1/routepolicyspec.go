@@ -9,6 +9,7 @@ type RoutePolicySpecApplyConfiguration struct {
 	AI             *AIRoutePolicyApplyConfiguration               `json:"ai,omitempty"`
 	Transformation *TransformationPolicyApplyConfiguration        `json:"transformation,omitempty"`
 	ExtAuth        *ExtAuthRoutePolicyApplyConfiguration          `json:"extAuth,omitempty"`
+	RateLimit      *RateLimitApplyConfiguration                   `json:"rateLimit,omitempty"`
 }
 
 // RoutePolicySpecApplyConfiguration constructs a declarative configuration of the RoutePolicySpec type for use with
@@ -51,5 +52,13 @@ func (b *RoutePolicySpecApplyConfiguration) WithTransformation(value *Transforma
 // If called multiple times, the ExtAuth field is set to the value of the last call.
 func (b *RoutePolicySpecApplyConfiguration) WithExtAuth(value *ExtAuthRoutePolicyApplyConfiguration) *RoutePolicySpecApplyConfiguration {
 	b.ExtAuth = value
+	return b
+}
+
+// WithRateLimit sets the RateLimit field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the RateLimit field is set to the value of the last call.
+func (b *RoutePolicySpecApplyConfiguration) WithRateLimit(value *RateLimitApplyConfiguration) *RoutePolicySpecApplyConfiguration {
+	b.RateLimit = value
 	return b
 }

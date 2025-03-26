@@ -10,6 +10,7 @@ import (
 
 	exteniondynamicmodulev3 "github.com/envoyproxy/go-control-plane/envoy/extensions/dynamic_modules/v3"
 	dynamicmodulesv3 "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/http/dynamic_modules/v3"
+	localratelimitv3 "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/http/local_ratelimit/v3"
 	envoyhttp "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/network/http_connection_manager/v3"
 	"google.golang.org/protobuf/proto"
 	skubeclient "istio.io/istio/pkg/config/schema/kubeclient"
@@ -49,6 +50,8 @@ const (
 	rustformationFilterNamePrefix  = "dynamic_modules/simple_mutations"
 	metadataRouteTransformation    = "transformation/helper"
 	extauthFilterNamePrefix        = "ext_auth"
+	localRateLimitFilterNamePrefix = "ratelimit/local"
+	localRateLimitStatPrefix       = "http_local_rate_limiter"
 )
 
 func extAuthFilterName(name string) string {
@@ -71,6 +74,7 @@ type routeSpecIr struct {
 	rustformation              proto.Message
 	rustformationStringToStash string
 	extAuth                    *extAuthIR
+	localRateLimit             *localratelimitv3.LocalRateLimit
 	errors                     []error
 }
 
@@ -116,6 +120,10 @@ func (d *routePolicy) Equals(in any) bool {
 	if !proto.Equal(d.spec.extAuth.filter, d2.spec.extAuth.filter) {
 		return false
 	}
+	if !proto.Equal(d.spec.localRateLimit, d2.spec.localRateLimit) {
+		return false
+	}
+
 	return true
 }
 
@@ -126,6 +134,7 @@ type routePolicyPluginGwPass struct {
 	ir.UnimplementedProxyTranslationPass
 	extAuthListenerEnabled bool
 	extAuth                *extAuthIR
+	localRateLimitInChain  *localratelimitv3.LocalRateLimit
 }
 
 func (p *routePolicyPluginGwPass) ApplyHCM(ctx context.Context, pCtx *ir.HcmContext, out *envoyhttp.HttpConnectionManager) error {
@@ -208,9 +217,14 @@ func (p *routePolicy) Name() string {
 
 // called 1 time for each listener
 func (p *routePolicyPluginGwPass) ApplyListenerPlugin(ctx context.Context, pCtx *ir.ListenerContext, out *envoy_config_listener_v3.Listener) {
+	policy, ok := pCtx.Policy.(*routePolicy)
+	if !ok {
+		return
+	}
 	if p.extAuth != nil {
 		p.extAuthListenerEnabled = true
 	}
+	p.localRateLimitInChain = policy.spec.localRateLimit
 }
 
 func (p *routePolicyPluginGwPass) ApplyVhostPlugin(ctx context.Context, pCtx *ir.VirtualHostContext, out *envoy_config_route_v3.VirtualHost) {
@@ -280,6 +294,19 @@ func (p *routePolicyPluginGwPass) ApplyForRoute(ctx context.Context, pCtx *ir.Ro
 		pCtx.TypedFilterConfig.AddTypedConfig(metadataRouteTransformation, setmetaTransform)
 
 		p.setTransformationInChain = true
+	}
+
+	if policy.spec.localRateLimit != nil {
+		pCtx.TypedFilterConfig.AddTypedConfig(localRateLimitFilterNamePrefix, policy.spec.localRateLimit)
+
+		// Add a filter to the chain. When having a rate limit for a route we need to also have a
+		// globally disabled rate limit filter in the chain otherwise it will be ignored.
+		// If there is also rate limit for the listener, it will not override this one.
+		if p.localRateLimitInChain == nil {
+			p.localRateLimitInChain = &localratelimitv3.LocalRateLimit{
+				StatPrefix: localRateLimitStatPrefix,
+			}
+		}
 	}
 
 	if policy.spec.AI != nil {
@@ -476,6 +503,11 @@ func (p *routePolicyPluginGwPass) HttpFilters(ctx context.Context, fcc ir.Filter
 			}
 		}
 	}
+	if p.localRateLimitInChain != nil {
+		filters = append(filters, plugins.MustNewStagedFilter(localRateLimitFilterNamePrefix,
+			p.localRateLimitInChain,
+			plugins.BeforeStage(plugins.AcceptedStage)))
+	}
 
 	if len(filters) == 0 {
 		return nil, nil
@@ -524,6 +556,8 @@ func buildTranslateFunc(ctx context.Context,
 		// Apply ExtAuthz specific translation
 
 		extAuthForSpec(gatewayExtensions, krtctx, policyCR, &outSpec)
+		// Apply rate limit specific translation
+		localRateLimitForSpec(policyCR.Spec, &outSpec)
 
 		for _, err := range outSpec.errors {
 			contextutils.LoggerFrom(ctx).Error(policyCR.GetNamespace(), policyCR.GetName(), err)
@@ -584,4 +618,22 @@ func transformationForSpec(spec v1alpha1.RoutePolicySpec, out *routeSpecIr) {
 	}
 	out.rustformation = rustformation
 	out.rustformationStringToStash = toStash
+}
+
+func localRateLimitForSpec(spec v1alpha1.RoutePolicySpec, out *routeSpecIr) {
+	if spec.RateLimit == nil || spec.RateLimit.Local == nil {
+		return
+	}
+
+	var err error
+	if spec.RateLimit.Local != nil {
+		out.localRateLimit, err = toLocalRateLimitFilterConfig(spec.RateLimit.Local)
+		if err != nil {
+			// In case of an error with translating the local rate limit configuration,
+			// the route will be dropped
+			out.errors = append(out.errors, err)
+		}
+	}
+
+	// TODO: Support rate limit extension
 }
