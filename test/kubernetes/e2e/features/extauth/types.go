@@ -1,7 +1,6 @@
 package extauth
 
 import (
-	"os"
 	"path/filepath"
 
 	appsv1 "k8s.io/api/apps/v1"
@@ -10,6 +9,7 @@ import (
 	gwv1 "sigs.k8s.io/gateway-api/apis/v1"
 
 	"github.com/kgateway-dev/kgateway/v2/api/v1alpha1"
+	"github.com/kgateway-dev/kgateway/v2/pkg/utils/fsutils"
 )
 
 func ptr[T any](v T) *T {
@@ -101,18 +101,14 @@ var (
 	}
 
 	// Manifest files
-	gatewayWithRouteManifest     = readTestData("common.yaml")
-	simpleServiceManifest        = readTestData("service.yaml")
-	extAuthManifest              = readTestData("ext-authz-server.yaml")
-	securedGatewayPolicyManifest = readTestData("secured-gateway-policy.yaml")
-	securedRouteManifest         = readTestData("secured-route.yaml")
-	insecureRouteManifest        = readTestData("insecure-route.yaml")
+	gatewayWithRouteManifest     = getTestFile("common.yaml")
+	simpleServiceManifest        = getTestFile("service.yaml")
+	extAuthManifest              = getTestFile("ext-authz-server.yaml")
+	securedGatewayPolicyManifest = getTestFile("secured-gateway-policy.yaml")
+	securedRouteManifest         = getTestFile("secured-route.yaml")
+	insecureRouteManifest        = getTestFile("insecure-route.yaml")
 )
 
-func readTestData(filename string) string {
-	data, err := os.ReadFile(filepath.Join("testdata", filename))
-	if err != nil {
-		panic(err)
-	}
-	return string(data)
+func getTestFile(filename string) string {
+	return filepath.Join(fsutils.MustGetThisDir(), "testdata", filename)
 }
