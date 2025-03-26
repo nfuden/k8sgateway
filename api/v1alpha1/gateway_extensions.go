@@ -32,8 +32,6 @@ const (
 	GatewayExtensionTypeExtAuth GatewayExtensionType = "ExtAuth"
 	// GatewayExtensionTypeExtProc is the type for ExtProc extensions.
 	GatewayExtensionTypeExtProc GatewayExtensionType = "ExtProc"
-
-	GatewayExtensionTypeExtended GatewayExtensionType = "Extended"
 )
 
 // FilterStageName represents the name of a filter stage.

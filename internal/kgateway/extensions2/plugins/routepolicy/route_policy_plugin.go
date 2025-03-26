@@ -318,6 +318,7 @@ func (p *routePolicyPluginGwPass) ApplyForRoute(ctx context.Context, pCtx *ir.Ro
 						Disabled: true,
 					},
 				})
+			// TODO (nfuden): for full support also set metadata transform
 
 		} else {
 			pCtx.TypedFilterConfig[string(policy.spec.extAuth.providerName)], _ = utils.MessageToAny(
@@ -327,6 +328,7 @@ func (p *routePolicyPluginGwPass) ApplyForRoute(ctx context.Context, pCtx *ir.Ro
 					},
 				})
 		}
+
 	}
 
 	return errors.Join(errs...)
@@ -432,16 +434,42 @@ func (p *routePolicyPluginGwPass) HttpFilters(ctx context.Context, fcc ir.Filter
 			if !p.extAuthListenerEnabled {
 				extAuthFilter.Filter.Disabled = true
 			}
-			// if
-			if p.extAuth.enabled == v1alpha1.ExtAuthDisableAll {
-				extAuthFilter.Filter.Disabled = false
-			}
+
 			filters = append(filters, extAuthFilter)
 		} else {
 			if p.extAuth.enabled == v1alpha1.ExtAuthDisableAll {
-				existingFilter.Filter.Disabled = false
+				// TODO: Enhance the disabled functionality as we support more extauth filters
+				// // dont slam other fields so pull from existing
+				// var extAuthCfg envoy_ext_authz_v3.ExtAuthz
+				// ptypes.UnmarshalAny(existingFilter.Filter.GetTypedConfig(), &extAuthCfg)
+				// extAuthCfg.FilterEnabledMetadata = &envoymatcher.MetadataMatcher{
+				// 	Filter: extAuthEnabledFilterName, // the transformation filter instance's name
+				// 	Invert: true,
+				// 	Path: []*envoymatcher.MetadataMatcher_PathSegment{
+				// 		{
+				// 			Segment: &envoymatcher.MetadataMatcher_PathSegment_Key{
+				// 				Key: extAuthEnabledFilterKey, // probably something like "ext-auth-enabled"
+				// 			},
+				// 		},
+				// 	},
+				// 	Value: &envoymatcher.ValueMatcher{
+				// 		MatchPattern: &envoymatcher.ValueMatcher_StringMatch{
+				// 			StringMatch: &envoymatcher.StringMatcher{
+				// 				MatchPattern: &envoymatcher.StringMatcher_Exact{
+				// 					Exact: "false",
+				// 				},
+				// 			},
+				// 		},
+				// 	},
+				// }
+
+			} else {
+				// if the filter exists and this was attached tot he gateway i guess we need to disable it.
+				if p.extAuthListenerEnabled {
+					existingFilter.Filter.Disabled = false
+					filters[existingFilterIdx] = existingFilter
+				}
 			}
-			filters[existingFilterIdx] = existingFilter
 		}
 	}
 

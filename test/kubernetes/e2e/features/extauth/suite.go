@@ -5,16 +5,13 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/onsi/gomega"
 	"github.com/stretchr/testify/suite"
-	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/kgateway-dev/kgateway/v2/pkg/utils/kubeutils"
 	"github.com/kgateway-dev/kgateway/v2/pkg/utils/requestutils/curl"
 	testmatchers "github.com/kgateway-dev/kgateway/v2/test/gomega/matchers"
-	"github.com/kgateway-dev/kgateway/v2/test/helpers"
 	"github.com/kgateway-dev/kgateway/v2/test/kubernetes/e2e"
 	"github.com/kgateway-dev/kgateway/v2/test/kubernetes/e2e/defaults"
 	testdefaults "github.com/kgateway-dev/kgateway/v2/test/kubernetes/e2e/defaults"
@@ -79,12 +76,6 @@ func (s *testingSuite) SetupSuite() {
 		LabelSelector: fmt.Sprintf("app.kubernetes.io/name=%s", proxyObjectMeta.GetName()),
 	})
 
-	s.assertStatus(metav1.Condition{
-		Type:    "Accepted",
-		Status:  metav1.ConditionTrue,
-		Reason:  "Accepted",
-		Message: "Policy accepted",
-	})
 }
 
 func (s *testingSuite) TearDownSuite() {
@@ -261,23 +252,4 @@ func (s *testingSuite) TestExtAuthWithRequestBody() {
 				tc.resp)
 		})
 	}
-}
-
-func (s *testingSuite) assertStatus(expected metav1.Condition) {
-	currentTimeout, pollingInterval := helpers.GetTimeouts()
-	p := s.testInstallation.Assertions
-	p.Gomega.Eventually(func(g gomega.Gomega) {
-		// be := &v1alpha1.RoutePolicy{ Spec: }
-		// objKey := client.ObjectKeyFromObject(routePolicy)
-		// err := s.testInstallation.ClusterContext.Client.Get(s.ctx, objKey, be)
-		// g.Expect(err).NotTo(gomega.HaveOccurred(), "failed to get route policy %s", objKey)
-
-		actual := be.Status.Conditions
-		g.Expect(actual).To(gomega.HaveLen(1), "condition should have length of 1")
-		cond := meta.FindStatusCondition(actual, expected.Type)
-		g.Expect(cond).NotTo(gomega.BeNil())
-		g.Expect(cond.Status).To(gomega.Equal(expected.Status))
-		g.Expect(cond.Reason).To(gomega.Equal(expected.Reason))
-		g.Expect(cond.Message).To(gomega.Equal(expected.Message))
-	}, currentTimeout, pollingInterval).Should(gomega.Succeed())
 }
