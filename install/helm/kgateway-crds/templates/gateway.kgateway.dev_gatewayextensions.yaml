@@ -141,13 +141,13 @@ spec:
             type: object
             x-kubernetes-validations:
             - message: ExtAuth must be set when type is ExtAuth
-              rule: self.type != 'ExtAuth' || has(self.extAuth)
+              rule: self.type != 'ExtAuth' || has(self.ExtAuth)
             - message: ExtProc must be set when type is ExtProc
-              rule: self.type != 'ExtProc' || has(self.extProc)
+              rule: self.type != 'ExtProc' || has(self.ExtProc)
             - message: ExtAuth must not be set when type is not ExtAuth
-              rule: self.type == 'ExtAuth' || !has(self.extAuth)
+              rule: self.type == 'ExtAuth' || !has(self.ExtAuth)
             - message: ExtProc must not be set when type is not ExtProc
-              rule: self.type == 'ExtProc' || !has(self.extProc)
+              rule: self.type == 'ExtProc' || !has(self.ExtProc)
           status:
             properties:
               conditions:

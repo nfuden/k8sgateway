@@ -141,8 +141,11 @@ type SimpleStatus struct {
 // +kubebuilder:validation:Enum=DisableAll
 type ExtAuthEnabled string
 
+// When we add a new field here we have to be specific around which extensions are enabled/disabled
+// and how these can be overriden by other policies.
 const (
-	// ExtAuthDisableAll disables the ExtAuth filter for this route.
+	// ExtAuthDisableAll disables all instances of the ExtAuth filter for this route.
+	// This is to enable a global disable such as for a health check route.
 	ExtAuthDisableAll ExtAuthEnabled = "DisableAll"
 )
 

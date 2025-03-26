@@ -3646,7 +3646,8 @@ func schema_kgateway_v2_api_v1alpha1_RoutePolicySpec(ref common.ReferenceCallbac
 					},
 					"extAuth": {
 						SchemaProps: spec.SchemaProps{
-							Ref: ref("github.com/kgateway-dev/kgateway/v2/api/v1alpha1.ExtAuthRoutePolicy"),
+							Description: "ExtAuth specifies the external authentication configuration for the policy. This controls what external server to send requests to for authentication.",
+							Ref:         ref("github.com/kgateway-dev/kgateway/v2/api/v1alpha1.ExtAuthRoutePolicy"),
 						},
 					},
 					"rateLimit": {

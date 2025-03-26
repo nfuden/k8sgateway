@@ -359,12 +359,15 @@ func (p *routePolicyPluginGwPass) ApplyForRoute(ctx context.Context, pCtx *ir.Ro
 		// Handle the enablement state
 		if policy.spec.extAuth.enablement == v1alpha1.ExtAuthDisableAll {
 			// Disable the filter under all providers via the metadata match
+			// we have to use the metadata as we dont know what other configurations may have extauth
 			pCtx.TypedFilterConfig.AddTypedConfig(extAuthGlobalDisableFilterName, extAuthEnablementPerRoute())
 		} else {
+			// if you are on a route and not trying to disable it then we need to make sure the provider is enabled.
+			// therefore set the perroute to be disabled: false
 			pCtx.TypedFilterConfig.AddTypedConfig(extAuthFilterName(policy.spec.extAuth.providerName),
 				&envoy_ext_authz_v3.ExtAuthzPerRoute{
 					Override: &envoy_ext_authz_v3.ExtAuthzPerRoute_Disabled{
-						Disabled: true,
+						Disabled: false,
 					},
 				},
 			)
@@ -455,7 +458,7 @@ func (p *routePolicyPluginGwPass) HttpFilters(ctx context.Context, fcc ir.Filter
 	if p.extAuth != nil {
 		extAuth := p.extAuth.filter
 
-		// handled opt out from all via metadata
+		// handled opt out from all via metadata this is purely for the fully disabled functionality
 		extAuth.FilterEnabledMetadata = &envoy_matcher_v3.MetadataMatcher{
 			Filter: extAuthGlobalDisableFilterName, // the transformation filter instance's name
 			Invert: true,
@@ -476,6 +479,7 @@ func (p *routePolicyPluginGwPass) HttpFilters(ctx context.Context, fcc ir.Filter
 				},
 			},
 		}
+
 		// register the filter that sets metadata so that it can have overrides on the route level
 		filters = append(filters, plugins.MustNewStagedFilter(extAuthGlobalDisableFilterKey,
 			&transformationpb.FilterTransformations{},
@@ -486,12 +490,15 @@ func (p *routePolicyPluginGwPass) HttpFilters(ctx context.Context, fcc ir.Filter
 		extAuthFilter := plugins.MustNewStagedFilter(extauthName,
 			extAuth,
 			plugins.DuringStage(plugins.AuthZStage))
+
+		// handle the two enable attachement cases
+
 		if !p.extAuthListenerEnabled {
+			// handle the case where route level only should be fired
 			extAuthFilter.Filter.Disabled = true
 		}
-		if p.extAuth.enablement != v1alpha1.ExtAuthDisableAll {
-			filters = append(filters, extAuthFilter)
-		}
+
+		filters = append(filters, extAuthFilter)
 
 	}
 	if p.localRateLimitInChain != nil {

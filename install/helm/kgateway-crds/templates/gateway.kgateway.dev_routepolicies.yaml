@@ -311,6 +311,7 @@ spec:
                     required:
                     - maxRequestBytes
                     type: object
+                type: object
               rateLimit:
                 properties:
                   local:
