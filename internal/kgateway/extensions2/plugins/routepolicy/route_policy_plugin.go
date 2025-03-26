@@ -308,7 +308,7 @@ func (p *routePolicyPluginGwPass) ApplyForRoute(ctx context.Context, pCtx *ir.Ro
 		// Handle the enabled state
 		if policy.spec.extAuth.enabled == v1alpha1.ExtAuthDisableAll {
 			// Disable the filter for this route
-			pCtx.TypedFilterConfig[string(policy.spec.extAuth.providerName)], _ = utils.MessageToAny(
+			pCtx.TypedFilterConfig.AddTypedConfig(string(policy.spec.extAuth.providerName),
 				&envoy_ext_authz_v3.ExtAuthzPerRoute{
 					Override: &envoy_ext_authz_v3.ExtAuthzPerRoute_Disabled{
 						Disabled: true,
@@ -316,7 +316,7 @@ func (p *routePolicyPluginGwPass) ApplyForRoute(ctx context.Context, pCtx *ir.Ro
 				})
 			// TODO (nfuden): for full support also set metadata transform
 		} else {
-			pCtx.TypedFilterConfig[string(policy.spec.extAuth.providerName)], _ = utils.MessageToAny(
+			pCtx.TypedFilterConfig.AddTypedConfig(string(policy.spec.extAuth.providerName),
 				&envoy_ext_authz_v3.ExtAuthzPerRoute{
 					Override: &envoy_ext_authz_v3.ExtAuthzPerRoute_Disabled{
 						Disabled: false,

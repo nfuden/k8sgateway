@@ -26,7 +26,7 @@ func TestExtAuthForSpec(t *testing.T) {
 	gExtGetter := func(name, namespace string) (*ir.GatewayExtension, error) {
 		return &ir.GatewayExtension{
 			Type: v1alpha1.GatewayExtensionTypeExtAuth,
-			ExtAuth: &v1alpha1.ExtAuthProvider{&gwv1.BackendRef{
+			ExtAuth: &v1alpha1.ExtAuthProvider{BackendRef: &gwv1.BackendRef{
 				BackendObjectReference: gwv1.BackendObjectReference{Name: "test-extauth"}}}}, nil
 	}
 	t.Run("creates basic ext auth configuration in one pass", func(t *testing.T) {
