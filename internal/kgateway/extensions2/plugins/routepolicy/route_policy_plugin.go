@@ -221,7 +221,7 @@ func (p *routePolicyPluginGwPass) ApplyListenerPlugin(ctx context.Context, pCtx 
 	if !ok {
 		return
 	}
-	if p.extAuth != nil {
+	if policy.spec.extAuth != nil {
 		p.extAuthListenerEnabled = true
 	}
 	p.localRateLimitInChain = policy.spec.localRateLimit

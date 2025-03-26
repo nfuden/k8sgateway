@@ -43,8 +43,8 @@ func TestExtAuthPolicyTranslation(t *testing.T) {
 
 		// Verify
 		require.NoError(t, err)
-		require.NotNil(t, outputRoute.TypedPerFilterConfig)
-		extAuthConfig, ok := outputRoute.TypedPerFilterConfig["test-auth-provider"]
+		require.NotNil(t, pCtx.TypedFilterConfig)
+		extAuthConfig, ok := pCtx.TypedFilterConfig[extAuthFilterName("test-auth-provider")]
 		assert.True(t, ok)
 		assert.NotNil(t, extAuthConfig)
 	})
@@ -88,8 +88,6 @@ func TestExtAuthPolicyTranslation(t *testing.T) {
 
 		// Verify
 		assert.True(t, plugin.extAuthListenerEnabled)
-		assert.NotNil(t, plugin.extAuth)
-		assert.Equal(t, "test-auth-provider", plugin.extAuth.providerName)
 	})
 
 	t.Run("adds ext auth filter to filter chain", func(t *testing.T) {
@@ -111,8 +109,8 @@ func TestExtAuthPolicyTranslation(t *testing.T) {
 		// Verify
 		require.NoError(t, err)
 		require.NotNil(t, filters)
-		assert.Equal(t, 1, len(filters))
-		assert.Equal(t, plugins.AuthZStage, filters[0].Stage)
+		assert.Equal(t, 2, len(filters))
+		assert.Equal(t, plugins.DuringStage(plugins.AuthZStage), filters[1].Stage)
 	})
 
 	t.Run("handles disabled ext auth configuration", func(t *testing.T) {
@@ -134,7 +132,7 @@ func TestExtAuthPolicyTranslation(t *testing.T) {
 
 		// Verify
 		require.NoError(t, err)
-		assert.Nil(t, outputRoute.TypedPerFilterConfig)
+		assert.Nil(t, pCtx.TypedFilterConfig)
 	})
 
 	t.Run("handles multiple ext auth configurations", func(t *testing.T) {
@@ -166,9 +164,9 @@ func TestExtAuthPolicyTranslation(t *testing.T) {
 		require.NoError(t, err)
 
 		// Verify
-		require.NotNil(t, outputRoute.TypedPerFilterConfig)
-		_, ok1 := outputRoute.TypedPerFilterConfig["test-auth-provider-1"]
-		_, ok2 := outputRoute.TypedPerFilterConfig["test-auth-provider-2"]
+		require.NotNil(t, pCtx.TypedFilterConfig)
+		_, ok1 := pCtx.TypedFilterConfig["test-auth-provider-1"]
+		_, ok2 := pCtx.TypedFilterConfig["test-auth-provider-2"]
 		assert.True(t, ok1)
 		assert.True(t, ok2)
 	})
