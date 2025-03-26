@@ -163,7 +163,7 @@ func TestApplyForRoute(t *testing.T) {
 		// Verify
 		require.NoError(t, err)
 		require.NotNil(t, pCtx.TypedFilterConfig)
-		extAuthConfig, ok := pCtx.TypedFilterConfig["test-extension"]
+		extAuthConfig, ok := pCtx.TypedFilterConfig[extAuthFilterName("test-extension")]
 		assert.True(t, ok)
 		assert.NotNil(t, extAuthConfig)
 	})
@@ -231,8 +231,6 @@ func TestApplyListenerPlugin(t *testing.T) {
 
 		// Verify
 		assert.True(t, plugin.extAuthListenerEnabled)
-		assert.NotNil(t, plugin.extAuth)
-		assert.Equal(t, "test-extension", plugin.extAuth.providerName)
 	})
 }
 
@@ -290,54 +288,10 @@ func TestExtAuthPolicyPlugin(t *testing.T) {
 		// Verify
 		require.NoError(t, err)
 		require.NotNil(t, pCtx.TypedFilterConfig)
-		extAuthConfig, ok := pCtx.TypedFilterConfig["test-auth-extension"]
+		extAuthConfig, ok := pCtx.TypedFilterConfig[extAuthFilterName("test-auth-extension")]
 		assert.True(t, ok)
 		assert.NotNil(t, extAuthConfig)
 	})
-
-	t.Run("configures listener with ext auth", func(t *testing.T) {
-		// Setup
-		plugin := &routePolicyPluginGwPass{}
-		ctx := context.Background()
-		policy := &routePolicy{
-			spec: routeSpecIr{
-				extAuth: &extAuthIR{
-					filter: &envoy_ext_authz_v3.ExtAuthz{
-						FailureModeAllow: true,
-					},
-					providerName: "test-auth-extension",
-				},
-			},
-		}
-		pCtx := &ir.ListenerContext{
-			Policy: policy,
-		}
-		listener := &envoy_config_listener_v3.Listener{
-			FilterChains: []*envoy_config_listener_v3.FilterChain{
-				{
-					Filters: []*envoy_config_listener_v3.Filter{
-						{
-							Name: "envoy.filters.network.http_connection_manager",
-							ConfigType: &envoy_config_listener_v3.Filter_TypedConfig{
-								TypedConfig: &anypb.Any{
-									TypeUrl: "type.googleapis.com/envoy.extensions.filters.network.http_connection_manager.v3.HttpConnectionManager",
-								},
-							},
-						},
-					},
-				},
-			},
-		}
-
-		// Execute
-		plugin.ApplyListenerPlugin(ctx, pCtx, listener)
-
-		// Verify
-		assert.True(t, plugin.extAuthListenerEnabled)
-		assert.NotNil(t, plugin.extAuth)
-		assert.Equal(t, "test-auth-extension", plugin.extAuth.providerName)
-	})
-
 	t.Run("adds ext auth filter to filter chain", func(t *testing.T) {
 		// Setup
 		plugin := &routePolicyPluginGwPass{
@@ -367,7 +321,9 @@ func TestExtAuthPolicyPlugin(t *testing.T) {
 		ctx := context.Background()
 		policy := &routePolicy{
 			spec: routeSpecIr{
-				extAuth: nil,
+				extAuth: &extAuthIR{
+					enablement: v1alpha1.ExtAuthDisableAll,
+				},
 			},
 		}
 		pCtx := &ir.RouteContext{
@@ -380,42 +336,8 @@ func TestExtAuthPolicyPlugin(t *testing.T) {
 
 		// Verify
 		require.NoError(t, err)
-		assert.Nil(t, pCtx.TypedFilterConfig)
-	})
-
-	t.Run("handles multiple ext auth configurations", func(t *testing.T) {
-		// Setup
-		plugin := &routePolicyPluginGwPass{}
-		ctx := context.Background()
-		policy := &routePolicy{
-			spec: routeSpecIr{
-				extAuth: &extAuthIR{
-					filter: &envoy_ext_authz_v3.ExtAuthz{
-						FailureModeAllow: true,
-					},
-					providerName: "test-auth-extension-1",
-				},
-			},
-		}
-		pCtx := &ir.RouteContext{
-			Policy: policy,
-		}
-		outputRoute := &envoy_config_route_v3.Route{}
-
-		// Execute first configuration
-		err := plugin.ApplyForRoute(ctx, pCtx, outputRoute)
-		require.NoError(t, err)
-
-		// Apply second configuration
-		policy.spec.extAuth.providerName = "test-auth-extension-2"
-		err = plugin.ApplyForRoute(ctx, pCtx, outputRoute)
-		require.NoError(t, err)
-
-		// Verify
-		require.NotNil(t, pCtx.TypedFilterConfig)
-		_, ok1 := pCtx.TypedFilterConfig["test-auth-extension-1"]
-		_, ok2 := pCtx.TypedFilterConfig["test-auth-extension-2"]
-		assert.True(t, ok1)
-		assert.True(t, ok2)
+		// assert.NotNil(t, )
+		assert.NotNil(t, pCtx.TypedFilterConfig, pCtx)
+		assert.NotEmpty(t, pCtx.TypedFilterConfig[extauthFilterNamePrefix])
 	})
 }

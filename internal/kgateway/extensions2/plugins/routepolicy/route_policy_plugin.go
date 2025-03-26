@@ -23,6 +23,7 @@ import (
 	envoy_config_listener_v3 "github.com/envoyproxy/go-control-plane/envoy/config/listener/v3"
 	envoy_config_route_v3 "github.com/envoyproxy/go-control-plane/envoy/config/route/v3"
 	envoy_ext_authz_v3 "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/http/ext_authz/v3"
+	envoy_matcher_v3 "github.com/envoyproxy/go-control-plane/envoy/type/matcher/v3"
 
 	"github.com/kgateway-dev/kgateway/v2/api/v1alpha1"
 	"github.com/kgateway-dev/kgateway/v2/internal/kgateway/extensions2/common"
@@ -43,10 +44,19 @@ import (
 
 const (
 	transformationFilterNamePrefix = "transformation"
+	extAuthGlobalDisableFilterName = "global_disable/ext_auth"
+	extAuthGlobalDisableFilterKey  = "global_disable/ext_auth"
 	rustformationFilterNamePrefix  = "dynamic_modules/simple_mutations"
 	metadataRouteTransformation    = "transformation/helper"
-	extauthFilterNamePrefix        = "ext_authz"
+	extauthFilterNamePrefix        = "ext_auth"
 )
+
+func extAuthFilterName(name string) string {
+	if name == "" {
+		return extauthFilterNamePrefix
+	}
+	return fmt.Sprintf("%s/%s", extauthFilterNamePrefix, name)
+}
 
 type routePolicy struct {
 	ct   time.Time
@@ -307,23 +317,19 @@ func (p *routePolicyPluginGwPass) ApplyForRoute(ctx context.Context, pCtx *ir.Ro
 	// ExtAuth does not allow for most information such as destination
 	// to be set at the route level so we need to smuggle info upwards.
 	if policy.spec.extAuth != nil {
-		// Handle the enabled state
-		if policy.spec.extAuth.enabled == v1alpha1.ExtAuthDisableAll {
-			// Disable the filter for this route
-			pCtx.TypedFilterConfig.AddTypedConfig(string(policy.spec.extAuth.providerName),
+
+		// Handle the enablement state
+		if policy.spec.extAuth.enablement == v1alpha1.ExtAuthDisableAll {
+			// Disable the filter under all providers via the metadata match
+			pCtx.TypedFilterConfig.AddTypedConfig(extAuthGlobalDisableFilterName, extAuthEnablementPerRoute())
+		} else {
+			pCtx.TypedFilterConfig.AddTypedConfig(extAuthFilterName(policy.spec.extAuth.providerName),
 				&envoy_ext_authz_v3.ExtAuthzPerRoute{
 					Override: &envoy_ext_authz_v3.ExtAuthzPerRoute_Disabled{
 						Disabled: true,
 					},
-				})
-			// TODO (nfuden): for full support also set metadata transform
-		} else {
-			pCtx.TypedFilterConfig.AddTypedConfig(string(policy.spec.extAuth.providerName),
-				&envoy_ext_authz_v3.ExtAuthzPerRoute{
-					Override: &envoy_ext_authz_v3.ExtAuthzPerRoute_Disabled{
-						Disabled: false,
-					},
-				})
+				},
+			)
 		}
 	}
 
@@ -410,7 +416,33 @@ func (p *routePolicyPluginGwPass) HttpFilters(ctx context.Context, fcc ir.Filter
 	// Add Ext_authz filter for listener
 	if p.extAuth != nil {
 		extAuth := p.extAuth.filter
-		extauthName := p.extAuth.providerName
+
+		// handled opt out from all
+		extAuth.FilterEnabledMetadata = &envoy_matcher_v3.MetadataMatcher{
+			Filter: extAuthGlobalDisableFilterName, // the transformation filter instance's name
+			Invert: true,
+			Path: []*envoy_matcher_v3.MetadataMatcher_PathSegment{
+				{
+					Segment: &envoy_matcher_v3.MetadataMatcher_PathSegment_Key{
+						Key: extAuthGlobalDisableFilterKey, // probably something like "ext-auth-enabled"
+					},
+				},
+			},
+			Value: &envoy_matcher_v3.ValueMatcher{
+				MatchPattern: &envoy_matcher_v3.ValueMatcher_StringMatch{
+					StringMatch: &envoy_matcher_v3.StringMatcher{
+						MatchPattern: &envoy_matcher_v3.StringMatcher_Exact{
+							Exact: "false",
+						},
+					},
+				},
+			},
+		}
+		filters = append(filters, plugins.MustNewStagedFilter(extAuthGlobalDisableFilterKey,
+			&transformationpb.FilterTransformations{},
+			plugins.BeforeStage(plugins.FaultStage)))
+
+		extauthName := extAuthFilterName(p.extAuth.providerName)
 
 		var existingFilter plugins.StagedHttpFilter
 		existingFilterIdx := -1
@@ -433,31 +465,7 @@ func (p *routePolicyPluginGwPass) HttpFilters(ctx context.Context, fcc ir.Filter
 
 			filters = append(filters, extAuthFilter)
 		} else {
-			if p.extAuth.enabled == v1alpha1.ExtAuthDisableAll {
-				// TODO: Enhance the disabled functionality as we support more extauth filters
-				// // dont slam other fields so pull from existing
-				// var extAuthCfg envoy_ext_authz_v3.ExtAuthz
-				// ptypes.UnmarshalAny(existingFilter.Filter.GetTypedConfig(), &extAuthCfg)
-				// extAuthCfg.FilterEnabledMetadata = &envoymatcher.MetadataMatcher{
-				// 	Filter: extAuthEnabledFilterName, // the transformation filter instance's name
-				// 	Invert: true,
-				// 	Path: []*envoymatcher.MetadataMatcher_PathSegment{
-				// 		{
-				// 			Segment: &envoymatcher.MetadataMatcher_PathSegment_Key{
-				// 				Key: extAuthEnabledFilterKey, // probably something like "ext-auth-enabled"
-				// 			},
-				// 		},
-				// 	},
-				// 	Value: &envoymatcher.ValueMatcher{
-				// 		MatchPattern: &envoymatcher.ValueMatcher_StringMatch{
-				// 			StringMatch: &envoymatcher.StringMatcher{
-				// 				MatchPattern: &envoymatcher.StringMatcher_Exact{
-				// 					Exact: "false",
-				// 				},
-				// 			},
-				// 		},
-				// 	},
-				// }
+			if p.extAuth.enablement == v1alpha1.ExtAuthDisableAll {
 
 			} else {
 				// if the filter exists and this was attached tot he gateway i guess we need to disable it.
