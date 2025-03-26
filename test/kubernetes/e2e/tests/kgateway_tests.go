@@ -28,7 +28,6 @@ import (
 func KubeGatewaySuiteRunner() e2e.SuiteRunner {
 	kubeGatewaySuiteRunner := e2e.NewSuiteRunner(false)
 	kubeGatewaySuiteRunner.Register("Extauth", extauth.NewTestingSuite)
-	return kubeGatewaySuiteRunner
 
 	kubeGatewaySuiteRunner.Register("Backends", backends.NewTestingSuite)
 	kubeGatewaySuiteRunner.Register("BackendTLSPolicies", backendtls.NewTestingSuite)
