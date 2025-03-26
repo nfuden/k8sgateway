@@ -114,7 +114,6 @@ type routePolicyPluginGwPass struct {
 	// TODO(nfuden): dont abuse httplevel filter in favor of route level
 	rustformationStash map[string]string
 	ir.UnimplementedProxyTranslationPass
-	setAIFilter            bool
 	extAuthListenerEnabled bool
 	extAuth                *extAuthIR
 }
@@ -316,7 +315,6 @@ func (p *routePolicyPluginGwPass) ApplyForRoute(ctx context.Context, pCtx *ir.Ro
 					},
 				})
 			// TODO (nfuden): for full support also set metadata transform
-
 		} else {
 			pCtx.TypedFilterConfig[string(policy.spec.extAuth.providerName)], _ = utils.MessageToAny(
 				&envoy_ext_authz_v3.ExtAuthzPerRoute{
@@ -325,7 +323,6 @@ func (p *routePolicyPluginGwPass) ApplyForRoute(ctx context.Context, pCtx *ir.Ro
 					},
 				})
 		}
-
 	}
 
 	return errors.Join(errs...)

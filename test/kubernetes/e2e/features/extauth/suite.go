@@ -78,7 +78,6 @@ func (s *testingSuite) SetupSuite() {
 	s.testInstallation.Assertions.EventuallyPodsRunning(s.ctx, proxyObjMeta.GetNamespace(), metav1.ListOptions{
 		LabelSelector: fmt.Sprintf("app.kubernetes.io/name=%s", proxyObjMeta.GetName()),
 	})
-
 }
 
 func (s *testingSuite) TearDownSuite() {
@@ -96,7 +95,6 @@ func (s *testingSuite) TearDownSuite() {
 
 // TestExtAuthPolicy tests the basic ExtAuth functionality with header-based allow/deny
 func (s *testingSuite) TestExtAuthPolicy() {
-
 	manifests := []string{
 		securedGatewayPolicyManifest,
 		insecureRouteManifest,

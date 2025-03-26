@@ -12,10 +12,6 @@ import (
 	"github.com/kgateway-dev/kgateway/v2/pkg/utils/fsutils"
 )
 
-func ptr[T any](v T) *T {
-	return &v
-}
-
 var (
 	// common resources
 	simpleSvc = &corev1.Service{
@@ -105,8 +101,8 @@ var (
 	simpleServiceManifest        = getTestFile("service.yaml")
 	extAuthManifest              = getTestFile("ext-authz-server.yaml")
 	securedGatewayPolicyManifest = getTestFile("secured-gateway-policy.yaml")
-	securedRouteManifest         = getTestFile("secured-route.yaml")
-	insecureRouteManifest        = getTestFile("insecure-route.yaml")
+	// securedRouteManifest         = getTestFile("secured-route.yaml")
+	insecureRouteManifest = getTestFile("insecure-route.yaml")
 )
 
 func getTestFile(filename string) string {

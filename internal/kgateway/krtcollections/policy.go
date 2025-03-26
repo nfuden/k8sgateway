@@ -239,7 +239,6 @@ func (geidx *GatewayExtensionIndex) HasSynced() bool {
 }
 
 func (geidx *GatewayExtensionIndex) GetGatewayExtensionFromRef(kctx krt.HandlerContext, ref types.NamespacedName) (*ir.GatewayExtension, error) {
-
 	var err error
 	gext := krt.FetchOne(kctx, geidx.GatewayExtensions, krt.FilterObjectName(
 		ref),

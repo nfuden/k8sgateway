@@ -4,7 +4,7 @@ import (
 	"context"
 	"testing"
 
-	v1 "k8s.io/api/core/v1"
+	corev1 "k8s.io/api/core/v1"
 	gwv1 "sigs.k8s.io/gateway-api/apis/v1"
 
 	envoy_config_listener_v3 "github.com/envoyproxy/go-control-plane/envoy/config/listener/v3"
@@ -30,10 +30,9 @@ func TestExtAuthForSpec(t *testing.T) {
 				BackendObjectReference: gwv1.BackendObjectReference{Name: "test-extauth"}}}}, nil
 	}
 	t.Run("creates basic ext auth configuration in one pass", func(t *testing.T) {
-
 		// Setup
 		spec := &v1alpha1.RoutePolicy{Spec: v1alpha1.RoutePolicySpec{ExtAuth: &v1alpha1.ExtAuthRoutePolicy{
-			ExtensionRef: &v1.LocalObjectReference{
+			ExtensionRef: &corev1.LocalObjectReference{
 				Name: "test-extension",
 			},
 			EmitFilterStateStats: truthy,
@@ -53,7 +52,7 @@ func TestExtAuthForSpec(t *testing.T) {
 		// Setup
 		truthy := true
 		spec := &v1alpha1.RoutePolicy{Spec: v1alpha1.RoutePolicySpec{ExtAuth: &v1alpha1.ExtAuthRoutePolicy{
-			ExtensionRef: &v1.LocalObjectReference{
+			ExtensionRef: &corev1.LocalObjectReference{
 				Name: "test-extension",
 			},
 			FailureModeAllow: &truthy,
@@ -73,7 +72,7 @@ func TestExtAuthForSpec(t *testing.T) {
 		truthy := true
 		// Setup
 		spec := &v1alpha1.RoutePolicy{Spec: v1alpha1.RoutePolicySpec{ExtAuth: &v1alpha1.ExtAuthRoutePolicy{
-			ExtensionRef: &v1.LocalObjectReference{
+			ExtensionRef: &corev1.LocalObjectReference{
 				Name: "test-extension",
 			},
 			WithRequestBody: &v1alpha1.BufferSettings{
@@ -99,7 +98,7 @@ func TestExtAuthForSpec(t *testing.T) {
 	t.Run("configures metadata context namespaces", func(t *testing.T) {
 		// Setup
 		spec := &v1alpha1.RoutePolicy{Spec: v1alpha1.RoutePolicySpec{ExtAuth: &v1alpha1.ExtAuthRoutePolicy{
-			ExtensionRef: &v1.LocalObjectReference{
+			ExtensionRef: &corev1.LocalObjectReference{
 				Name: "test-extension",
 			},
 			MetadataContextNamespaces: []string{"jwt", "custom"},
@@ -119,7 +118,7 @@ func TestExtAuthForSpec(t *testing.T) {
 		// Setup
 		truthy := true
 		spec := &v1alpha1.RoutePolicy{Spec: v1alpha1.RoutePolicySpec{ExtAuth: &v1alpha1.ExtAuthRoutePolicy{
-			ExtensionRef: &v1.LocalObjectReference{
+			ExtensionRef: &corev1.LocalObjectReference{
 				Name: "test-extension",
 			},
 			IncludePeerCertificate: &truthy,

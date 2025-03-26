@@ -32,11 +32,9 @@ func ErrInvalidExtensionType(expected, actual v1alpha1.GatewayExtensionType) err
 // GetGatewayExtension retrieves a GatewayExtension resource by name and namespace.
 // It returns the extension and any error encountered during retrieval.
 func GetGatewayExtension(extensions *krtcollections.GatewayExtensionIndex, krtctx krt.HandlerContext, extensionName, ns string) (*ir.GatewayExtension, error) {
-
 	extension, err := extensions.GetGatewayExtensionFromRef(krtctx, types.NamespacedName{Name: extensionName, Namespace: ns})
 	if err != nil {
 		return nil, fmt.Errorf("failed to find secret %s: %v", extensionName, err)
 	}
 	return extension, nil
-
 }

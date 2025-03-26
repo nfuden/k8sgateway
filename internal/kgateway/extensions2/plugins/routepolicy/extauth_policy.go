@@ -34,7 +34,6 @@ func extAuthForSpecWithExtensionFunction(
 	gExtensionGetter func(name, namespace string) (*ir.GatewayExtension, error),
 	routepolicy *v1alpha1.RoutePolicy,
 	out *routeSpecIr) {
-
 	routeSpec := &routepolicy.Spec
 
 	if routeSpec == nil || routeSpec.ExtAuth == nil {
@@ -95,7 +94,6 @@ func extAuthForSpecWithExtensionFunction(
 				},
 			},
 		}
-
 	}
 
 	nameOrPlaceholder := "ext-auth"
