@@ -62,7 +62,7 @@ type GatewayExtensionSpec struct {
 
 	// Placement configuration for where this extension should be placed in the filter chain.
 	// If not specified, the extension will be placed based on the type of the extension.
-	// For example Exauth will be place in the in AuthZStage by default.
+	// For example, ExtAuth will be placed in the AuthZStage by default.
 	// +optional
 	// Placement Placement `json:"placement"`
 
