@@ -128,5 +128,4 @@ func extAuthEnablementPerRoute() proto.Message {
 			},
 		},
 	}
-
 }

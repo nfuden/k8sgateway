@@ -344,7 +344,6 @@ func (p *routePolicyPluginGwPass) ApplyForRoute(ctx context.Context, pCtx *ir.Ro
 	// ExtAuth does not allow for most information such as destination
 	// to be set at the route level so we need to smuggle info upwards.
 	if policy.spec.extAuth != nil {
-
 		// Handle the enablement state
 		if policy.spec.extAuth.enablement == v1alpha1.ExtAuthDisableAll {
 			// Disable the filter under all providers via the metadata match

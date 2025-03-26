@@ -226,6 +226,8 @@ type BufferSettings struct {
 	// When unset, the default behavior is false.
 	// +optional
 	PackAsBytes *bool `json:"packAsBytes,omitempty"`
+}
+
 // RateLimit defines a rate limiting policy.
 type RateLimit struct {
 	// Local defines a local rate limiting policy.
