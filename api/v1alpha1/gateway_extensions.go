@@ -34,37 +34,6 @@ const (
 	GatewayExtensionTypeExtProc GatewayExtensionType = "ExtProc"
 )
 
-// FilterStageName represents the name of a filter stage.
-// +kubebuilder:validation:Enum=FaultStage;CorsStage;WafStage;AuthNStage;AuthZStage;RateLimitStage;AcceptedStage;OutAuthStage;RouteStage
-type FilterStageName string
-
-const (
-	FaultStage     FilterStageName = "FaultStage"
-	CorsStage      FilterStageName = "CorsStage"
-	WafStage       FilterStageName = "WafStage"
-	AuthNStage     FilterStageName = "AuthNStage"
-	AuthZStage     FilterStageName = "AuthZStage"
-	RateLimitStage FilterStageName = "RateLimitStage"
-	AcceptedStage  FilterStageName = "AcceptedStage"
-	OutAuthStage   FilterStageName = "OutAuthStage"
-	RouteStage     FilterStageName = "RouteStage"
-)
-
-// Placement defines the configuration for where a provider should be placed in the filter chain.
-type Placement struct {
-	// Name of the filter stage where the provider should be placed.
-	// +kubebuilder:validation:Required
-	Name FilterStageName `json:"name"`
-
-	// Priority determines the relative order of providers within the same stage.
-	// Lower priorities are processed first.
-	// In general ordering within a stage is considered not important.
-	// +optional
-	// +kubebuilder:validation:Minimum=-20
-	// +kubebuilder:validation:Maximum=20
-	Priority *int32 `json:"priority,omitempty"`
-}
-
 // ExtAuthProvider defines the configuration for an ExtAuth provider.
 type ExtAuthProvider struct {
 	// BackendRef references the backend service that will handle the authentication.
@@ -80,10 +49,10 @@ type ExtProcProvider struct {
 }
 
 // GatewayExtensionSpec defines the desired state of GatewayExtension.
-// +kubebuilder:validation:XValidation:message="ExtAuth must be set when type is ExtAuth",rule="self.type != 'ExtAuth' || has(self.ExtAuth)"
-// +kubebuilder:validation:XValidation:message="ExtProc must be set when type is ExtProc",rule="self.type != 'ExtProc' || has(self.ExtProc)"
-// +kubebuilder:validation:XValidation:message="ExtAuth must not be set when type is not ExtAuth",rule="self.type == 'ExtAuth' || !has(self.ExtAuth)"
-// +kubebuilder:validation:XValidation:message="ExtProc must not be set when type is not ExtProc",rule="self.type == 'ExtProc' || !has(self.ExtProc)"
+// +kubebuilder:validation:XValidation:message="ExtAuth must be set when type is ExtAuth",rule="self.type != 'ExtAuth' || has(self.extAuth)"
+// +kubebuilder:validation:XValidation:message="ExtProc must be set when type is ExtProc",rule="self.type != 'ExtProc' || has(self.extProc)"
+// +kubebuilder:validation:XValidation:message="ExtAuth must not be set when type is not ExtAuth",rule="self.type == 'ExtAuth' || !has(self.extAuth)"
+// +kubebuilder:validation:XValidation:message="ExtProc must not be set when type is not ExtProc",rule="self.type == 'ExtProc' || !has(self.extProc)"
 type GatewayExtensionSpec struct {
 	// Type indicates the type of the GatewayExtension to be used.
 	// +unionDiscriminator
