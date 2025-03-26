@@ -597,7 +597,7 @@ func aiSecretForSpec(
 
 // transformationForSpec translates the transformation spec into and onto the IR policy
 func transformationForSpec(spec v1alpha1.RoutePolicySpec, out *routeSpecIr) {
-	if spec.Transformation != (v1alpha1.TransformationPolicy{}) {
+	if spec.Transformation == (v1alpha1.TransformationPolicy{}) {
 		return
 	}
 	var err error
