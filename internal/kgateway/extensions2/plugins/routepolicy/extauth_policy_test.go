@@ -254,8 +254,8 @@ func TestHttpFilters(t *testing.T) {
 		// Verify
 		require.NoError(t, err)
 		require.NotNil(t, filters)
-		assert.Equal(t, 1, len(filters))
-		assert.Equal(t, plugins.AuthZStage, filters[0].Stage)
+		assert.Equal(t, 2, len(filters)) // extauth and metadata filter
+		assert.Equal(t, plugins.DuringStage(plugins.AuthZStage), filters[1].Stage)
 	})
 }
 
@@ -291,28 +291,7 @@ func TestExtAuthPolicyPlugin(t *testing.T) {
 		extAuthConfig, ok := pCtx.TypedFilterConfig[extAuthFilterName("test-auth-extension")]
 		assert.True(t, ok)
 		assert.NotNil(t, extAuthConfig)
-	})
-	t.Run("adds ext auth filter to filter chain", func(t *testing.T) {
-		// Setup
-		plugin := &routePolicyPluginGwPass{
-			extAuth: &extAuthIR{
-				filter: &envoy_ext_authz_v3.ExtAuthz{
-					FailureModeAllow: true,
-				},
-				providerName: "test-auth-extension",
-			},
-		}
-		ctx := context.Background()
-		fcc := ir.FilterChainCommon{}
-
-		// Execute
-		filters, err := plugin.HttpFilters(ctx, fcc)
-
-		// Verify
-		require.NoError(t, err)
-		require.NotNil(t, filters)
-		assert.Equal(t, 1, len(filters))
-		assert.Equal(t, plugins.AuthZStage, filters[0].Stage)
+		assert.Empty(t, pCtx.TypedFilterConfig[extAuthGlobalDisableFilterName])
 	})
 
 	t.Run("handles disabled ext auth configuration", func(t *testing.T) {
@@ -338,6 +317,6 @@ func TestExtAuthPolicyPlugin(t *testing.T) {
 		require.NoError(t, err)
 		// assert.NotNil(t, )
 		assert.NotNil(t, pCtx.TypedFilterConfig, pCtx)
-		assert.NotEmpty(t, pCtx.TypedFilterConfig[extauthFilterNamePrefix])
+		assert.NotEmpty(t, pCtx.TypedFilterConfig[extAuthGlobalDisableFilterName])
 	})
 }
