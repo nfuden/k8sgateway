@@ -483,8 +483,7 @@ func buildTranslateFunc(ctx context.Context,
 			// Preprocess the AI backend
 			err = preProcessAIRoutePolicy(policyCR.Spec.AI, outSpec.AI)
 			if err != nil {
-				// TODO: append errors to return on policyIr
-				contextutils.LoggerFrom(ctx).Error(policyCR.GetNamespace(), policyCR.GetName(), err)
+				outSpec.errors = append(outSpec.errors, err)
 			}
 		}
 		// Apply transformation specific translation
