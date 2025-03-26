@@ -98,7 +98,7 @@ func extAuthForSpecWithExtensionFunction(
 
 	}
 
-	nameOrPlaceholder := ""
+	nameOrPlaceholder := "ext-auth"
 	if spec.ExtensionRef != nil {
 		nameOrPlaceholder = string(spec.ExtensionRef.Name)
 	}

@@ -106,9 +106,6 @@ func (d *routePolicy) Equals(in any) bool {
 	if !proto.Equal(d.spec.extAuth.filter, d2.spec.extAuth.filter) {
 		return false
 	}
-	// if d.spec.extAuth.Stage != d2.spec.extAuth.Stage {
-	// 	return false
-	// }
 	return true
 }
 
