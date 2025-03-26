@@ -443,7 +443,7 @@ func (p *routePolicyPluginGwPass) HttpFilters(ctx context.Context, fcc ir.Filter
 	if p.extAuth != nil {
 		extAuth := p.extAuth.filter
 
-		// handled opt out from all
+		// handled opt out from all via metadata
 		extAuth.FilterEnabledMetadata = &envoy_matcher_v3.MetadataMatcher{
 			Filter: extAuthGlobalDisableFilterName, // the transformation filter instance's name
 			Invert: true,
@@ -464,43 +464,23 @@ func (p *routePolicyPluginGwPass) HttpFilters(ctx context.Context, fcc ir.Filter
 				},
 			},
 		}
+		// register the filter that sets metadata so that it can have overrides on the route level
 		filters = append(filters, plugins.MustNewStagedFilter(extAuthGlobalDisableFilterKey,
 			&transformationpb.FilterTransformations{},
 			plugins.BeforeStage(plugins.FaultStage)))
 
+		// add the specific auth filter
 		extauthName := extAuthFilterName(p.extAuth.providerName)
-
-		var existingFilter plugins.StagedHttpFilter
-		existingFilterIdx := -1
-		for idx, filter := range filters {
-			if filter.Filter.GetName() == extauthName {
-				existingFilter = filter
-				existingFilterIdx = idx
-				break
-			}
+		extAuthFilter := plugins.MustNewStagedFilter(extauthName,
+			extAuth,
+			plugins.DuringStage(plugins.AuthZStage))
+		if !p.extAuthListenerEnabled {
+			extAuthFilter.Filter.Disabled = true
 		}
-		if existingFilterIdx == -1 {
-			extAuthFilter := plugins.MustNewStagedFilter(extauthName,
-				extAuth,
-				plugins.DuringStage(plugins.AuthZStage)) //TODO(nfuden): support stages
-			// if listener was not configured then we only have route level config
-			// so we need to make our route level filters disabled by default
-			if !p.extAuthListenerEnabled {
-				extAuthFilter.Filter.Disabled = true
-			}
-
+		if p.extAuth.enablement != v1alpha1.ExtAuthDisableAll {
 			filters = append(filters, extAuthFilter)
-		} else {
-			if p.extAuth.enablement == v1alpha1.ExtAuthDisableAll {
-
-			} else {
-				// if the filter exists and this was attached tot he gateway i guess we need to disable it.
-				if p.extAuthListenerEnabled {
-					existingFilter.Filter.Disabled = false
-					filters[existingFilterIdx] = existingFilter
-				}
-			}
 		}
+
 	}
 	if p.localRateLimitInChain != nil {
 		filters = append(filters, plugins.MustNewStagedFilter(localRateLimitFilterNamePrefix,
