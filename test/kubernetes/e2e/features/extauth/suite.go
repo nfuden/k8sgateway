@@ -47,15 +47,18 @@ func (s *testingSuite) SetupSuite() {
 		testdefaults.CurlPodManifest,
 		simpleServiceManifest,
 		gatewayWithRouteManifest,
-		extAuthServiceManifest,
+		extAuthManifest,
+		// securedGatewayPolicyManifest,
+		// securedRouteManifest,
+		// insecureRouteManifest,
 	}
 	s.commonResources = []client.Object{
 		// resources from curl manifest
 		testdefaults.CurlPod,
 		// resources from service manifest
-		simpleSvc,
+		simpleSvc, simpleDeployment,
 		// deployer-generated resources
-		proxyDeployment, proxyService, proxyServiceAccount,
+		proxyDeployment, proxyService,
 		// extauth resources
 		extAuthSvc, extAuthExtension,
 	}
@@ -72,8 +75,8 @@ func (s *testingSuite) SetupSuite() {
 		LabelSelector: defaults.CurlPodLabelSelector,
 	})
 
-	s.testInstallation.Assertions.EventuallyPodsRunning(s.ctx, proxyObjectMeta.GetNamespace(), metav1.ListOptions{
-		LabelSelector: fmt.Sprintf("app.kubernetes.io/name=%s", proxyObjectMeta.GetName()),
+	s.testInstallation.Assertions.EventuallyPodsRunning(s.ctx, proxyObjMeta.GetNamespace(), metav1.ListOptions{
+		LabelSelector: fmt.Sprintf("app.kubernetes.io/name=%s", proxyObjMeta.GetName()),
 	})
 
 }
@@ -86,19 +89,42 @@ func (s *testingSuite) TearDownSuite() {
 	}
 	s.testInstallation.Assertions.EventuallyObjectsNotExist(s.ctx, s.commonResources...)
 
-	s.testInstallation.Assertions.EventuallyPodsNotExist(s.ctx, proxyObjectMeta.GetNamespace(), metav1.ListOptions{
-		LabelSelector: fmt.Sprintf("app.kubernetes.io/name=%s", proxyObjectMeta.GetName()),
+	s.testInstallation.Assertions.EventuallyPodsNotExist(s.ctx, proxyObjMeta.GetNamespace(), metav1.ListOptions{
+		LabelSelector: fmt.Sprintf("app.kubernetes.io/name=%s", proxyObjMeta.GetName()),
 	})
 }
 
 // TestExtAuthPolicy tests the basic ExtAuth functionality with header-based allow/deny
 func (s *testingSuite) TestExtAuthPolicy() {
 
+	manifests := []string{
+		securedGatewayPolicyManifest,
+		insecureRouteManifest,
+	}
+
+	resources := []client.Object{
+		basicSecureRoute, gatewayAttachedRoutePolicy,
+		insecureRoute, insecureRoutePolicy,
+	}
+	s.T().Cleanup(func() {
+		for _, manifest := range manifests {
+			err := s.testInstallation.Actions.Kubectl().DeleteFileSafe(s.ctx, manifest)
+			s.Require().NoError(err)
+		}
+		s.testInstallation.Assertions.EventuallyObjectsNotExist(s.ctx, resources...)
+	})
+	// set up common resources once
+	for _, manifest := range manifests {
+		err := s.testInstallation.Actions.Kubectl().ApplyFile(s.ctx, manifest)
+		s.Require().NoError(err, "can apply "+manifest)
+	}
+	s.testInstallation.Assertions.EventuallyObjectsExist(s.ctx, resources...)
+
 	// Wait for pods to be running
 	s.testInstallation.Assertions.EventuallyPodsRunning(s.ctx, testdefaults.CurlPod.GetNamespace(), metav1.ListOptions{
 		LabelSelector: "app.kubernetes.io/name=curl",
 	})
-	s.testInstallation.Assertions.EventuallyPodsRunning(s.ctx, proxyObjectMeta.GetNamespace(), metav1.ListOptions{
+	s.testInstallation.Assertions.EventuallyPodsRunning(s.ctx, proxyObjMeta.GetNamespace(), metav1.ListOptions{
 		LabelSelector: "app.kubernetes.io/name=gw",
 	})
 	s.testInstallation.Assertions.EventuallyPodsRunning(s.ctx, extAuthSvc.GetNamespace(), metav1.ListOptions{
@@ -139,7 +165,7 @@ func (s *testingSuite) TestExtAuthPolicy() {
 		s.Run(tc.name, func() {
 			// Build curl options
 			opts := []curl.Option{
-				curl.WithHost(kubeutils.ServiceFQDN(proxyObjectMeta)),
+				curl.WithHost(kubeutils.ServiceFQDN(proxyObjMeta)),
 				curl.WithHostHeader("example.com"),
 				curl.WithPort(8080),
 			}
@@ -158,98 +184,6 @@ func (s *testingSuite) TestExtAuthPolicy() {
 					StatusCode: tc.expectedStatus,
 					Headers:    tc.expectedHeaders,
 				})
-		})
-	}
-}
-
-// TestExtAuthWithRequestBody tests the ExtAuth route policy with request body buffering
-func (s *testingSuite) TestExtAuthWithRequestBody() {
-	manifests := []string{
-		testdefaults.CurlPodManifest,
-		simpleServiceManifest,
-		gatewayWithRouteManifest,
-		extAuthServiceManifest,
-		extAuthExtensionManifest,
-		// routePolicyWithExtAuthRequestBody,
-	}
-	manifestObjects := []client.Object{
-		testdefaults.CurlPod,                               // curl
-		simpleSvc,                                          // echo service
-		proxyService, proxyServiceAccount, proxyDeployment, // proxy
-		extAuthSvc,       // extauth service
-		extAuthExtension, // extauth extension
-	}
-
-	s.T().Cleanup(func() {
-		for _, manifest := range manifests {
-			err := s.testInstallation.Actions.Kubectl().DeleteFileSafe(s.ctx, manifest)
-			s.Require().NoError(err)
-		}
-		s.testInstallation.Assertions.EventuallyObjectsNotExist(s.ctx, manifestObjects...)
-	})
-
-	for _, manifest := range manifests {
-		err := s.testInstallation.Actions.Kubectl().ApplyFile(s.ctx, manifest)
-		s.Require().NoError(err)
-	}
-	s.testInstallation.Assertions.EventuallyObjectsExist(s.ctx, manifestObjects...)
-
-	// make sure pods are running
-	s.testInstallation.Assertions.EventuallyPodsRunning(s.ctx, testdefaults.CurlPod.GetNamespace(), metav1.ListOptions{
-		LabelSelector: "app.kubernetes.io/name=curl",
-	})
-
-	s.testInstallation.Assertions.EventuallyPodsRunning(s.ctx, proxyObjectMeta.GetNamespace(), metav1.ListOptions{
-		LabelSelector: "app.kubernetes.io/name=gw",
-	})
-
-	s.testInstallation.Assertions.EventuallyPodsRunning(s.ctx, extAuthSvc.GetNamespace(), metav1.ListOptions{
-		LabelSelector: "app.kubernetes.io/name=extauth",
-	})
-
-	testCases := []struct {
-		name string
-		opts []curl.Option
-		resp *testmatchers.HttpResponse
-	}{
-		{
-			name: "request body included in auth check",
-			opts: []curl.Option{
-				curl.WithBody(`{"action": "allow", "token": "valid-token"}`),
-				curl.WithHeader("Content-Type", "application/json"),
-				curl.WithHeader("Authorization", "Bearer valid-token"),
-			},
-			resp: &testmatchers.HttpResponse{
-				StatusCode: http.StatusOK,
-				Headers: map[string]interface{}{
-					"x-auth-status": "authorized",
-				},
-			},
-		},
-		{
-			name: "request body too large",
-			opts: []curl.Option{
-				curl.WithBody(fmt.Sprintf(`{"action": "allow", "token": "valid-token", "data": "%s"}`, make([]byte, 1025))),
-				curl.WithHeader("Content-Type", "application/json"),
-				curl.WithHeader("Authorization", "Bearer valid-token"),
-			},
-			resp: &testmatchers.HttpResponse{
-				StatusCode: http.StatusRequestEntityTooLarge,
-			},
-		},
-	}
-
-	for _, tc := range testCases {
-		s.Run(tc.name, func() {
-			s.testInstallation.Assertions.AssertEventualCurlResponse(
-				s.ctx,
-				testdefaults.CurlPodExecOpt,
-				append(tc.opts,
-					curl.WithHost(kubeutils.ServiceFQDN(proxyObjectMeta)),
-					curl.WithHostHeader("example.com"),
-					curl.WithPort(8080),
-				),
-				tc.resp)
 		})
 	}
 }

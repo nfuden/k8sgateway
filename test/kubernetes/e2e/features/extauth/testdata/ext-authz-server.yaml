@@ -20,7 +20,7 @@ spec:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: ext-authz-isio
+  name: ext-authz-istio
 spec:
   replicas: 1
   selector:
@@ -37,3 +37,13 @@ spec:
         ports:
         - containerPort: 8000
         - containerPort: 9000
+---
+apiVersion: gateway.kgateway.dev/v1alpha1
+kind: GatewayExtension
+metadata:
+  name: basic-extauth
+spec:
+  type: Extauth
+  extauth:
+  - backendRef:
+    - name: ext-authz

@@ -17,96 +17,38 @@ func ptr[T any](v T) *T {
 }
 
 var (
-	// Common objects used across tests
-	proxyObjectMeta = metav1.ObjectMeta{
-		Name:      "example-gateway",
-		Namespace: "default",
-	}
-
-	// Service and deployment for the echo service
+	// common resources
 	simpleSvc = &corev1.Service{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      "echo",
+			Name:      "simple-svc",
 			Namespace: "default",
 		},
-		Spec: corev1.ServiceSpec{
-			Ports: []corev1.ServicePort{
-				{
-					Name: "http",
-					Port: 8080,
-				},
-			},
-			Selector: map[string]string{
-				"app.kubernetes.io/name": "echo",
-			},
+	}
+	simpleDeployment = &appsv1.Deployment{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "backend-0",
+			Namespace: "default",
 		},
 	}
 
-	// Proxy service and deployment
-	proxyService = &corev1.Service{
-		ObjectMeta: proxyObjectMeta,
-		Spec: corev1.ServiceSpec{
-			Ports: []corev1.ServicePort{
-				{
-					Name: "http",
-					Port: 8080,
-				},
-			},
-			Selector: map[string]string{
-				"app.kubernetes.io/name": "gw",
-			},
-		},
+	proxyObjMeta = metav1.ObjectMeta{
+		Name:      "super-gateway",
+		Namespace: "default",
 	}
-
-	proxyServiceAccount = &corev1.ServiceAccount{
-		ObjectMeta: proxyObjectMeta,
-	}
-
-	proxyDeployment = &appsv1.Deployment{
-		ObjectMeta: proxyObjectMeta,
-		Spec: appsv1.DeploymentSpec{
-			Replicas: ptr(int32(1)),
-			Selector: &metav1.LabelSelector{
-				MatchLabels: map[string]string{
-					"app.kubernetes.io/name": "gw",
-				},
-			},
-			Template: corev1.PodTemplateSpec{
-				ObjectMeta: metav1.ObjectMeta{
-					Labels: map[string]string{
-						"app.kubernetes.io/name": "gw",
-					},
-				},
-				Spec: corev1.PodSpec{
-					ServiceAccountName: proxyObjectMeta.Name,
-					Containers: []corev1.Container{
-						{
-							Name:  "proxy",
-							Image: "envoyproxy/envoy:v1.28-latest",
-							Ports: []corev1.ContainerPort{
-								{
-									Name:          "http",
-									ContainerPort: 8080,
-								},
-							},
-						},
-					},
-				},
-			},
-		},
-	}
+	proxyDeployment = &appsv1.Deployment{ObjectMeta: proxyObjMeta}
+	proxyService    = &corev1.Service{ObjectMeta: proxyObjMeta}
 
 	// ExtAuth service and extension
 	extAuthSvc = &corev1.Service{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      "extauth",
+			Name:      " ext-authz",
 			Namespace: "default",
 		},
 		Spec: corev1.ServiceSpec{
 			Ports: []corev1.ServicePort{
 				{
 					Name: "http",
-					Port: 8080,
+					Port: 8000,
 				},
 			},
 			Selector: map[string]string{
@@ -117,7 +59,7 @@ var (
 
 	extAuthExtension = &v1alpha1.GatewayExtension{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      "test-auth-extension",
+			Name:      "basic-extauth",
 			Namespace: "default",
 		},
 		Spec: v1alpha1.GatewayExtensionSpec{
@@ -125,20 +67,46 @@ var (
 			ExtAuth: &v1alpha1.ExtAuthProvider{
 				BackendRef: &gwv1.BackendRef{
 					BackendObjectReference: gwv1.BackendObjectReference{
-						Name: "extauth",
-						Port: ptr(gwv1.PortNumber(8080)),
+						Name: "ext-authz",
 					},
 				},
 			},
 		},
 	}
 
+	// MARK per test data
+	basicSecureRoute = &gwv1.HTTPRoute{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "example-route-default",
+			Namespace: "default",
+		},
+	}
+	gatewayAttachedRoutePolicy = &v1alpha1.RoutePolicy{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "gw-policy",
+			Namespace: "default",
+		},
+	}
+	insecureRoute = &gwv1.HTTPRoute{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "example-insecure-route",
+			Namespace: "default",
+		},
+	}
+	insecureRoutePolicy = &v1alpha1.RoutePolicy{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "insecure-route-policy",
+			Namespace: "default",
+		},
+	}
+
 	// Manifest files
-	simpleServiceManifest         = readTestData("service.yaml")
-	gatewayWithRouteManifest      = readTestData("common.yaml")
-	extAuthServiceManifest        = readTestData("ext-authz-server.yaml")
-	extAuthExtensionManifest      = readTestData("securing-at-route.yaml")
-	routePolicyWithExtAuthEnabled = readTestData("route-policy-extauth-enabled.yaml")
+	gatewayWithRouteManifest     = readTestData("common.yaml")
+	simpleServiceManifest        = readTestData("service.yaml")
+	extAuthManifest              = readTestData("ext-authz-server.yaml")
+	securedGatewayPolicyManifest = readTestData("secured-gateway-policy.yaml")
+	securedRouteManifest         = readTestData("secured-route.yaml")
+	insecureRouteManifest        = readTestData("insecure-route.yaml")
 )
 
 func readTestData(filename string) string {
