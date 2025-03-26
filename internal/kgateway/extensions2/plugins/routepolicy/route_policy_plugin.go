@@ -499,7 +499,6 @@ func (p *routePolicyPluginGwPass) HttpFilters(ctx context.Context, fcc ir.Filter
 		}
 
 		filters = append(filters, extAuthFilter)
-
 	}
 	if p.localRateLimitInChain != nil {
 		filters = append(filters, plugins.MustNewStagedFilter(localRateLimitFilterNamePrefix,
