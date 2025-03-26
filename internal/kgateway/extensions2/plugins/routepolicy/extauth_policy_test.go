@@ -162,8 +162,8 @@ func TestApplyForRoute(t *testing.T) {
 
 		// Verify
 		require.NoError(t, err)
-		require.NotNil(t, outputRoute.TypedPerFilterConfig)
-		extAuthConfig, ok := outputRoute.TypedPerFilterConfig["test-extension"]
+		require.NotNil(t, pCtx.TypedFilterConfig)
+		extAuthConfig, ok := pCtx.TypedFilterConfig["test-extension"]
 		assert.True(t, ok)
 		assert.NotNil(t, extAuthConfig)
 	})
@@ -187,7 +187,7 @@ func TestApplyForRoute(t *testing.T) {
 
 		// Verify
 		require.NoError(t, err)
-		assert.Nil(t, outputRoute.TypedPerFilterConfig)
+		assert.Nil(t, pCtx.TypedFilterConfig)
 	})
 }
 
@@ -289,8 +289,8 @@ func TestExtAuthPolicyPlugin(t *testing.T) {
 
 		// Verify
 		require.NoError(t, err)
-		require.NotNil(t, outputRoute.TypedPerFilterConfig)
-		extAuthConfig, ok := outputRoute.TypedPerFilterConfig["test-auth-extension"]
+		require.NotNil(t, pCtx.TypedFilterConfig)
+		extAuthConfig, ok := pCtx.TypedFilterConfig["test-auth-extension"]
 		assert.True(t, ok)
 		assert.NotNil(t, extAuthConfig)
 	})
@@ -380,7 +380,7 @@ func TestExtAuthPolicyPlugin(t *testing.T) {
 
 		// Verify
 		require.NoError(t, err)
-		assert.Nil(t, outputRoute.TypedPerFilterConfig)
+		assert.Nil(t, pCtx.TypedFilterConfig)
 	})
 
 	t.Run("handles multiple ext auth configurations", func(t *testing.T) {
@@ -412,9 +412,9 @@ func TestExtAuthPolicyPlugin(t *testing.T) {
 		require.NoError(t, err)
 
 		// Verify
-		require.NotNil(t, outputRoute.TypedPerFilterConfig)
-		_, ok1 := outputRoute.TypedPerFilterConfig["test-auth-extension-1"]
-		_, ok2 := outputRoute.TypedPerFilterConfig["test-auth-extension-2"]
+		require.NotNil(t, pCtx.TypedFilterConfig)
+		_, ok1 := pCtx.TypedFilterConfig["test-auth-extension-1"]
+		_, ok2 := pCtx.TypedFilterConfig["test-auth-extension-2"]
 		assert.True(t, ok1)
 		assert.True(t, ok2)
 	})
