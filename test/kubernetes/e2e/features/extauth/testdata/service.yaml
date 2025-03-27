@@ -8,11 +8,11 @@ spec:
     - name: super-gateway
       namespace: kgateway-test
   rules:
-  - matches:
-    - path:
-        type: PathPrefix
-        value: /nothingever
-    - backendRefs:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /nothingever
+      backendRefs:
         - name: simple-svc
           port: 8080
 ---
