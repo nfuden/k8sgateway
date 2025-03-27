@@ -28,7 +28,7 @@ var (
 	}
 
 	proxyObjMeta = metav1.ObjectMeta{
-		Name:      "gw",
+		Name:      "super-gateway",
 		Namespace: "kgateway-test",
 	}
 	proxyDeployment = &appsv1.Deployment{ObjectMeta: proxyObjMeta}
