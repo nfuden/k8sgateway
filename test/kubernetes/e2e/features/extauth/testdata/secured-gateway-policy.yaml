@@ -10,7 +10,7 @@ spec:
   rules:
     - backendRefs:
         - name: simple-svc
-          port: 8080
+          port: 9000
 ---
 apiVersion: gateway.kgateway.dev/v1alpha1
 kind: RoutePolicy
