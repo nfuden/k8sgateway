@@ -45,5 +45,5 @@ metadata:
 spec:
   type: ExtAuth
   extauth:
-  - backendRef:
-    - name: ext-authz
+    backendRef:
+      name: ext-authz
