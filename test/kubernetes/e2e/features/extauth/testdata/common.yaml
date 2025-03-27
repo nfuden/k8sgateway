@@ -1,9 +1,8 @@
 kind: Gateway
 apiVersion: gateway.networking.k8s.io/v1
 metadata:
+  namespace: kgateway-test
   name: super-gateway
-  annotations:
-    gateway.kgateway.dev/gateway-parameters-name: kgateway-gateway-override
 spec:
   gatewayClassName: kgateway
   listeners:
