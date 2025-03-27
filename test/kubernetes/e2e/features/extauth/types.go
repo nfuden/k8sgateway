@@ -85,7 +85,7 @@ var (
 	}
 	insecureRoute = &gwv1.HTTPRoute{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      "example-insecure-route",
+			Name:      "example-route-insecure",
 			Namespace: "kgateway-test",
 		},
 	}
