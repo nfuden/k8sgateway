@@ -28,7 +28,7 @@ var (
 	}
 
 	proxyObjMeta = metav1.ObjectMeta{
-		Name:      "super-gateway",
+		Name:      "gw",
 		Namespace: "kgateway-test",
 	}
 	proxyDeployment = &appsv1.Deployment{ObjectMeta: proxyObjMeta}
@@ -37,7 +37,7 @@ var (
 	// ExtAuth service and extension
 	extAuthSvc = &corev1.Service{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      " ext-authz",
+			Name:      "ext-authz",
 			Namespace: "kgateway-test",
 		},
 		Spec: corev1.ServiceSpec{

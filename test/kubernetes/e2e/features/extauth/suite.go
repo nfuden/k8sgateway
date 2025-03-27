@@ -69,6 +69,7 @@ func (s *testingSuite) SetupSuite() {
 		s.Require().NoError(err, "can apply "+manifest)
 	}
 
+	// time.Sleep(10 * time.Hour)
 	s.testInstallation.Assertions.EventuallyObjectsExist(s.ctx, s.commonResources...)
 
 	// make sure pods are running
