@@ -43,7 +43,7 @@ kind: GatewayExtension
 metadata:
   name: basic-extauth
 spec:
-  type: Extauth
+  type: ExtAuth
   extauth:
   - backendRef:
     - name: ext-authz
