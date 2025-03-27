@@ -27,21 +27,18 @@ func extAuthForSpec(
 	routepolicy *v1alpha1.RoutePolicy,
 	out *routeSpecIr) {
 	getter := (func(name, namespace string) (*ir.GatewayExtension, *ir.BackendObjectIR, error) {
-
 		gExt, err := pluginutils.GetGatewayExtension(commoncol.GatewayExtensions, krtctx, name, namespace)
 		if err != nil {
 			return nil, nil, err
 		}
 		if gExt.Type != v1alpha1.GatewayExtensionTypeExtAuth {
 			return nil, nil, pluginutils.ErrInvalidExtensionType(v1alpha1.GatewayExtensionTypeExtAuth, gExt.Type)
-
 		}
 		backend, err := commoncol.BackendIndex.GetBackendFromRef(krtctx, gExt.ObjectSource, gExt.ExtAuth.BackendRef.BackendObjectReference)
 		if err != nil {
 			return nil, nil, err
 		}
 		return gExt, backend, nil
-
 	})
 
 	extAuthForSpecWithExtensionFunction(getter, routepolicy, out)

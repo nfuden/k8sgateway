@@ -73,7 +73,7 @@ var (
 	// MARK per test data
 	basicSecureRoute = &gwv1.HTTPRoute{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      "example-route-default",
+			Name:      "hey-its-a-route",
 			Namespace: "kgateway-test",
 		},
 	}
@@ -85,7 +85,7 @@ var (
 	}
 	insecureRoute = &gwv1.HTTPRoute{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      "example-route-insecure",
+			Name:      "route-example-insecure",
 			Namespace: "kgateway-test",
 		},
 	}
