@@ -10,15 +10,15 @@ on:
         type: string
         required: false
         description: "Override the default version (e.g. v0.0.0-manual-<git-sha>)"
-  push:
-    tags:
-      - 'v*'
-      - '!v2.0.0-main'
-    branches:
-      - main
-  pull_request:
-    branches:
-      - main
+  # push:
+  #   tags:
+  #     - 'v*'
+  #     - '!v2.0.0-main'
+  #   branches:
+  #     - main
+  # pull_request:
+  #   branches:
+  #     - main
 
 env:
   # this is uses the `github.repository_owner` to support releases from forks (useful for testing).
