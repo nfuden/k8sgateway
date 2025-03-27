@@ -26,5 +26,5 @@ spec:
     kind: HTTPRoute
     name: example-route-secure
   extAuth:
-    extension: 
+    extensionRef: 
       name: basic-extauth

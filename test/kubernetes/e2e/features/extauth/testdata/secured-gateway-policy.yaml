@@ -25,5 +25,5 @@ spec:
     kind: Gateway
     name: super-gateway
   extAuth:
-    extension: 
+    extensionRef: 
       name: basic-extauth
