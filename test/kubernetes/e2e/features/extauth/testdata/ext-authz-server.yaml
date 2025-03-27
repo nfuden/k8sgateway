@@ -32,7 +32,7 @@ spec:
         app: ext-authz
     spec:
       containers:
-      - image: gcr.io/istio-testing/ext-authz:v1.25.0 # use istio's extauthz for ease of use
+      - image: gcr.io/istio-testing/ext-authz:1.25-dev # use istio's extauthz for ease of use
         name: ext-authz-istio
         ports:
         - containerPort: 8000
