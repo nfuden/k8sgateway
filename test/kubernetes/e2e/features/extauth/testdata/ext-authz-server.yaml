@@ -47,3 +47,4 @@ spec:
   extAuth:
     backendRef:
       name: ext-authz
+      port: 9000
