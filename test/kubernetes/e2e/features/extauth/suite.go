@@ -1,12 +1,9 @@
 package extauth
 
 import (
-	"bufio"
 	"context"
 	"fmt"
 	"net/http"
-	"os"
-	"time"
 
 	"github.com/stretchr/testify/suite"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -72,9 +69,9 @@ func (s *testingSuite) SetupSuite() {
 		s.Require().NoError(err, "can apply "+manifest)
 	}
 
-	input := bufio.NewScanner(os.Stdin)
-	input.Scan()
-	time.Sleep(time.Hour)
+	// input := bufio.NewScanner(os.Stdin)
+	// input.Scan()
+	// time.Sleep(time.Hour)
 
 	s.testInstallation.Assertions.EventuallyObjectsExist(s.ctx, s.commonResources...)
 
