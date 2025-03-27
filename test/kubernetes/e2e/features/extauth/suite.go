@@ -69,10 +69,6 @@ func (s *testingSuite) SetupSuite() {
 		s.Require().NoError(err, "can apply "+manifest)
 	}
 
-	// input := bufio.NewScanner(os.Stdin)
-	// input.Scan()
-	// time.Sleep(time.Hour)
-
 	s.testInstallation.Assertions.EventuallyObjectsExist(s.ctx, s.commonResources...)
 
 	// make sure pods are running
@@ -128,15 +124,16 @@ func (s *testingSuite) TestExtAuthPolicy() {
 		LabelSelector: "app.kubernetes.io/name=curl",
 	})
 	s.testInstallation.Assertions.EventuallyPodsRunning(s.ctx, proxyObjMeta.GetNamespace(), metav1.ListOptions{
-		LabelSelector: "app.kubernetes.io/name=gw",
+		LabelSelector: "app.kubernetes.io/name=super-gateway",
 	})
 	s.testInstallation.Assertions.EventuallyPodsRunning(s.ctx, extAuthSvc.GetNamespace(), metav1.ListOptions{
-		LabelSelector: "app.kubernetes.io/name=extauth",
+		LabelSelector: "app.kubernetes.io/name=ext-authz",
 	})
 
 	testCases := []struct {
 		name            string
 		headers         map[string]string
+		hostnameheader  string
 		expectedStatus  int
 		expectedHeaders map[string]interface{}
 	}{
@@ -145,6 +142,7 @@ func (s *testingSuite) TestExtAuthPolicy() {
 			headers: map[string]string{
 				"x-ext-authz": "allow",
 			},
+			hostnameheader: "securegateway.com",
 			expectedStatus: http.StatusOK,
 			expectedHeaders: map[string]interface{}{
 				"x-ext-authz-result": "allowed",
@@ -153,6 +151,7 @@ func (s *testingSuite) TestExtAuthPolicy() {
 		{
 			name:           "request denied without allow header",
 			headers:        map[string]string{},
+			hostnameheader: "securegateway.com",
 			expectedStatus: http.StatusUnauthorized,
 		},
 		{
@@ -160,6 +159,7 @@ func (s *testingSuite) TestExtAuthPolicy() {
 			headers: map[string]string{
 				"x-ext-authz": "deny",
 			},
+			hostnameheader: "securegateway.com",
 			expectedStatus: http.StatusUnauthorized,
 		},
 	}
@@ -169,7 +169,7 @@ func (s *testingSuite) TestExtAuthPolicy() {
 			// Build curl options
 			opts := []curl.Option{
 				curl.WithHost(kubeutils.ServiceFQDN(proxyObjMeta)),
-				curl.WithHostHeader("example.com"),
+				curl.WithHostHeader(tc.hostnameheader),
 				curl.WithPort(8080),
 			}
 

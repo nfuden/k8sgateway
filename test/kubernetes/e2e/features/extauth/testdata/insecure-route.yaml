@@ -7,8 +7,9 @@ metadata:
 spec:
   parentRefs:
     - name: super-gateway
+      namespace: kgateway-test
   hostnames:
-    - "example.com"
+    - "insecureroute.com"
   rules:
     - backendRefs:
         - name: simple-svc

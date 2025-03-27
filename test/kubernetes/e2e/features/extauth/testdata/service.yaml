@@ -6,9 +6,12 @@ metadata:
 spec:
   parentRefs:
     - name: super-gateway
-  hostnames:
-    - "somethingcrazy"
+      namespace: kgateway-test
   rules:
+  - matches:
+    - path:
+        type: PathPrefix
+        value: /nothingever
     - backendRefs:
         - name: simple-svc
           port: 8080

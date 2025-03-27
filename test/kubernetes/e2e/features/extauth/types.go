@@ -17,19 +17,19 @@ var (
 	simpleSvc = &corev1.Service{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "simple-svc",
-			Namespace: "default",
+			Namespace: "kgateway-test",
 		},
 	}
 	simpleDeployment = &appsv1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "backend-0",
-			Namespace: "default",
+			Namespace: "kgateway-test",
 		},
 	}
 
 	proxyObjMeta = metav1.ObjectMeta{
 		Name:      "super-gateway",
-		Namespace: "default",
+		Namespace: "kgateway-test",
 	}
 	proxyDeployment = &appsv1.Deployment{ObjectMeta: proxyObjMeta}
 	proxyService    = &corev1.Service{ObjectMeta: proxyObjMeta}
@@ -38,7 +38,7 @@ var (
 	extAuthSvc = &corev1.Service{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      " ext-authz",
-			Namespace: "default",
+			Namespace: "kgateway-test",
 		},
 		Spec: corev1.ServiceSpec{
 			Ports: []corev1.ServicePort{
@@ -56,7 +56,7 @@ var (
 	extAuthExtension = &v1alpha1.GatewayExtension{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "basic-extauth",
-			Namespace: "default",
+			Namespace: "kgateway-test",
 		},
 		Spec: v1alpha1.GatewayExtensionSpec{
 			Type: v1alpha1.GatewayExtensionTypeExtAuth,
@@ -74,25 +74,25 @@ var (
 	basicSecureRoute = &gwv1.HTTPRoute{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "example-route-default",
-			Namespace: "default",
+			Namespace: "kgateway-test",
 		},
 	}
 	gatewayAttachedRoutePolicy = &v1alpha1.RoutePolicy{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "gw-policy",
-			Namespace: "default",
+			Namespace: "kgateway-test",
 		},
 	}
 	insecureRoute = &gwv1.HTTPRoute{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "example-insecure-route",
-			Namespace: "default",
+			Namespace: "kgateway-test",
 		},
 	}
 	insecureRoutePolicy = &v1alpha1.RoutePolicy{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "insecure-route-policy",
-			Namespace: "default",
+			Namespace: "kgateway-test",
 		},
 	}
 
