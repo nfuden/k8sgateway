@@ -25,6 +25,6 @@ spec:
   - group: gateway.networking.k8s.io
     kind: HTTPRoute
     name: example-route-secure
-  extauth:
+  extAuth:
     extension: 
       name: basic-extauth
