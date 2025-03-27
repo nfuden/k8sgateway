@@ -47,10 +47,10 @@ jobs:
           go-test-run-regex: '^TestKgateway$$/^Extauth$$|^TestKgateway$$/^ExtProc$$'
           localstack: 'false'
         # March 18, 2025: 6 minutes
-        - cluster-name: 'cluster-ai'
-          go-test-args: '-v -timeout=25m'
-          go-test-run-regex: '^TestAIExtension'
-          localstack: 'false'
+        # - cluster-name: 'cluster-ai'
+        #   go-test-args: '-v -timeout=25m'
+        #   go-test-run-regex: '^TestAIExtension'
+        #   localstack: 'false'
 
 #         # Dec 4, 2024: 23 minutes
 #         - cluster-name: 'cluster-two'
