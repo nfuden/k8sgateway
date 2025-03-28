@@ -74,7 +74,6 @@ func (s *testingSuite) SetupSuite() {
 	s.testInstallation.Assertions.EventuallyPodsRunning(s.ctx, proxyObjMeta.GetNamespace(), metav1.ListOptions{
 		LabelSelector: fmt.Sprintf("app.kubernetes.io/name=%s", proxyObjMeta.GetName()),
 	})
-
 }
 
 func (s *testingSuite) TearDownSuite() {
@@ -102,19 +101,16 @@ func (s *testingSuite) TestExtAuthPolicy() {
 		insecureRoute, insecureRoutePolicy,
 	}
 	s.T().Cleanup(func() {
-		for _, manifest := range manifests {
-			err := s.testInstallation.Actions.Kubectl().DeleteFileSafe(s.ctx, manifest)
-			s.Require().NoError(err)
-		}
-		s.testInstallation.Assertions.EventuallyObjectsNotExist(s.ctx, resources...)
+		// for _, manifest := range manifests {
+		// 	err := s.testInstallation.Actions.Kubectl().DeleteFileSafe(s.ctx, manifest)
+		// 	s.Require().NoError(err)
+		// }
+		// s.testInstallation.Assertions.EventuallyObjectsNotExist(s.ctx, resources...)
 	})
 	// set up common resources once
 	for _, manifest := range manifests {
 		err := s.testInstallation.Actions.Kubectl().ApplyFile(s.ctx, manifest)
 		s.Require().NoError(err, "can apply "+manifest)
-	}
-	if true == true {
-		return
 	}
 	s.testInstallation.Assertions.EventuallyObjectsExist(s.ctx, resources...)
 
