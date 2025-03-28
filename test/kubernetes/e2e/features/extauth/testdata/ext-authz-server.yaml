@@ -9,11 +9,11 @@ metadata:
     app: ext-authz
 spec:
   ports:
-  - name: http
-    port: 8000
-    targetPort: 8000
+  # - name: http
+  #   port: 8000
+  #   targetPort: 8000
   - name: grpc
-    port: 9000
+    port: 4444
     targetPort: 9000
   selector:
     app: ext-authz
@@ -22,7 +22,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   namespace: kgateway-test
-  name: ext-authz-istio
+  name: ext-authz
 spec:
   replicas: 1
   selector:
@@ -38,7 +38,7 @@ spec:
       - image: gcr.io/istio-testing/ext-authz:1.25-dev # use istio's extauthz for ease of use
         name: ext-authz-istio
         ports:
-        - containerPort: 8000
+        # - containerPort: 8000
         - containerPort: 9000
 ---
 apiVersion: gateway.kgateway.dev/v1alpha1
@@ -46,6 +46,19 @@ kind: GatewayExtension
 metadata:
   namespace: kgateway-test
   name: basic-extauth
+spec:
+  type: ExtAuth
+  extAuth:
+    grpcService:
+      backendRef:
+        name: ext-authz
+        port: 9000
+---
+apiVersion: gateway.kgateway.dev/v1alpha1
+kind: GatewayExtension
+metadata:
+  namespace: kgateway-test
+  name: basic-extauth2
 spec:
   type: ExtAuth
   extAuth:

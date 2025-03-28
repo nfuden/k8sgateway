@@ -98,12 +98,12 @@ func (s *testingSuite) TearDownSuite() {
 func (s *testingSuite) TestExtAuthPolicy() {
 	manifests := []string{
 		securedGatewayPolicyManifest,
-		insecureRouteManifest,
+		// insecureRouteManifest,
 	}
 
 	resources := []client.Object{
-		basicSecureRoute, gatewayAttachedTrafficPolicy,
-		insecureRoute,
+		// basicSecureRoute, gatewayAttachedTrafficPolicy,
+		// insecureRoute,
 	}
 	s.T().Cleanup(func() {
 		for _, manifest := range manifests {

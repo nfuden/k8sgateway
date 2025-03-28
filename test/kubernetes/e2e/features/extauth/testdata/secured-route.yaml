@@ -27,4 +27,4 @@ spec:
     name: route-example-secure
   extAuth:
     extensionRef: 
-      name: basic-extauth
+      name: basic-extauth2
