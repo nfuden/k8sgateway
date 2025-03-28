@@ -473,6 +473,12 @@ var schemaYAML = typed.YAMLObject(`types:
     - name: withRequestBody
       type:
         namedType: com.github.kgateway-dev.kgateway.v2.api.v1alpha1.BufferSettings
+- name: com.github.kgateway-dev.kgateway.v2.api.v1alpha1.ExtAuthProvider
+  map:
+    fields:
+    - name: grpcService
+      type:
+        namedType: com.github.kgateway-dev.kgateway.v2.api.v1alpha1.ExtGrpcService
 - name: com.github.kgateway-dev.kgateway.v2.api.v1alpha1.ExtGrpcService
   map:
     fields:

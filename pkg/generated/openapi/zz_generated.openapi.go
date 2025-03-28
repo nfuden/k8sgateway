@@ -48,7 +48,7 @@ func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenA
 		"github.com/kgateway-dev/kgateway/v2/api/v1alpha1.EnvoyContainer":             schema_kgateway_v2_api_v1alpha1_EnvoyContainer(ref),
 		"github.com/kgateway-dev/kgateway/v2/api/v1alpha1.ExtAuthPolicy":              schema_kgateway_v2_api_v1alpha1_ExtAuthPolicy(ref),
 		"github.com/kgateway-dev/kgateway/v2/api/v1alpha1.ExtAuthProvider":            schema_kgateway_v2_api_v1alpha1_ExtAuthProvider(ref),
-		"github.com/kgateway-dev/kgateway/v2/api/v1alpha1.ExtProcGrpcService":         schema_kgateway_v2_api_v1alpha1_ExtProcGrpcService(ref),
+		"github.com/kgateway-dev/kgateway/v2/api/v1alpha1.ExtGrpcService":             schema_kgateway_v2_api_v1alpha1_ExtGrpcService(ref),
 		"github.com/kgateway-dev/kgateway/v2/api/v1alpha1.ExtProcPolicy":              schema_kgateway_v2_api_v1alpha1_ExtProcPolicy(ref),
 		"github.com/kgateway-dev/kgateway/v2/api/v1alpha1.ExtProcProvider":            schema_kgateway_v2_api_v1alpha1_ExtProcProvider(ref),
 		"github.com/kgateway-dev/kgateway/v2/api/v1alpha1.FieldDefault":               schema_kgateway_v2_api_v1alpha1_FieldDefault(ref),
@@ -1757,6 +1757,28 @@ func schema_kgateway_v2_api_v1alpha1_ExtAuthRoutePolicy(ref common.ReferenceCall
 		},
 		Dependencies: []string{
 			"github.com/kgateway-dev/kgateway/v2/api/v1alpha1.BufferSettings", "k8s.io/api/core/v1.LocalObjectReference"},
+	}
+}
+
+func schema_kgateway_v2_api_v1alpha1_ExtAuthProvider(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "ExtAuthProvider defines the configuration for an ExtAuth provider.",
+				Type:        []string{"object"},
+				Properties: map[string]spec.Schema{
+					"grpcService": {
+						SchemaProps: spec.SchemaProps{
+							Description: "GrpcService is the GRPC service that will handle the authentication.",
+							Ref:         ref("github.com/kgateway-dev/kgateway/v2/api/v1alpha1.ExtGrpcService"),
+						},
+					},
+				},
+				Required: []string{"grpcService"},
+			},
+		},
+		Dependencies: []string{
+			"github.com/kgateway-dev/kgateway/v2/api/v1alpha1.ExtGrpcService"},
 	}
 }
 
