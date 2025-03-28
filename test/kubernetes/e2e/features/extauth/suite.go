@@ -13,6 +13,7 @@ import (
 	"github.com/kgateway-dev/kgateway/v2/pkg/utils/requestutils/curl"
 	testmatchers "github.com/kgateway-dev/kgateway/v2/test/gomega/matchers"
 	"github.com/kgateway-dev/kgateway/v2/test/kubernetes/e2e"
+	"github.com/kgateway-dev/kgateway/v2/test/kubernetes/e2e/defaults"
 	testdefaults "github.com/kgateway-dev/kgateway/v2/test/kubernetes/e2e/defaults"
 )
 
@@ -67,9 +68,12 @@ func (s *testingSuite) SetupSuite() {
 		err := s.testInstallation.Actions.Kubectl().ApplyFile(s.ctx, manifest)
 		s.Require().NoError(err, "can apply "+manifest)
 	}
-
-	// time.Sleep(10 * time.Hour)
 	s.testInstallation.Assertions.EventuallyObjectsExist(s.ctx, s.commonResources...)
+
+	// make sure pods are running
+	s.testInstallation.Assertions.EventuallyPodsRunning(s.ctx, defaults.CurlPod.GetNamespace(), metav1.ListOptions{
+		LabelSelector: defaults.CurlPodLabelSelector,
+	})
 
 	s.testInstallation.Assertions.EventuallyPodsRunning(s.ctx, proxyObjMeta.GetNamespace(), metav1.ListOptions{
 		LabelSelector: fmt.Sprintf("app.kubernetes.io/name=%s", proxyObjMeta.GetName()),
@@ -97,8 +101,8 @@ func (s *testingSuite) TestExtAuthPolicy() {
 	}
 
 	resources := []client.Object{
-		basicSecureRoute, gatewayAttachedRoutePolicy,
-		insecureRoute, insecureRoutePolicy,
+		basicSecureRoute, gatewayAttachedTrafficPolicy,
+		insecureRoute, insecureTrafficPolicy,
 	}
 	s.T().Cleanup(func() {
 		// for _, manifest := range manifests {
@@ -115,17 +119,19 @@ func (s *testingSuite) TestExtAuthPolicy() {
 	s.testInstallation.Assertions.EventuallyObjectsExist(s.ctx, resources...)
 
 	// Wait for pods to be running
+	s.testInstallation.Assertions.EventuallyPodsRunning(s.ctx, testdefaults.CurlPod.GetNamespace(), metav1.ListOptions{
+		LabelSelector: "app.kubernetes.io/name=curl",
+	})
 	s.testInstallation.Assertions.EventuallyPodsRunning(s.ctx, proxyObjMeta.GetNamespace(), metav1.ListOptions{
-		LabelSelector: "app.kubernetes.io/name=super-gateway",
+		LabelSelector: "app.kubernetes.io/name=gw",
 	})
 	s.testInstallation.Assertions.EventuallyPodsRunning(s.ctx, extAuthSvc.GetNamespace(), metav1.ListOptions{
-		LabelSelector: "app.kubernetes.io/name=ext-authz",
+		LabelSelector: "app.kubernetes.io/name=extauth",
 	})
 
 	testCases := []struct {
 		name            string
 		headers         map[string]string
-		hostnameheader  string
 		expectedStatus  int
 		expectedHeaders map[string]interface{}
 	}{
@@ -134,7 +140,6 @@ func (s *testingSuite) TestExtAuthPolicy() {
 			headers: map[string]string{
 				"x-ext-authz": "allow",
 			},
-			hostnameheader: "securegateway.com",
 			expectedStatus: http.StatusOK,
 			expectedHeaders: map[string]interface{}{
 				"x-ext-authz-result": "allowed",
@@ -143,7 +148,6 @@ func (s *testingSuite) TestExtAuthPolicy() {
 		{
 			name:           "request denied without allow header",
 			headers:        map[string]string{},
-			hostnameheader: "securegateway.com",
 			expectedStatus: http.StatusUnauthorized,
 		},
 		{
@@ -151,7 +155,6 @@ func (s *testingSuite) TestExtAuthPolicy() {
 			headers: map[string]string{
 				"x-ext-authz": "deny",
 			},
-			hostnameheader: "securegateway.com",
 			expectedStatus: http.StatusUnauthorized,
 		},
 	}
@@ -161,7 +164,7 @@ func (s *testingSuite) TestExtAuthPolicy() {
 			// Build curl options
 			opts := []curl.Option{
 				curl.WithHost(kubeutils.ServiceFQDN(proxyObjMeta)),
-				curl.WithHostHeader(tc.hostnameheader),
+				curl.WithHostHeader("example.com"),
 				curl.WithPort(8080),
 			}
 
