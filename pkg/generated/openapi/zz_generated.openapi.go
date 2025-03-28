@@ -1653,29 +1653,7 @@ func schema_kgateway_v2_api_v1alpha1_ExtAuthPolicy(ref common.ReferenceCallback)
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
 			SchemaProps: spec.SchemaProps{
-				Description: "ExtAuthProvider defines the configuration for an ExtAuth provider.",
-				Type:        []string{"object"},
-				Properties: map[string]spec.Schema{
-					"grpcService": {
-						SchemaProps: spec.SchemaProps{
-							Description: "GrpcService is the GRPC service that will handle the authentication.",
-							Ref:         ref("github.com/kgateway-dev/kgateway/v2/api/v1alpha1.ExtGrpcService"),
-						},
-					},
-				},
-				Required: []string{"grpcService"},
-			},
-		},
-		Dependencies: []string{
-			"github.com/kgateway-dev/kgateway/v2/api/v1alpha1.ExtGrpcService"},
-	}
-}
-
-func schema_kgateway_v2_api_v1alpha1_ExtAuthRoutePolicy(ref common.ReferenceCallback) common.OpenAPIDefinition {
-	return common.OpenAPIDefinition{
-		Schema: spec.Schema{
-			SchemaProps: spec.SchemaProps{
-				Description: "ExtAuthRoutePolicy configures external authentication for a route. This policy will determine the ext auth server to use and how to  talk to it. Note that most of these fields are passed along as is to Envoy. For more details on particular fields please see the Envoy ExtAuth documentation. https://raw.githubusercontent.com/envoyproxy/envoy/f910f4abea24904aff04ec33a00147184ea7cffa/api/envoy/extensions/filters/http/ext_authz/v3/ext_authz.proto",
+				Description: "ExtAuthPolicy configures external authentication for a route. This policy will determine the ext auth server to use and how to  talk to it. Note that most of these fields are passed along as is to Envoy. For more details on particular fields please see the Envoy ExtAuth documentation. https://raw.githubusercontent.com/envoyproxy/envoy/f910f4abea24904aff04ec33a00147184ea7cffa/api/envoy/extensions/filters/http/ext_authz/v3/ext_authz.proto",
 				Type:        []string{"object"},
 				Properties: map[string]spec.Schema{
 					"extensionRef": {

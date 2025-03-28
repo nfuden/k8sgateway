@@ -434,13 +434,7 @@ var schemaYAML = typed.YAMLObject(`types:
     - name: securityContext
       type:
         namedType: io.k8s.api.core.v1.SecurityContext
-- name: com.github.kgateway-dev.kgateway.v2.api.v1alpha1.ExtAuthProvider
-  map:
-    fields:
-    - name: grpcService
-      type:
-        namedType: com.github.kgateway-dev.kgateway.v2.api.v1alpha1.ExtGrpcService
-- name: com.github.kgateway-dev.kgateway.v2.api.v1alpha1.ExtAuthRoutePolicy
+- name: com.github.kgateway-dev.kgateway.v2.api.v1alpha1.ExtAuthPolicy
   map:
     fields:
     - name: clearRouteCache
