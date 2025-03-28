@@ -23,8 +23,6 @@ kind: Deployment
 metadata:
   namespace: kgateway-test
   name: ext-authz-istio
-  labels:
-    app.kubernetes.io/name: ext-authz-istio
 spec:
   replicas: 1
   selector:
@@ -34,6 +32,7 @@ spec:
     metadata:
       labels:
         app: ext-authz
+        app.kubernetes.io/name: ext-authz-istio
     spec:
       containers:
       - image: gcr.io/istio-testing/ext-authz:1.25-dev # use istio's extauthz for ease of use

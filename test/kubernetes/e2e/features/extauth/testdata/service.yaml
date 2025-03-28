@@ -7,12 +7,10 @@ spec:
   parentRefs:
     - name: super-gateway
       namespace: kgateway-test
+  hostnames:
+    - "example.com"
   rules:
-    - matches:
-        - path:
-            type: PathPrefix
-            value: /nothingever
-      backendRefs:
+    - backendRefs:
         - name: simple-svc
           port: 8080
 ---

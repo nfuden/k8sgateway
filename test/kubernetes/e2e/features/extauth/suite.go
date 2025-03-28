@@ -103,14 +103,14 @@ func (s *testingSuite) TestExtAuthPolicy() {
 
 	resources := []client.Object{
 		basicSecureRoute, gatewayAttachedTrafficPolicy,
-		insecureRoute, insecureTrafficPolicy,
+		insecureRoute,
 	}
 	s.T().Cleanup(func() {
-		// for _, manifest := range manifests {
-		// 	err := s.testInstallation.Actions.Kubectl().DeleteFileSafe(s.ctx, manifest)
-		// 	s.Require().NoError(err)
-		// }
-		// s.testInstallation.Assertions.EventuallyObjectsNotExist(s.ctx, resources...)
+		for _, manifest := range manifests {
+			err := s.testInstallation.Actions.Kubectl().DeleteFileSafe(s.ctx, manifest)
+			s.Require().NoError(err)
+		}
+		s.testInstallation.Assertions.EventuallyObjectsNotExist(s.ctx, resources...)
 	})
 	// set up common resources once
 	for _, manifest := range manifests {
@@ -133,6 +133,7 @@ func (s *testingSuite) TestExtAuthPolicy() {
 	testCases := []struct {
 		name            string
 		headers         map[string]string
+		hostname        string
 		expectedStatus  int
 		expectedHeaders map[string]interface{}
 	}{
@@ -141,6 +142,7 @@ func (s *testingSuite) TestExtAuthPolicy() {
 			headers: map[string]string{
 				"x-ext-authz": "allow",
 			},
+			hostname:       "example.com",
 			expectedStatus: http.StatusOK,
 			expectedHeaders: map[string]interface{}{
 				"x-ext-authz-result": "allowed",
@@ -149,10 +151,12 @@ func (s *testingSuite) TestExtAuthPolicy() {
 		{
 			name:           "request denied without allow header",
 			headers:        map[string]string{},
+			hostname:       "example.com",
 			expectedStatus: http.StatusUnauthorized,
 		},
 		{
-			name: "request denied with deny header",
+			name:     "request denied with deny header",
+			hostname: "example.com",
 			headers: map[string]string{
 				"x-ext-authz": "deny",
 			},
@@ -165,7 +169,7 @@ func (s *testingSuite) TestExtAuthPolicy() {
 			// Build curl options
 			opts := []curl.Option{
 				curl.WithHost(kubeutils.ServiceFQDN(proxyObjMeta)),
-				curl.WithHostHeader("example.com"),
+				curl.WithHostHeader(tc.hostname),
 				curl.WithPort(8080),
 			}
 
