@@ -48,6 +48,7 @@ metadata:
 spec:
   type: ExtAuth
   extAuth:
+    grpcService:
     backendRef:
       name: ext-authz
       port: 9000
