@@ -49,6 +49,6 @@ spec:
   type: ExtAuth
   extAuth:
     grpcService:
-    backendRef:
-      name: ext-authz
-      port: 9000
+      backendRef:
+        name: ext-authz
+        port: 9000
