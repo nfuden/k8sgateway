@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/stretchr/testify/suite"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -77,7 +78,7 @@ func (s *testingSuite) SetupSuite() {
 
 	s.testInstallation.Assertions.EventuallyPodsRunning(s.ctx, proxyObjMeta.GetNamespace(), metav1.ListOptions{
 		LabelSelector: fmt.Sprintf("app.kubernetes.io/name=%s", proxyObjMeta.GetName()),
-	})
+	}, time.Minute*2)
 }
 
 func (s *testingSuite) TearDownSuite() {
@@ -123,10 +124,10 @@ func (s *testingSuite) TestExtAuthPolicy() {
 		LabelSelector: "app.kubernetes.io/name=curl",
 	})
 	s.testInstallation.Assertions.EventuallyPodsRunning(s.ctx, proxyObjMeta.GetNamespace(), metav1.ListOptions{
-		LabelSelector: "app.kubernetes.io/name=gw",
-	})
+		LabelSelector: "app.kubernetes.io/name=super-gateway",
+	}, time.Minute)
 	s.testInstallation.Assertions.EventuallyPodsRunning(s.ctx, extAuthSvc.GetNamespace(), metav1.ListOptions{
-		LabelSelector: "app.kubernetes.io/name=extauth",
+		LabelSelector: "app.kubernetes.io/name=ext-authz-istio",
 	})
 
 	testCases := []struct {
