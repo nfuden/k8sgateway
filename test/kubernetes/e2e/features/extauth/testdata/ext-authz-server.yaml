@@ -12,9 +12,10 @@ spec:
   # - name: http
   #   port: 8000
   #   targetPort: 8000
-  - name: grpc
-    port: 4444
+  - port: 4444
     targetPort: 9000
+    protocol: TCP
+    appProtocol: kubernetes.io/h2c
   selector:
     app: ext-authz
 ---
@@ -32,11 +33,11 @@ spec:
     metadata:
       labels:
         app: ext-authz
-        app.kubernetes.io/name: ext-authz-istio
+        app.kubernetes.io/name: ext-authz
     spec:
       containers:
       - image: gcr.io/istio-testing/ext-authz:1.25-dev # use istio's extauthz for ease of use
-        name: ext-authz-istio
+        name: ext-authz
         ports:
         # - containerPort: 8000
         - containerPort: 9000
@@ -52,7 +53,7 @@ spec:
     grpcService:
       backendRef:
         name: ext-authz
-        port: 9000
+        port: 4444
 ---
 apiVersion: gateway.kgateway.dev/v1alpha1
 kind: GatewayExtension
@@ -65,4 +66,4 @@ spec:
     grpcService:
       backendRef:
         name: ext-authz
-        port: 9000
+        port: 4444
