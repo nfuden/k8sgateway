@@ -59,15 +59,21 @@ func (s *tsuite) SetupSuite() {
 	// Not every resource that is applied needs to be verified. We are not testing `kubectl apply`,
 	// but the below code demonstrates how it can be done if necessary
 	s.manifestObjects = map[string][]client.Object{
-		basicRoutesManifest:                 {routeRoot, routeTeam1, routeTeam2},
-		cyclicRoutesManifest:                {routeRoot, routeTeam1, routeTeam2},
-		recursiveRoutesManifest:             {routeRoot, routeTeam1, routeTeam2},
-		invalidChildRoutesManifest:          {routeRoot, routeTeam1, routeTeam2},
-		headerQueryMatchRoutesManifest:      {routeRoot, routeTeam1, routeTeam2},
-		multipleParentsManifest:             {routeParent1, routeParent2, routeTeam1, routeTeam2},
-		invalidChildValidStandaloneManifest: {proxyTestService, proxyTestDeployment, routeRoot, routeTeam1, routeTeam2},
-		unresolvedChildManifest:             {routeRoot},
-		matcherInheritanceManifest:          {routeParent1, routeParent2, routeTeam1},
+		basicRoutesManifest:            {routeRoot, routeTeam1, routeTeam2},
+		cyclicRoutesManifest:           {routeRoot, routeTeam1, routeTeam2},
+		recursiveRoutesManifest:        {routeRoot, routeTeam1, routeTeam2},
+		invalidChildRoutesManifest:     {routeRoot, routeTeam1, routeTeam2},
+		headerQueryMatchRoutesManifest: {routeRoot, routeTeam1, routeTeam2},
+		multipleParentsManifest:        {routeParent1, routeParent2, routeTeam1, routeTeam2},
+		invalidChildValidStandaloneManifest: {
+			proxyTestService,
+			proxyTestDeployment,
+			routeRoot,
+			routeTeam1,
+			routeTeam2,
+		},
+		unresolvedChildManifest:    {routeRoot},
+		matcherInheritanceManifest: {routeParent1, routeParent2, routeTeam1},
 	}
 
 	s.commonResources = []client.Object{
@@ -82,12 +88,20 @@ func (s *tsuite) SetupSuite() {
 	s.Require().NoError(err, "can apply common manifest")
 	s.ti.Assertions.EventuallyObjectsExist(s.ctx, s.commonResources...)
 	// make sure pods are running
-	s.ti.Assertions.EventuallyPodsRunning(s.ctx, httpbinTeam1Deployment.GetNamespace(), metav1.ListOptions{
-		LabelSelector: "app=httpbin,version=v1",
-	})
-	s.ti.Assertions.EventuallyPodsRunning(s.ctx, httpbinTeam2Deployment.GetNamespace(), metav1.ListOptions{
-		LabelSelector: "app=httpbin,version=v2",
-	})
+	s.ti.Assertions.EventuallyPodsRunning(
+		s.ctx,
+		httpbinTeam1Deployment.GetNamespace(),
+		metav1.ListOptions{
+			LabelSelector: "app=httpbin,version=v1",
+		},
+	)
+	s.ti.Assertions.EventuallyPodsRunning(
+		s.ctx,
+		httpbinTeam2Deployment.GetNamespace(),
+		metav1.ListOptions{
+			LabelSelector: "app=httpbin,version=v2",
+		},
+	)
 	s.ti.Assertions.EventuallyPodsRunning(s.ctx, proxyMeta.GetNamespace(), metav1.ListOptions{
 		LabelSelector: fmt.Sprintf("app.kubernetes.io/name=%s", proxyMeta.GetName()),
 	})
@@ -95,9 +109,13 @@ func (s *tsuite) SetupSuite() {
 	// set up curl once
 	err = s.ti.Actions.Kubectl().ApplyFile(s.ctx, defaults.CurlPodManifest)
 	s.Require().NoError(err, "can apply curl pod manifest")
-	s.ti.Assertions.EventuallyPodsRunning(s.ctx, defaults.CurlPod.GetNamespace(), metav1.ListOptions{
-		LabelSelector: defaults.CurlPodLabelSelector,
-	})
+	s.ti.Assertions.EventuallyPodsRunning(
+		s.ctx,
+		defaults.CurlPod.GetNamespace(),
+		metav1.ListOptions{
+			LabelSelector: defaults.CurlPodLabelSelector,
+		},
+	)
 }
 
 func (s *tsuite) TearDownSuite() {
@@ -110,12 +128,20 @@ func (s *tsuite) TearDownSuite() {
 	err = s.ti.Actions.Kubectl().DeleteFileSafe(s.ctx, commonManifest)
 	s.Require().NoError(err, "can delete common manifest")
 	s.ti.Assertions.EventuallyObjectsNotExist(s.ctx, s.commonResources...)
-	s.ti.Assertions.EventuallyPodsNotExist(s.ctx, httpbinTeam1Deployment.GetNamespace(), metav1.ListOptions{
-		LabelSelector: "app=httpbin,version=v1",
-	})
-	s.ti.Assertions.EventuallyPodsNotExist(s.ctx, httpbinTeam2Deployment.GetNamespace(), metav1.ListOptions{
-		LabelSelector: "app=httpbin,version=v2",
-	})
+	s.ti.Assertions.EventuallyPodsNotExist(
+		s.ctx,
+		httpbinTeam1Deployment.GetNamespace(),
+		metav1.ListOptions{
+			LabelSelector: "app=httpbin,version=v1",
+		},
+	)
+	s.ti.Assertions.EventuallyPodsNotExist(
+		s.ctx,
+		httpbinTeam2Deployment.GetNamespace(),
+		metav1.ListOptions{
+			LabelSelector: "app=httpbin,version=v2",
+		},
+	)
 	s.ti.Assertions.EventuallyPodsNotExist(s.ctx, proxyMeta.GetNamespace(), metav1.ListOptions{
 		LabelSelector: fmt.Sprintf("app.kubernetes.io/name=%s", proxyMeta.GetName()),
 	})
@@ -141,48 +167,92 @@ func (s *tsuite) AfterTest(suiteName, testName string) {
 
 func (s *tsuite) TestBasic() {
 	// Assert traffic to team1 route
-	s.ti.Assertions.AssertEventuallyConsistentCurlResponse(s.ctx, defaults.CurlPodExecOpt, []curl.Option{curl.WithHostPort(proxyHostPort), curl.WithPath(pathTeam1)},
-		&testmatchers.HttpResponse{StatusCode: http.StatusOK, Body: ContainSubstring(pathTeam1)})
+	s.ti.Assertions.AssertEventuallyConsistentCurlResponse(
+		s.ctx,
+		defaults.CurlPodExecOpt,
+		[]curl.Option{curl.WithHostPort(proxyHostPort), curl.WithPath(pathTeam1)},
+		&testmatchers.HttpResponse{StatusCode: http.StatusOK, Body: ContainSubstring(pathTeam1)},
+	)
 
 	// Assert traffic to team2 route
-	s.ti.Assertions.AssertEventuallyConsistentCurlResponse(s.ctx, defaults.CurlPodExecOpt, []curl.Option{curl.WithHostPort(proxyHostPort), curl.WithPath(pathTeam2)},
-		&testmatchers.HttpResponse{StatusCode: http.StatusOK, Body: ContainSubstring(pathTeam2)})
+	s.ti.Assertions.AssertEventuallyConsistentCurlResponse(
+		s.ctx,
+		defaults.CurlPodExecOpt,
+		[]curl.Option{curl.WithHostPort(proxyHostPort), curl.WithPath(pathTeam2)},
+		&testmatchers.HttpResponse{StatusCode: http.StatusOK, Body: ContainSubstring(pathTeam2)},
+	)
 }
 
 func (s *tsuite) TestRecursive() {
 	// Assert traffic to team1 route
-	s.ti.Assertions.AssertEventuallyConsistentCurlResponse(s.ctx, defaults.CurlPodExecOpt, []curl.Option{curl.WithHostPort(proxyHostPort), curl.WithPath(pathTeam1)},
-		&testmatchers.HttpResponse{StatusCode: http.StatusOK, Body: ContainSubstring(pathTeam1)})
+	s.ti.Assertions.AssertEventuallyConsistentCurlResponse(
+		s.ctx,
+		defaults.CurlPodExecOpt,
+		[]curl.Option{curl.WithHostPort(proxyHostPort), curl.WithPath(pathTeam1)},
+		&testmatchers.HttpResponse{StatusCode: http.StatusOK, Body: ContainSubstring(pathTeam1)},
+	)
 
 	// Assert traffic to team2 route
-	s.ti.Assertions.AssertEventuallyConsistentCurlResponse(s.ctx, defaults.CurlPodExecOpt, []curl.Option{curl.WithHostPort(proxyHostPort), curl.WithPath(pathTeam2)},
-		&testmatchers.HttpResponse{StatusCode: http.StatusOK, Body: ContainSubstring(pathTeam2)})
+	s.ti.Assertions.AssertEventuallyConsistentCurlResponse(
+		s.ctx,
+		defaults.CurlPodExecOpt,
+		[]curl.Option{curl.WithHostPort(proxyHostPort), curl.WithPath(pathTeam2)},
+		&testmatchers.HttpResponse{StatusCode: http.StatusOK, Body: ContainSubstring(pathTeam2)},
+	)
 }
 
 func (s *tsuite) TestCyclic() {
 	// Assert traffic to team1 route
-	s.ti.Assertions.AssertEventuallyConsistentCurlResponse(s.ctx, defaults.CurlPodExecOpt, []curl.Option{curl.WithHostPort(proxyHostPort), curl.WithPath(pathTeam1)},
-		&testmatchers.HttpResponse{StatusCode: http.StatusOK, Body: ContainSubstring(pathTeam1)})
+	s.ti.Assertions.AssertEventuallyConsistentCurlResponse(
+		s.ctx,
+		defaults.CurlPodExecOpt,
+		[]curl.Option{curl.WithHostPort(proxyHostPort), curl.WithPath(pathTeam1)},
+		&testmatchers.HttpResponse{StatusCode: http.StatusOK, Body: ContainSubstring(pathTeam1)},
+	)
 
 	// Assert traffic to team2 route fails with HTTP 404 as it is a cyclic route
-	s.ti.Assertions.AssertEventuallyConsistentCurlResponse(s.ctx, defaults.CurlPodExecOpt, []curl.Option{curl.WithHostPort(proxyHostPort), curl.WithPath(pathTeam2)},
-		&testmatchers.HttpResponse{StatusCode: http.StatusNotFound})
+	s.ti.Assertions.AssertEventuallyConsistentCurlResponse(
+		s.ctx,
+		defaults.CurlPodExecOpt,
+		[]curl.Option{curl.WithHostPort(proxyHostPort), curl.WithPath(pathTeam2)},
+		&testmatchers.HttpResponse{StatusCode: http.StatusNotFound},
+	)
 
-	s.ti.Assertions.EventuallyHTTPRouteStatusContainsMessage(s.ctx, routeTeam2.Name, routeTeam2.Namespace,
-		"cyclic reference detected", 10*time.Second, 1*time.Second)
+	s.ti.Assertions.EventuallyHTTPRouteStatusContainsMessage(
+		s.ctx,
+		routeTeam2.Name,
+		routeTeam2.Namespace,
+		"cyclic reference detected",
+		10*time.Second,
+		1*time.Second,
+	)
 }
 
 func (s *tsuite) TestInvalidChild() {
 	// Assert traffic to team1 route
-	s.ti.Assertions.AssertEventuallyConsistentCurlResponse(s.ctx, defaults.CurlPodExecOpt, []curl.Option{curl.WithHostPort(proxyHostPort), curl.WithPath(pathTeam1)},
-		&testmatchers.HttpResponse{StatusCode: http.StatusOK, Body: ContainSubstring(pathTeam1)})
+	s.ti.Assertions.AssertEventuallyConsistentCurlResponse(
+		s.ctx,
+		defaults.CurlPodExecOpt,
+		[]curl.Option{curl.WithHostPort(proxyHostPort), curl.WithPath(pathTeam1)},
+		&testmatchers.HttpResponse{StatusCode: http.StatusOK, Body: ContainSubstring(pathTeam1)},
+	)
 
 	// Assert traffic to team2 route fails with HTTP 404 as the route is invalid due to specifying a hostname on the child route
-	s.ti.Assertions.AssertEventuallyConsistentCurlResponse(s.ctx, defaults.CurlPodExecOpt, []curl.Option{curl.WithHostPort(proxyHostPort), curl.WithPath(pathTeam2)},
-		&testmatchers.HttpResponse{StatusCode: http.StatusNotFound})
+	s.ti.Assertions.AssertEventuallyConsistentCurlResponse(
+		s.ctx,
+		defaults.CurlPodExecOpt,
+		[]curl.Option{curl.WithHostPort(proxyHostPort), curl.WithPath(pathTeam2)},
+		&testmatchers.HttpResponse{StatusCode: http.StatusNotFound},
+	)
 
-	s.ti.Assertions.EventuallyHTTPRouteStatusContainsMessage(s.ctx, routeTeam2.Name, routeTeam2.Namespace,
-		"spec.hostnames must be unset", 10*time.Second, 1*time.Second)
+	s.ti.Assertions.EventuallyHTTPRouteStatusContainsMessage(
+		s.ctx,
+		routeTeam2.Name,
+		routeTeam2.Namespace,
+		"spec.hostnames must be unset",
+		10*time.Second,
+		1*time.Second,
+	)
 }
 
 func (s *tsuite) TestHeaderQueryMatch() {
@@ -272,23 +342,47 @@ func (s *tsuite) TestInvalidChildValidStandalone() {
 		},
 		&testmatchers.HttpResponse{StatusCode: http.StatusOK, Body: ContainSubstring(pathTeam2)})
 
-	s.ti.Assertions.EventuallyHTTPRouteStatusContainsMessage(s.ctx, routeTeam2.Name, routeTeam2.Namespace,
-		"spec.hostnames must be unset", 10*time.Second, 1*time.Second)
+	s.ti.Assertions.EventuallyHTTPRouteStatusContainsMessage(
+		s.ctx,
+		routeTeam2.Name,
+		routeTeam2.Namespace,
+		"spec.hostnames must be unset",
+		10*time.Second,
+		1*time.Second,
+	)
 }
 
 func (s *tsuite) TestUnresolvedChild() {
-	s.ti.Assertions.EventuallyHTTPRouteStatusContainsReason(s.ctx, routeRoot.Name, routeRoot.Namespace,
-		string(gwv1.RouteReasonBackendNotFound), 10*time.Second, 1*time.Second)
+	s.ti.Assertions.EventuallyHTTPRouteStatusContainsReason(
+		s.ctx,
+		routeRoot.Name,
+		routeRoot.Namespace,
+		string(gwv1.RouteReasonBackendNotFound),
+		10*time.Second,
+		1*time.Second,
+	)
 }
 
 func (s *tsuite) TestMatcherInheritance() {
 	// Assert traffic on parent1's prefix
-	s.ti.Assertions.AssertEventuallyConsistentCurlResponse(s.ctx, defaults.CurlPodExecOpt,
+	s.ti.Assertions.AssertEventuallyConsistentCurlResponse(
+		s.ctx,
+		defaults.CurlPodExecOpt,
 		[]curl.Option{curl.WithHostPort(proxyHostPort), curl.WithPath("/anything/foo/child")},
-		&testmatchers.HttpResponse{StatusCode: http.StatusOK, Body: ContainSubstring("/anything/foo/child")})
+		&testmatchers.HttpResponse{
+			StatusCode: http.StatusOK,
+			Body:       ContainSubstring("/anything/foo/child"),
+		},
+	)
 
 	// Assert traffic on parent2's prefix
-	s.ti.Assertions.AssertEventuallyConsistentCurlResponse(s.ctx, defaults.CurlPodExecOpt,
+	s.ti.Assertions.AssertEventuallyConsistentCurlResponse(
+		s.ctx,
+		defaults.CurlPodExecOpt,
 		[]curl.Option{curl.WithHostPort(proxyHostPort), curl.WithPath("/anything/baz/child")},
-		&testmatchers.HttpResponse{StatusCode: http.StatusOK, Body: ContainSubstring("/anything/baz/child")})
+		&testmatchers.HttpResponse{
+			StatusCode: http.StatusOK,
+			Body:       ContainSubstring("/anything/baz/child"),
+		},
+	)
 }

@@ -7,13 +7,21 @@ import (
 	"istio.io/istio/pkg/kube/krt"
 )
 
-func (w *waypointQueries) GetAuthorizationPolicies(kctx krt.HandlerContext, ctx context.Context, targetNamespace, rootNamespace string) []*istiosecurity.AuthorizationPolicy {
+func (w *waypointQueries) GetAuthorizationPolicies(
+	kctx krt.HandlerContext,
+	ctx context.Context,
+	targetNamespace, rootNamespace string,
+) []*istiosecurity.AuthorizationPolicy {
 	// Get all policies in the target namespace
 	policies := krt.Fetch(kctx, w.authzPolicies, krt.FilterIndex(w.byNamespace, targetNamespace))
 
 	// Get all policies in the root namespace
 	if rootNamespace != "" && rootNamespace != targetNamespace {
-		rootPolicies := krt.Fetch(kctx, w.authzPolicies, krt.FilterIndex(w.byNamespace, rootNamespace))
+		rootPolicies := krt.Fetch(
+			kctx,
+			w.authzPolicies,
+			krt.FilterIndex(w.byNamespace, rootNamespace),
+		)
 		policies = append(policies, rootPolicies...)
 	}
 
@@ -23,7 +31,8 @@ func (w *waypointQueries) GetAuthorizationPolicies(kctx krt.HandlerContext, ctx 
 		for _, targetRef := range policy.Spec.GetTargetRefs() {
 			if targetRef.GetKind() == "Service" && targetRef.GetGroup() == "" {
 				// If the policy targets a service in the target namespace, include it
-				targetNamespaceMatches := targetRef.GetNamespace() == "" || targetRef.GetNamespace() == targetNamespace
+				targetNamespaceMatches := targetRef.GetNamespace() == "" ||
+					targetRef.GetNamespace() == targetNamespace
 				if targetNamespaceMatches {
 					filteredPolicies = append(filteredPolicies, policy)
 					break

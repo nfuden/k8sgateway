@@ -25,7 +25,13 @@ const (
 	tlsPort = 443
 )
 
-func ProcessAIBackend(ctx context.Context, in *v1alpha1.AIBackend, aiSecret *ir.Secret, multiSecrets map[string]*ir.Secret, out *envoy_config_cluster_v3.Cluster) error {
+func ProcessAIBackend(
+	ctx context.Context,
+	in *v1alpha1.AIBackend,
+	aiSecret *ir.Secret,
+	multiSecrets map[string]*ir.Secret,
+	out *envoy_config_cluster_v3.Cluster,
+) error {
 	if in == nil {
 		return nil
 	}
@@ -41,7 +47,13 @@ func ProcessAIBackend(ctx context.Context, in *v1alpha1.AIBackend, aiSecret *ir.
 // This function is used by the `ProcessBackend` function to build the cluster for the AI backend.
 // It is ALSO used by `ProcessRoute` to create the cluster in the event of backup models being used
 // and fallbacks being required.
-func buildModelCluster(ctx context.Context, aiUs *v1alpha1.AIBackend, aiSecret *ir.Secret, multiSecrets map[string]*ir.Secret, out *envoy_config_cluster_v3.Cluster) error {
+func buildModelCluster(
+	ctx context.Context,
+	aiUs *v1alpha1.AIBackend,
+	aiSecret *ir.Secret,
+	multiSecrets map[string]*ir.Secret,
+	out *envoy_config_cluster_v3.Cluster,
+) error {
 	// set the type to strict dns to support mutli pool backends
 	out.ClusterDiscoveryType = &envoy_config_cluster_v3.Cluster_Type{
 		Type: envoy_config_cluster_v3.Cluster_STRICT_DNS,
@@ -56,7 +68,11 @@ func buildModelCluster(ctx context.Context, aiUs *v1alpha1.AIBackend, aiSecret *
 
 	if aiUs.MultiPool != nil {
 		epByType := map[string]struct{}{}
-		prioritized = make([]*envoy_config_endpoint_v3.LocalityLbEndpoints, 0, len(aiUs.MultiPool.Priorities))
+		prioritized = make(
+			[]*envoy_config_endpoint_v3.LocalityLbEndpoints,
+			0,
+			len(aiUs.MultiPool.Priorities),
+		)
 		for idx, pool := range aiUs.MultiPool.Priorities {
 			eps := make([]*envoy_config_endpoint_v3.LbEndpoint, 0, len(pool.Pool))
 			for jdx, ep := range pool.Pool {
@@ -69,7 +85,11 @@ func buildModelCluster(ctx context.Context, aiUs *v1alpha1.AIBackend, aiSecret *
 						secretRef := ep.Provider.OpenAI.AuthToken.SecretRef
 						secretForMultiPool = multiSecrets[GetMultiPoolSecretKey(idx, jdx, secretRef.Name)]
 					}
-					result, err = buildOpenAIEndpoint(ep.Provider.OpenAI, ep.HostOverride, secretForMultiPool)
+					result, err = buildOpenAIEndpoint(
+						ep.Provider.OpenAI,
+						ep.HostOverride,
+						secretForMultiPool,
+					)
 				} else if ep.Provider.Anthropic != nil {
 					var secretForMultiPool *ir.Secret
 					if ep.Provider.Anthropic.AuthToken.Kind == v1alpha1.SecretRef {
@@ -128,29 +148,31 @@ func buildModelCluster(ctx context.Context, aiUs *v1alpha1.AIBackend, aiSecret *
 	if err != nil {
 		return err
 	}
-	out.TransportSocketMatches = append(out.GetTransportSocketMatches(), []*envoy_config_cluster_v3.Cluster_TransportSocketMatch{
-		{
-			Name: "tls",
-			TransportSocket: &envoy_config_core_v3.TransportSocket{
-				Name: wellknown.TransportSocketTls,
-				ConfigType: &envoy_config_core_v3.TransportSocket_TypedConfig{
-					TypedConfig: tlsMatchAny,
-				},
-			},
-		},
-		{
-			Name: "plaintext",
-			TransportSocket: &envoy_config_core_v3.TransportSocket{
-				Name: wellknown.TransportSocketRawBuffer,
-				ConfigType: &envoy_config_core_v3.TransportSocket_TypedConfig{
-					TypedConfig: &anypb.Any{
-						TypeUrl: "type.googleapis.com/envoy.extensions.transport_sockets.raw_buffer.v3.RawBuffer",
+	out.TransportSocketMatches = append(
+		out.GetTransportSocketMatches(),
+		[]*envoy_config_cluster_v3.Cluster_TransportSocketMatch{
+			{
+				Name: "tls",
+				TransportSocket: &envoy_config_core_v3.TransportSocket{
+					Name: wellknown.TransportSocketTls,
+					ConfigType: &envoy_config_core_v3.TransportSocket_TypedConfig{
+						TypedConfig: tlsMatchAny,
 					},
 				},
 			},
-			Match: &structpb.Struct{},
-		},
-	}...)
+			{
+				Name: "plaintext",
+				TransportSocket: &envoy_config_core_v3.TransportSocket{
+					Name: wellknown.TransportSocketRawBuffer,
+					ConfigType: &envoy_config_core_v3.TransportSocket_TypedConfig{
+						TypedConfig: &anypb.Any{
+							TypeUrl: "type.googleapis.com/envoy.extensions.transport_sockets.raw_buffer.v3.RawBuffer",
+						},
+					},
+				},
+				Match: &structpb.Struct{},
+			},
+		}...)
 	out.LoadAssignment = &envoy_config_endpoint_v3.ClusterLoadAssignment{
 		ClusterName: out.GetName(),
 		Endpoints:   prioritized,
@@ -159,7 +181,11 @@ func buildModelCluster(ctx context.Context, aiUs *v1alpha1.AIBackend, aiSecret *
 	return nil
 }
 
-func buildLLMEndpoint(ctx context.Context, aiUs *v1alpha1.AIBackend, aiSecrets *ir.Secret) ([]*envoy_config_endpoint_v3.LocalityLbEndpoints, error) {
+func buildLLMEndpoint(
+	ctx context.Context,
+	aiUs *v1alpha1.AIBackend,
+	aiSecrets *ir.Secret,
+) ([]*envoy_config_endpoint_v3.LocalityLbEndpoints, error) {
 	var prioritized []*envoy_config_endpoint_v3.LocalityLbEndpoints
 	provider := aiUs.LLM.Provider
 	if provider.OpenAI != nil {
@@ -206,7 +232,11 @@ func buildLLMEndpoint(ctx context.Context, aiUs *v1alpha1.AIBackend, aiSecrets *
 	return prioritized, nil
 }
 
-func buildOpenAIEndpoint(data *v1alpha1.OpenAIConfig, hostOverride *v1alpha1.Host, aiSecrets *ir.Secret) (*envoy_config_endpoint_v3.LbEndpoint, error) {
+func buildOpenAIEndpoint(
+	data *v1alpha1.OpenAIConfig,
+	hostOverride *v1alpha1.Host,
+	aiSecrets *ir.Secret,
+) (*envoy_config_endpoint_v3.LbEndpoint, error) {
 	token, err := aiutils.GetAuthToken(data.AuthToken, aiSecrets)
 	if err != nil {
 		return nil, err
@@ -223,7 +253,12 @@ func buildOpenAIEndpoint(data *v1alpha1.OpenAIConfig, hostOverride *v1alpha1.Hos
 	)
 	return ep, nil
 }
-func buildAnthropicEndpoint(data *v1alpha1.AnthropicConfig, hostOverride *v1alpha1.Host, aiSecrets *ir.Secret) (*envoy_config_endpoint_v3.LbEndpoint, error) {
+
+func buildAnthropicEndpoint(
+	data *v1alpha1.AnthropicConfig,
+	hostOverride *v1alpha1.Host,
+	aiSecrets *ir.Secret,
+) (*envoy_config_endpoint_v3.LbEndpoint, error) {
 	token, err := aiutils.GetAuthToken(data.AuthToken, aiSecrets)
 	if err != nil {
 		return nil, err
@@ -240,7 +275,12 @@ func buildAnthropicEndpoint(data *v1alpha1.AnthropicConfig, hostOverride *v1alph
 	)
 	return ep, nil
 }
-func buildAzureOpenAIEndpoint(data *v1alpha1.AzureOpenAIConfig, hostOverride *v1alpha1.Host, aiSecrets *ir.Secret) (*envoy_config_endpoint_v3.LbEndpoint, error) {
+
+func buildAzureOpenAIEndpoint(
+	data *v1alpha1.AzureOpenAIConfig,
+	hostOverride *v1alpha1.Host,
+	aiSecrets *ir.Secret,
+) (*envoy_config_endpoint_v3.LbEndpoint, error) {
 	token, err := aiutils.GetAuthToken(data.AuthToken, aiSecrets)
 	if err != nil {
 		return nil, err
@@ -249,11 +289,20 @@ func buildAzureOpenAIEndpoint(data *v1alpha1.AzureOpenAIConfig, hostOverride *v1
 		data.Endpoint,
 		tlsPort,
 		hostOverride,
-		buildEndpointMeta(token, data.DeploymentName, map[string]string{"api_version": data.ApiVersion}),
+		buildEndpointMeta(
+			token,
+			data.DeploymentName,
+			map[string]string{"api_version": data.ApiVersion},
+		),
 	)
 	return ep, nil
 }
-func buildGeminiEndpoint(data *v1alpha1.GeminiConfig, hostOverride *v1alpha1.Host, aiSecrets *ir.Secret) (*envoy_config_endpoint_v3.LbEndpoint, error) {
+
+func buildGeminiEndpoint(
+	data *v1alpha1.GeminiConfig,
+	hostOverride *v1alpha1.Host,
+	aiSecrets *ir.Secret,
+) (*envoy_config_endpoint_v3.LbEndpoint, error) {
 	token, err := aiutils.GetAuthToken(data.AuthToken, aiSecrets)
 	if err != nil {
 		return nil, err
@@ -266,7 +315,13 @@ func buildGeminiEndpoint(data *v1alpha1.GeminiConfig, hostOverride *v1alpha1.Hos
 	)
 	return ep, nil
 }
-func buildVertexAIEndpoint(ctx context.Context, data *v1alpha1.VertexAIConfig, hostOverride *v1alpha1.Host, aiSecrets *ir.Secret) (*envoy_config_endpoint_v3.LbEndpoint, error) {
+
+func buildVertexAIEndpoint(
+	ctx context.Context,
+	data *v1alpha1.VertexAIConfig,
+	hostOverride *v1alpha1.Host,
+	aiSecrets *ir.Secret,
+) (*envoy_config_endpoint_v3.LbEndpoint, error) {
 	token, err := aiutils.GetAuthToken(data.AuthToken, aiSecrets)
 	if err != nil {
 		return nil, err
@@ -277,14 +332,24 @@ func buildVertexAIEndpoint(ctx context.Context, data *v1alpha1.VertexAIConfig, h
 		publisher = "google"
 	default:
 		// TODO(npolshak): add support for other publishers
-		contextutils.LoggerFrom(ctx).Warnf("unsupported Vertex AI publisher: %v. Defaulting to Google.", data.Publisher)
+		contextutils.LoggerFrom(ctx).
+			Warnf("unsupported Vertex AI publisher: %v. Defaulting to Google.", data.Publisher)
 		publisher = "google"
 	}
 	ep := buildLocalityLbEndpoint(
 		fmt.Sprintf("%s-aiplatform.googleapis.com", data.Location),
 		tlsPort,
 		hostOverride,
-		buildEndpointMeta(token, data.Model, map[string]string{"api_version": data.ApiVersion, "location": data.Location, "project": data.ProjectId, "publisher": publisher}),
+		buildEndpointMeta(
+			token,
+			data.Model,
+			map[string]string{
+				"api_version": data.ApiVersion,
+				"location":    data.Location,
+				"project":     data.ProjectId,
+				"publisher":   publisher,
+			},
+		),
 	)
 	return ep, nil
 }
@@ -335,7 +400,10 @@ func buildLocalityLbEndpoint(
 
 // `buildEndpointMeta` builds the metadata for the endpoint.
 // This metadata is used by the post routing transformation filter to modify the request body.
-func buildEndpointMeta(token, model string, additionalFields map[string]string) *envoy_config_core_v3.Metadata {
+func buildEndpointMeta(
+	token, model string,
+	additionalFields map[string]string,
+) *envoy_config_core_v3.Metadata {
 	fields := map[string]*structpb.Value{
 		"auth_token": structpb.NewStringValue(token),
 	}
@@ -354,7 +422,10 @@ func buildEndpointMeta(token, model string, additionalFields map[string]string) 
 	}
 }
 
-func createTransformationTemplate(ctx context.Context, aiBackend *v1alpha1.AIBackend) *envoytransformation.TransformationTemplate {
+func createTransformationTemplate(
+	ctx context.Context,
+	aiBackend *v1alpha1.AIBackend,
+) *envoytransformation.TransformationTemplate {
 	// Setup initial transformation template. This may be modified by further
 	transformationTemplate := &envoytransformation.TransformationTemplate{
 		// We will add the auth token later
@@ -380,7 +451,10 @@ func createTransformationTemplate(ctx context.Context, aiBackend *v1alpha1.AIBac
 	return transformationTemplate
 }
 
-func getTransformation(ctx context.Context, llm *v1alpha1.LLMProvider) (string, string, string, *envoytransformation.TransformationTemplate_MergeJsonKeys) {
+func getTransformation(
+	ctx context.Context,
+	llm *v1alpha1.LLMProvider,
+) (string, string, string, *envoytransformation.TransformationTemplate_MergeJsonKeys) {
 	headerName := "Authorization"
 	var prefix, path string
 	var bodyTransformation *envoytransformation.TransformationTemplate_MergeJsonKeys

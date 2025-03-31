@@ -61,18 +61,23 @@ func TestUniqueClients(t *testing.T) {
 						Id: "podname.ns",
 						Metadata: &structpb.Struct{
 							Fields: map[string]*structpb.Value{
-								xds.RoleKey: structpb.NewStringValue(wellknown.GatewayApiProxyValue + "~best-proxy-role"),
+								xds.RoleKey: structpb.NewStringValue(
+									wellknown.GatewayApiProxyValue + "~best-proxy-role",
+								),
 							},
 						},
 					},
 				},
 			},
 			result: sets.New(
-				fmt.Sprintf("kgateway-kube-gateway-api~best-proxy-role~%d~ns", utils.HashLabels(map[string]string{
-					corev1.LabelTopologyRegion: "region",
-					corev1.LabelTopologyZone:   "zone",
-					"a":                        "b",
-				})),
+				fmt.Sprintf(
+					"kgateway-kube-gateway-api~best-proxy-role~%d~ns",
+					utils.HashLabels(map[string]string{
+						corev1.LabelTopologyRegion: "region",
+						corev1.LabelTopologyZone:   "zone",
+						"a":                        "b",
+					}),
+				),
 			),
 		},
 		{
@@ -125,7 +130,9 @@ func TestUniqueClients(t *testing.T) {
 						Id: "podname.ns",
 						Metadata: &structpb.Struct{
 							Fields: map[string]*structpb.Value{
-								xds.RoleKey: structpb.NewStringValue(wellknown.GatewayApiProxyValue + "~best-proxy-role"),
+								xds.RoleKey: structpb.NewStringValue(
+									wellknown.GatewayApiProxyValue + "~best-proxy-role",
+								),
 							},
 						},
 					},
@@ -135,22 +142,31 @@ func TestUniqueClients(t *testing.T) {
 						Id: "podname2.ns",
 						Metadata: &structpb.Struct{
 							Fields: map[string]*structpb.Value{
-								xds.RoleKey: structpb.NewStringValue(wellknown.GatewayApiProxyValue + "~best-proxy-role"),
+								xds.RoleKey: structpb.NewStringValue(
+									wellknown.GatewayApiProxyValue + "~best-proxy-role",
+								),
 							},
 						},
 					},
 				},
 			},
 			result: sets.New(
-				fmt.Sprintf("kgateway-kube-gateway-api~best-proxy-role~%d~ns", utils.HashLabels(map[string]string{
-					corev1.LabelTopologyRegion: "region",
-					corev1.LabelTopologyZone:   "zone",
-					"a":                        "b",
-				})), fmt.Sprintf("kgateway-kube-gateway-api~best-proxy-role~%d~ns", utils.HashLabels(map[string]string{
-					corev1.LabelTopologyRegion: "region2",
-					corev1.LabelTopologyZone:   "zone2",
-					"a":                        "b",
-				})),
+				fmt.Sprintf(
+					"kgateway-kube-gateway-api~best-proxy-role~%d~ns",
+					utils.HashLabels(map[string]string{
+						corev1.LabelTopologyRegion: "region",
+						corev1.LabelTopologyZone:   "zone",
+						"a":                        "b",
+					}),
+				),
+				fmt.Sprintf(
+					"kgateway-kube-gateway-api~best-proxy-role~%d~ns",
+					utils.HashLabels(map[string]string{
+						corev1.LabelTopologyRegion: "region2",
+						corev1.LabelTopologyZone:   "zone2",
+						"a":                        "b",
+					}),
+				),
 			),
 		},
 		{
@@ -162,7 +178,9 @@ func TestUniqueClients(t *testing.T) {
 						Id: "podname.ns",
 						Metadata: &structpb.Struct{
 							Fields: map[string]*structpb.Value{
-								xds.RoleKey: structpb.NewStringValue(wellknown.GatewayApiProxyValue + "~best-proxy-role"),
+								xds.RoleKey: structpb.NewStringValue(
+									wellknown.GatewayApiProxyValue + "~best-proxy-role",
+								),
 							},
 						},
 					},
@@ -180,7 +198,11 @@ func TestUniqueClients(t *testing.T) {
 			if tc.inputs != nil {
 				mock := krttest.NewMock(t, tc.inputs)
 				nodes := NewNodeMetadataCollection(krttest.GetMockCollection[*corev1.Node](mock))
-				pods = NewLocalityPodsCollection(nodes, krttest.GetMockCollection[*corev1.Pod](mock), krtutil.KrtOptions{})
+				pods = NewLocalityPodsCollection(
+					nodes,
+					krttest.GetMockCollection[*corev1.Pod](mock),
+					krtutil.KrtOptions{},
+				)
 				nodes.WaitUntilSynced(context.Background().Done())
 				pods.WaitUntilSynced(context.Background().Done())
 			}
@@ -196,10 +218,15 @@ func TestUniqueClients(t *testing.T) {
 				fetchDR := proto.Clone(r).(*envoy_service_discovery_v3.DiscoveryRequest)
 				err := cb.OnFetchRequest(context.Background(), fetchDR)
 				g.Expect(err).NotTo(HaveOccurred())
-				fetchNames.Insert(fetchDR.GetNode().GetMetadata().GetFields()[xds.RoleKey].GetStringValue())
+				fetchNames.Insert(
+					fetchDR.GetNode().GetMetadata().GetFields()[xds.RoleKey].GetStringValue(),
+				)
 
 				for j := 0; j < 10; j++ { // simulate 10 requests that are the same client
-					cb.OnStreamRequest(int64(i*10+j), proto.Clone(r).(*envoy_service_discovery_v3.DiscoveryRequest))
+					cb.OnStreamRequest(
+						int64(i*10+j),
+						proto.Clone(r).(*envoy_service_discovery_v3.DiscoveryRequest),
+					)
 				}
 			}
 

@@ -77,14 +77,20 @@ func preProcessAITrafficPolicy(
 	// If the route options specify this as a chat streaming route, add a header to the ext-proc request
 	if aiConfig.RouteType != nil && *aiConfig.RouteType == v1alpha1.CHAT_STREAMING {
 		// append streaming header if it's a streaming route
-		extprocSettings.GetOverrides().GrpcInitialMetadata = append(extprocSettings.GetOverrides().GetGrpcInitialMetadata(), &envoy_config_core_v3.HeaderValue{
-			Key:   "x-chat-streaming",
-			Value: "true",
-		})
-		transformationTemplate.DynamicMetadataValues = append(transformationTemplate.GetDynamicMetadataValues(), &envoytransformation.TransformationTemplate_DynamicMetadataValue{
-			Key:   "route_type",
-			Value: &envoytransformation.InjaTemplate{Text: "CHAT_STREAMING"},
-		})
+		extprocSettings.GetOverrides().GrpcInitialMetadata = append(
+			extprocSettings.GetOverrides().GetGrpcInitialMetadata(),
+			&envoy_config_core_v3.HeaderValue{
+				Key:   "x-chat-streaming",
+				Value: "true",
+			},
+		)
+		transformationTemplate.DynamicMetadataValues = append(
+			transformationTemplate.GetDynamicMetadataValues(),
+			&envoytransformation.TransformationTemplate_DynamicMetadataValue{
+				Key:   "route_type",
+				Value: &envoytransformation.InjaTemplate{Text: "CHAT_STREAMING"},
+			},
+		)
 	}
 
 	err := handleAITrafficPolicy(aiConfig, extprocSettings, transformationTemplate, ir.AISecret)
@@ -99,7 +105,9 @@ func preProcessAITrafficPolicy(
 					RequestMatch: &envoytransformation.RouteTransformations_RouteTransformation_RequestMatch{
 						RequestTransformation: &envoytransformation.Transformation{
 							// Set this env var to true to log the request/response info for each transformation
-							LogRequestResponseInfo: wrapperspb.Bool(os.Getenv("AI_PLUGIN_DEBUG_TRANSFORMATIONS") == "true"),
+							LogRequestResponseInfo: wrapperspb.Bool(
+								os.Getenv("AI_PLUGIN_DEBUG_TRANSFORMATIONS") == "true",
+							),
 							TransformationType: &envoytransformation.Transformation_TransformationTemplate{
 								TransformationTemplate: transformationTemplate,
 							},
@@ -169,7 +177,9 @@ func applyDefaults(
 			tmpl = string(marshalled)
 		}
 		if transformation.GetMergeJsonKeys().GetJsonKeys() == nil {
-			transformation.GetMergeJsonKeys().JsonKeys = make(map[string]*envoytransformation.MergeJsonKeys_OverridableTemplate)
+			transformation.GetMergeJsonKeys().JsonKeys = make(
+				map[string]*envoytransformation.MergeJsonKeys_OverridableTemplate,
+			)
 		}
 		transformation.GetMergeJsonKeys().GetJsonKeys()[field.Field] = &envoytransformation.MergeJsonKeys_OverridableTemplate{
 			Tmpl: &envoytransformation.InjaTemplate{Text: tmpl},
@@ -239,7 +249,11 @@ func applyPromptEnrichment(
 	return nil
 }
 
-func applyPromptGuard(pg *v1alpha1.AIPromptGuard, extProcRouteSettings *envoy_ext_proc_v3.ExtProcPerRoute, secret *ir.Secret) error {
+func applyPromptGuard(
+	pg *v1alpha1.AIPromptGuard,
+	extProcRouteSettings *envoy_ext_proc_v3.ExtProcPerRoute,
+	secret *ir.Secret,
+) error {
 	if pg == nil {
 		return nil
 	}
@@ -263,7 +277,8 @@ func applyPromptGuard(pg *v1alpha1.AIPromptGuard, extProcRouteSettings *envoy_ex
 		if err != nil {
 			return err
 		}
-		extProcRouteSettings.GetOverrides().GrpcInitialMetadata = append(extProcRouteSettings.GetOverrides().GetGrpcInitialMetadata(),
+		extProcRouteSettings.GetOverrides().GrpcInitialMetadata = append(
+			extProcRouteSettings.GetOverrides().GetGrpcInitialMetadata(),
 			&envoy_config_core_v3.HeaderValue{
 				Key:   "x-req-guardrails-config",
 				Value: string(bin),
@@ -272,7 +287,8 @@ func applyPromptGuard(pg *v1alpha1.AIPromptGuard, extProcRouteSettings *envoy_ex
 		// Use this in the server to key per-route-config
 		// Better to do it here because we have generated functions
 		reqHash, _ := hashUnique(req, nil)
-		extProcRouteSettings.GetOverrides().GrpcInitialMetadata = append(extProcRouteSettings.GetOverrides().GetGrpcInitialMetadata(),
+		extProcRouteSettings.GetOverrides().GrpcInitialMetadata = append(
+			extProcRouteSettings.GetOverrides().GetGrpcInitialMetadata(),
 			&envoy_config_core_v3.HeaderValue{
 				Key:   "x-req-guardrails-config-hash",
 				Value: fmt.Sprint(reqHash),
@@ -286,7 +302,8 @@ func applyPromptGuard(pg *v1alpha1.AIPromptGuard, extProcRouteSettings *envoy_ex
 		if err != nil {
 			return err
 		}
-		extProcRouteSettings.GetOverrides().GrpcInitialMetadata = append(extProcRouteSettings.GetOverrides().GetGrpcInitialMetadata(),
+		extProcRouteSettings.GetOverrides().GrpcInitialMetadata = append(
+			extProcRouteSettings.GetOverrides().GetGrpcInitialMetadata(),
 			&envoy_config_core_v3.HeaderValue{
 				Key:   "x-resp-guardrails-config",
 				Value: string(bin),
@@ -295,7 +312,8 @@ func applyPromptGuard(pg *v1alpha1.AIPromptGuard, extProcRouteSettings *envoy_ex
 		// Use this in the server to key per-route-config
 		// Better to do it here because we have generated functions
 		respHash, _ := hashUnique(resp, nil)
-		extProcRouteSettings.GetOverrides().GrpcInitialMetadata = append(extProcRouteSettings.GetOverrides().GetGrpcInitialMetadata(),
+		extProcRouteSettings.GetOverrides().GrpcInitialMetadata = append(
+			extProcRouteSettings.GetOverrides().GetGrpcInitialMetadata(),
 			&envoy_config_core_v3.HeaderValue{
 				Key:   "x-resp-guardrails-config-hash",
 				Value: fmt.Sprint(respHash),

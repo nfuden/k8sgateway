@@ -96,7 +96,12 @@ func doesClusterHaveSslConfigPresent(_ *envoy_config_cluster_v3.Cluster) bool {
 	return false
 }
 
-func (p istioPlugin) processBackend(ctx context.Context, ir ir.PolicyIR, in ir.BackendObjectIR, out *envoy_config_cluster_v3.Cluster) {
+func (p istioPlugin) processBackend(
+	ctx context.Context,
+	ir ir.PolicyIR,
+	in ir.BackendObjectIR,
+	out *envoy_config_cluster_v3.Cluster,
+) {
 	var socketmatches []*envoy_config_cluster_v3.Cluster_TransportSocketMatch
 
 	st, ok := ir.(IstioSettings)
@@ -123,7 +128,11 @@ func (p istioPlugin) processBackend(ctx context.Context, ir ir.PolicyIR, in ir.B
 func createIstioMatch(sni string) *envoy_config_cluster_v3.Cluster_TransportSocketMatch {
 	istioMtlsTransportSocketMatch := &structpb.Struct{
 		Fields: map[string]*structpb.Value{
-			ourwellknown.TLSModeLabelShortname: {Kind: &structpb.Value_StringValue{StringValue: ourwellknown.IstioMutualTLSModeLabel}},
+			ourwellknown.TLSModeLabelShortname: {
+				Kind: &structpb.Value_StringValue{
+					StringValue: ourwellknown.IstioMutualTLSModeLabel,
+				},
+			},
 		},
 	}
 
@@ -146,7 +155,9 @@ func createIstioMatch(sni string) *envoy_config_cluster_v3.Cluster_TransportSock
 								GrpcServices: []*envoy_config_core_v3.GrpcService{
 									{
 										TargetSpecifier: &envoy_config_core_v3.GrpcService_EnvoyGrpc_{
-											EnvoyGrpc: &envoy_config_core_v3.GrpcService_EnvoyGrpc{ClusterName: ourwellknown.SdsClusterName},
+											EnvoyGrpc: &envoy_config_core_v3.GrpcService_EnvoyGrpc{
+												ClusterName: ourwellknown.SdsClusterName,
+											},
 										},
 									},
 								},
@@ -190,7 +201,11 @@ func createIstioMatch(sni string) *envoy_config_cluster_v3.Cluster_TransportSock
 	}
 
 	return &envoy_config_cluster_v3.Cluster_TransportSocketMatch{
-		Name:            fmt.Sprintf("%s-%s", ourwellknown.TLSModeLabelShortname, ourwellknown.IstioMutualTLSModeLabel),
+		Name: fmt.Sprintf(
+			"%s-%s",
+			ourwellknown.TLSModeLabelShortname,
+			ourwellknown.IstioMutualTLSModeLabel,
+		),
 		Match:           istioMtlsTransportSocketMatch,
 		TransportSocket: transportSocket,
 	}

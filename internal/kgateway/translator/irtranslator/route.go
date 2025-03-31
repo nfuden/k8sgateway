@@ -36,7 +36,10 @@ type httpRouteConfigurationTranslator struct {
 	PluginPass               TranslationPassPlugins
 }
 
-func (h *httpRouteConfigurationTranslator) ComputeRouteConfiguration(ctx context.Context, vhosts []*ir.VirtualHost) *envoy_config_route_v3.RouteConfiguration {
+func (h *httpRouteConfigurationTranslator) ComputeRouteConfiguration(
+	ctx context.Context,
+	vhosts []*ir.VirtualHost,
+) *envoy_config_route_v3.RouteConfiguration {
 	ctx = contextutils.WithLogger(ctx, "compute_route_config."+h.routeConfigName)
 	cfg := &envoy_config_route_v3.RouteConfiguration{
 		Name: h.routeConfigName,
@@ -61,7 +64,10 @@ func (h *httpRouteConfigurationTranslator) ComputeRouteConfiguration(ctx context
 	return cfg
 }
 
-func (h *httpRouteConfigurationTranslator) computeVirtualHosts(ctx context.Context, virtualHosts []*ir.VirtualHost) []*envoy_config_route_v3.VirtualHost {
+func (h *httpRouteConfigurationTranslator) computeVirtualHosts(
+	ctx context.Context,
+	virtualHosts []*ir.VirtualHost,
+) []*envoy_config_route_v3.VirtualHost {
 	var envoyVirtualHosts []*envoy_config_route_v3.VirtualHost
 	for _, virtualHost := range virtualHosts {
 		envoyVirtualHosts = append(envoyVirtualHosts, h.computeVirtualHost(ctx, virtualHost))
@@ -186,7 +192,11 @@ func (h *httpRouteConfigurationTranslator) envoyRoutes(ctx context.Context,
 	return out
 }
 
-func applyRouteTimeout(ctx context.Context, route *envoy_config_route_v3.Route, timeout *gwv1.Duration) {
+func applyRouteTimeout(
+	ctx context.Context,
+	route *envoy_config_route_v3.Route,
+	timeout *gwv1.Duration,
+) {
 	duration, err := time.ParseDuration(string(*timeout))
 	if err == nil {
 		route.GetRoute().Timeout = durationpb.New(duration)
@@ -195,7 +205,10 @@ func applyRouteTimeout(ctx context.Context, route *envoy_config_route_v3.Route, 
 	}
 }
 
-func (h *httpRouteConfigurationTranslator) runVhostPlugins(ctx context.Context, out *envoy_config_route_v3.VirtualHost) {
+func (h *httpRouteConfigurationTranslator) runVhostPlugins(
+	ctx context.Context,
+	out *envoy_config_route_v3.VirtualHost,
+) {
 	attachedPoliciesSlice := []ir.AttachedPolicies{
 		h.gw.AttachedHttpPolicies,
 		h.listener.AttachedPolicies,
@@ -293,7 +306,11 @@ func (h *httpRouteConfigurationTranslator) runRoutePlugins(
 	return err
 }
 
-func (h *httpRouteConfigurationTranslator) runBackendPolicies(ctx context.Context, in ir.HttpBackend, pCtx *ir.RouteBackendContext) error {
+func (h *httpRouteConfigurationTranslator) runBackendPolicies(
+	ctx context.Context,
+	in ir.HttpBackend,
+	pCtx *ir.RouteBackendContext,
+) error {
 	var errs []error
 	for gk, pols := range in.AttachedPolicies.Policies {
 		pass := h.PluginPass[gk]
@@ -313,7 +330,12 @@ func (h *httpRouteConfigurationTranslator) runBackendPolicies(ctx context.Contex
 	return errors.Join(errs...)
 }
 
-func (h *httpRouteConfigurationTranslator) runBackend(ctx context.Context, in ir.HttpBackend, pCtx *ir.RouteBackendContext, outRoute *envoy_config_route_v3.Route) error {
+func (h *httpRouteConfigurationTranslator) runBackend(
+	ctx context.Context,
+	in ir.HttpBackend,
+	pCtx *ir.RouteBackendContext,
+	outRoute *envoy_config_route_v3.Route,
+) error {
 	var errs []error
 	if in.Backend.BackendObject != nil {
 		backendPass := h.PluginPass[in.Backend.BackendObject.GetGroupKind()]
@@ -559,7 +581,9 @@ func envoyHeaderMatcher(in []gwv1.HTTPHeaderMatch) []*envoy_config_route_v3.Head
 	return out
 }
 
-func envoyQueryMatcher(in []gwv1.HTTPQueryParamMatch) []*envoy_config_route_v3.QueryParameterMatcher {
+func envoyQueryMatcher(
+	in []gwv1.HTTPQueryParamMatch,
+) []*envoy_config_route_v3.QueryParameterMatcher {
 	var out []*envoy_config_route_v3.QueryParameterMatcher
 	for _, matcher := range in {
 		envoyMatch := &envoy_config_route_v3.QueryParameterMatcher{

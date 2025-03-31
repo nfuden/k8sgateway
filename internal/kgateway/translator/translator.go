@@ -54,8 +54,10 @@ func NewCombinedTranslator(
 		commonCols:      commonCols,
 		extensions:      extensions,
 		endpointPlugins: endpointPlugins,
-		logger:          contextutils.LoggerFrom(ctx).Desugar().With(zap.String("component", "translator_syncer")),
-		waitForSync:     []cache.InformerSynced{extensions.HasSynced},
+		logger: contextutils.LoggerFrom(ctx).
+			Desugar().
+			With(zap.String("component", "translator_syncer")),
+		waitForSync: []cache.InformerSynced{extensions.HasSynced},
 	}
 }
 
@@ -92,7 +94,12 @@ func (s *CombinedTranslator) HasSynced() bool {
 }
 
 // buildProxy performs translation of a kube Gateway -> gloov1.Proxy (really a wrapper type)
-func (s *CombinedTranslator) buildProxy(kctx krt.HandlerContext, ctx context.Context, gw ir.Gateway, r reports.Reporter) *ir.GatewayIR {
+func (s *CombinedTranslator) buildProxy(
+	kctx krt.HandlerContext,
+	ctx context.Context,
+	gw ir.Gateway,
+	r reports.Reporter,
+) *ir.GatewayIR {
 	stopwatch := utils.NewTranslatorStopWatch("CombinedTranslator")
 	stopwatch.Start()
 	var gatewayTranslator extensionsplug.KGwTranslator = s.gwtranslator
@@ -108,7 +115,8 @@ func (s *CombinedTranslator) buildProxy(kctx krt.HandlerContext, ctx context.Con
 	}
 
 	duration := stopwatch.Stop(ctx)
-	contextutils.LoggerFrom(ctx).Debugf("translated proxy %s/%s in %s", gw.Namespace, gw.Name, duration.String())
+	contextutils.LoggerFrom(ctx).
+		Debugf("translated proxy %s/%s in %s", gw.Namespace, gw.Name, duration.String())
 
 	// TODO: these are likely unnecessary and should be removed!
 	//	applyPostTranslationPlugins(ctx, pluginRegistry, &gwplugins.PostTranslationContext{
@@ -123,12 +131,20 @@ func (s *CombinedTranslator) GetUpstreamTranslator() *irtranslator.BackendTransl
 }
 
 // ctx needed for logging; remove once we refactor logging.
-func (s *CombinedTranslator) TranslateGateway(kctx krt.HandlerContext, ctx context.Context, gw ir.Gateway) (*irtranslator.TranslationResult, reports.ReportMap) {
+func (s *CombinedTranslator) TranslateGateway(
+	kctx krt.HandlerContext,
+	ctx context.Context,
+	gw ir.Gateway,
+) (*irtranslator.TranslationResult, reports.ReportMap) {
 	logger := contextutils.LoggerFrom(ctx)
 
 	rm := reports.NewReportMap()
 	r := reports.NewReporter(&rm)
-	logger.Debugf("building proxy for kube gw %s version %s", client.ObjectKeyFromObject(gw.Obj), gw.Obj.GetResourceVersion())
+	logger.Debugf(
+		"building proxy for kube gw %s version %s",
+		client.ObjectKeyFromObject(gw.Obj),
+		gw.Obj.GetResourceVersion(),
+	)
 	gwir := s.buildProxy(kctx, ctx, gw, r)
 
 	if gwir == nil {
@@ -141,7 +157,11 @@ func (s *CombinedTranslator) TranslateGateway(kctx krt.HandlerContext, ctx conte
 	return &xdsSnap, rm
 }
 
-func (s *CombinedTranslator) TranslateEndpoints(kctx krt.HandlerContext, ucc ir.UniqlyConnectedClient, ep ir.EndpointsForBackend) (*envoy_config_endpoint_v3.ClusterLoadAssignment, uint64) {
+func (s *CombinedTranslator) TranslateEndpoints(
+	kctx krt.HandlerContext,
+	ucc ir.UniqlyConnectedClient,
+	ep ir.EndpointsForBackend,
+) (*envoy_config_endpoint_v3.ClusterLoadAssignment, uint64) {
 	// check if we have a plugin to do it
 	cla, additionalHash := proccessWithPlugins(s.endpointPlugins, kctx, context.TODO(), ucc, ep)
 	if cla != nil {
@@ -150,7 +170,13 @@ func (s *CombinedTranslator) TranslateEndpoints(kctx krt.HandlerContext, ucc ir.
 	return endpoints.PrioritizeEndpoints(s.logger, nil, ep, ucc), 0
 }
 
-func proccessWithPlugins(plugins []extensionsplug.EndpointPlugin, kctx krt.HandlerContext, ctx context.Context, ucc ir.UniqlyConnectedClient, in ir.EndpointsForBackend) (*envoy_config_endpoint_v3.ClusterLoadAssignment, uint64) {
+func proccessWithPlugins(
+	plugins []extensionsplug.EndpointPlugin,
+	kctx krt.HandlerContext,
+	ctx context.Context,
+	ucc ir.UniqlyConnectedClient,
+	in ir.EndpointsForBackend,
+) (*envoy_config_endpoint_v3.ClusterLoadAssignment, uint64) {
 	for _, processEnddpoints := range plugins {
 		cla, additionalHash := processEnddpoints(kctx, context.TODO(), ucc, in)
 		if cla != nil {

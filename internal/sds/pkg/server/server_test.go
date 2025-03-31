@@ -73,34 +73,36 @@ var _ = Describe("SDS Server", func() {
 		_ = fs.RemoveAll(dir)
 	})
 
-	DescribeTable("correctly reads tls secrets from files to generate snapshot version", func(useOcsp bool, expectedHashes []string) {
-		certs, err := testutils.FilesToBytes(keyFile.Name(), certFile.Name(), caFile.Name())
-		Expect(err).NotTo(HaveOccurred())
-		if useOcsp {
-			ocspResponse, err := os.ReadFile(ocspResponseFile.Name())
+	DescribeTable(
+		"correctly reads tls secrets from files to generate snapshot version",
+		func(useOcsp bool, expectedHashes []string) {
+			certs, err := testutils.FilesToBytes(keyFile.Name(), certFile.Name(), caFile.Name())
 			Expect(err).NotTo(HaveOccurred())
-			certs = append(certs, ocspResponse)
-		}
+			if useOcsp {
+				ocspResponse, err := os.ReadFile(ocspResponseFile.Name())
+				Expect(err).NotTo(HaveOccurred())
+				certs = append(certs, ocspResponse)
+			}
 
-		snapshotVersion, err := server.GetSnapshotVersion(certs)
-		Expect(err).NotTo(HaveOccurred())
-		Expect(snapshotVersion).To(Equal(expectedHashes[0]))
-
-		// Test that the snapshot version changes if the contents of the file changes
-		_, err = keyFile.WriteString(`newFileString`)
-		Expect(err).NotTo(HaveOccurred())
-		certs, err = testutils.FilesToBytes(keyFile.Name(), certFile.Name(), caFile.Name())
-		Expect(err).NotTo(HaveOccurred())
-		if useOcsp {
-			ocspResponse, err := os.ReadFile(ocspResponseFile.Name())
+			snapshotVersion, err := server.GetSnapshotVersion(certs)
 			Expect(err).NotTo(HaveOccurred())
-			certs = append(certs, ocspResponse)
-		}
+			Expect(snapshotVersion).To(Equal(expectedHashes[0]))
 
-		snapshotVersion, err = server.GetSnapshotVersion(certs)
-		Expect(err).NotTo(HaveOccurred())
-		Expect(snapshotVersion).To(Equal(expectedHashes[1]))
-	},
+			// Test that the snapshot version changes if the contents of the file changes
+			_, err = keyFile.WriteString(`newFileString`)
+			Expect(err).NotTo(HaveOccurred())
+			certs, err = testutils.FilesToBytes(keyFile.Name(), certFile.Name(), caFile.Name())
+			Expect(err).NotTo(HaveOccurred())
+			if useOcsp {
+				ocspResponse, err := os.ReadFile(ocspResponseFile.Name())
+				Expect(err).NotTo(HaveOccurred())
+				certs = append(certs, ocspResponse)
+			}
+
+			snapshotVersion, err = server.GetSnapshotVersion(certs)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(snapshotVersion).To(Equal(expectedHashes[1]))
+		},
 		Entry("without ocsps", false, []string{"6730780456972595554", "4234248347190811569"}),
 		Entry("with ocsps", true, []string{"969835737182439215", "6328977429293055969"}),
 	)

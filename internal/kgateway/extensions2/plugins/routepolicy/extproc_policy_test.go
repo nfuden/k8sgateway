@@ -81,12 +81,36 @@ func TestBuildEnvoyExtProc(t *testing.T) {
 			},
 			validateResult: func(t *testing.T, result *envoy_ext_proc_v3.ExternalProcessor) {
 				assert.NotNil(t, result.ProcessingMode)
-				assert.Equal(t, envoy_ext_proc_v3.ProcessingMode_SEND, result.ProcessingMode.RequestHeaderMode)
-				assert.Equal(t, envoy_ext_proc_v3.ProcessingMode_SKIP, result.ProcessingMode.ResponseHeaderMode)
-				assert.Equal(t, envoy_ext_proc_v3.ProcessingMode_STREAMED, result.ProcessingMode.RequestBodyMode)
-				assert.Equal(t, envoy_ext_proc_v3.ProcessingMode_BUFFERED, result.ProcessingMode.ResponseBodyMode)
-				assert.Equal(t, envoy_ext_proc_v3.ProcessingMode_SEND, result.ProcessingMode.RequestTrailerMode)
-				assert.Equal(t, envoy_ext_proc_v3.ProcessingMode_SKIP, result.ProcessingMode.ResponseTrailerMode)
+				assert.Equal(
+					t,
+					envoy_ext_proc_v3.ProcessingMode_SEND,
+					result.ProcessingMode.RequestHeaderMode,
+				)
+				assert.Equal(
+					t,
+					envoy_ext_proc_v3.ProcessingMode_SKIP,
+					result.ProcessingMode.ResponseHeaderMode,
+				)
+				assert.Equal(
+					t,
+					envoy_ext_proc_v3.ProcessingMode_STREAMED,
+					result.ProcessingMode.RequestBodyMode,
+				)
+				assert.Equal(
+					t,
+					envoy_ext_proc_v3.ProcessingMode_BUFFERED,
+					result.ProcessingMode.ResponseBodyMode,
+				)
+				assert.Equal(
+					t,
+					envoy_ext_proc_v3.ProcessingMode_SEND,
+					result.ProcessingMode.RequestTrailerMode,
+				)
+				assert.Equal(
+					t,
+					envoy_ext_proc_v3.ProcessingMode_SKIP,
+					result.ProcessingMode.ResponseTrailerMode,
+				)
 			},
 		},
 		{
@@ -101,12 +125,36 @@ func TestBuildEnvoyExtProc(t *testing.T) {
 			},
 			validateResult: func(t *testing.T, result *envoy_ext_proc_v3.ExternalProcessor) {
 				assert.NotNil(t, result.ProcessingMode)
-				assert.Equal(t, envoy_ext_proc_v3.ProcessingMode_DEFAULT, result.ProcessingMode.RequestHeaderMode)
-				assert.Equal(t, envoy_ext_proc_v3.ProcessingMode_DEFAULT, result.ProcessingMode.ResponseHeaderMode)
-				assert.Equal(t, envoy_ext_proc_v3.ProcessingMode_NONE, result.ProcessingMode.RequestBodyMode)
-				assert.Equal(t, envoy_ext_proc_v3.ProcessingMode_NONE, result.ProcessingMode.ResponseBodyMode)
-				assert.Equal(t, envoy_ext_proc_v3.ProcessingMode_DEFAULT, result.ProcessingMode.RequestTrailerMode)
-				assert.Equal(t, envoy_ext_proc_v3.ProcessingMode_DEFAULT, result.ProcessingMode.ResponseTrailerMode)
+				assert.Equal(
+					t,
+					envoy_ext_proc_v3.ProcessingMode_DEFAULT,
+					result.ProcessingMode.RequestHeaderMode,
+				)
+				assert.Equal(
+					t,
+					envoy_ext_proc_v3.ProcessingMode_DEFAULT,
+					result.ProcessingMode.ResponseHeaderMode,
+				)
+				assert.Equal(
+					t,
+					envoy_ext_proc_v3.ProcessingMode_NONE,
+					result.ProcessingMode.RequestBodyMode,
+				)
+				assert.Equal(
+					t,
+					envoy_ext_proc_v3.ProcessingMode_NONE,
+					result.ProcessingMode.ResponseBodyMode,
+				)
+				assert.Equal(
+					t,
+					envoy_ext_proc_v3.ProcessingMode_DEFAULT,
+					result.ProcessingMode.RequestTrailerMode,
+				)
+				assert.Equal(
+					t,
+					envoy_ext_proc_v3.ProcessingMode_DEFAULT,
+					result.ProcessingMode.ResponseTrailerMode,
+				)
 			},
 		},
 		{
@@ -128,12 +176,36 @@ func TestBuildEnvoyExtProc(t *testing.T) {
 			},
 			validateResult: func(t *testing.T, result *envoy_ext_proc_v3.ExternalProcessor) {
 				assert.NotNil(t, result.ProcessingMode)
-				assert.Equal(t, envoy_ext_proc_v3.ProcessingMode_DEFAULT, result.ProcessingMode.RequestHeaderMode)
-				assert.Equal(t, envoy_ext_proc_v3.ProcessingMode_DEFAULT, result.ProcessingMode.ResponseHeaderMode)
-				assert.Equal(t, envoy_ext_proc_v3.ProcessingMode_NONE, result.ProcessingMode.RequestBodyMode)
-				assert.Equal(t, envoy_ext_proc_v3.ProcessingMode_NONE, result.ProcessingMode.ResponseBodyMode)
-				assert.Equal(t, envoy_ext_proc_v3.ProcessingMode_DEFAULT, result.ProcessingMode.RequestTrailerMode)
-				assert.Equal(t, envoy_ext_proc_v3.ProcessingMode_DEFAULT, result.ProcessingMode.ResponseTrailerMode)
+				assert.Equal(
+					t,
+					envoy_ext_proc_v3.ProcessingMode_DEFAULT,
+					result.ProcessingMode.RequestHeaderMode,
+				)
+				assert.Equal(
+					t,
+					envoy_ext_proc_v3.ProcessingMode_DEFAULT,
+					result.ProcessingMode.ResponseHeaderMode,
+				)
+				assert.Equal(
+					t,
+					envoy_ext_proc_v3.ProcessingMode_NONE,
+					result.ProcessingMode.RequestBodyMode,
+				)
+				assert.Equal(
+					t,
+					envoy_ext_proc_v3.ProcessingMode_NONE,
+					result.ProcessingMode.ResponseBodyMode,
+				)
+				assert.Equal(
+					t,
+					envoy_ext_proc_v3.ProcessingMode_DEFAULT,
+					result.ProcessingMode.RequestTrailerMode,
+				)
+				assert.Equal(
+					t,
+					envoy_ext_proc_v3.ProcessingMode_DEFAULT,
+					result.ProcessingMode.ResponseTrailerMode,
+				)
 			},
 		},
 	}

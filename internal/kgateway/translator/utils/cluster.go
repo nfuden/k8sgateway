@@ -10,7 +10,10 @@ import (
 	"github.com/kgateway-dev/kgateway/v2/internal/kgateway/utils"
 )
 
-func MutateHttpOptions(c *envoy_config_cluster_v3.Cluster, m func(*envoy_upstreams_v3.HttpProtocolOptions)) error {
+func MutateHttpOptions(
+	c *envoy_config_cluster_v3.Cluster,
+	m func(*envoy_upstreams_v3.HttpProtocolOptions),
+) error {
 	if c.GetTypedExtensionProtocolOptions() == nil {
 		c.TypedExtensionProtocolOptions = map[string]*anypb.Any{}
 	}

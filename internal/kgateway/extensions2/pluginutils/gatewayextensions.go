@@ -44,7 +44,10 @@ func GetGatewayExtension(
 	}
 	gwExt := krt.FetchOne(kctx, gwExts, krt.FilterKey(gwExtKey.ResourceName()))
 	if gwExt == nil {
-		return nil, fmt.Errorf("failed to find GatewayExtension %s", fmt.Sprintf("%s/%s", ns, extensionName))
+		return nil, fmt.Errorf(
+			"failed to find GatewayExtension %s",
+			fmt.Sprintf("%s/%s", ns, extensionName),
+		)
 	}
 	return gwExt, nil
 }

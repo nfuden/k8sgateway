@@ -28,8 +28,17 @@ const BackendClusterPrefix = "kube"
 
 func NewPlugin(ctx context.Context, commoncol *common.CommonCollections) extensionsplug.Plugin {
 	epSliceClient := kclient.New[*discoveryv1.EndpointSlice](commoncol.Client)
-	endpointSlices := krt.WrapClient(epSliceClient, commoncol.KrtOpts.ToOptions("EndpointSlices")...)
-	return NewPluginFromCollections(ctx, commoncol.KrtOpts, commoncol.Pods, commoncol.Services, endpointSlices, commoncol.Settings)
+	endpointSlices := krt.WrapClient(
+		epSliceClient,
+		commoncol.KrtOpts.ToOptions("EndpointSlices")...)
+	return NewPluginFromCollections(
+		ctx,
+		commoncol.KrtOpts,
+		commoncol.Pods,
+		commoncol.Services,
+		endpointSlices,
+		commoncol.Settings,
+	)
 }
 
 func NewPluginFromCollections(
@@ -40,15 +49,31 @@ func NewPluginFromCollections(
 	endpointSlices krt.Collection[*discoveryv1.EndpointSlice],
 	stngs settings.Settings,
 ) extensionsplug.Plugin {
-	k8sServiceBackends := krt.NewManyCollection(services, func(kctx krt.HandlerContext, svc *corev1.Service) []ir.BackendObjectIR {
-		uss := []ir.BackendObjectIR{}
-		for _, port := range svc.Spec.Ports {
-			uss = append(uss, BuildServiceBackendObjectIR(svc, port.Port, ptr.OrDefault(port.AppProtocol, port.Name)))
-		}
-		return uss
-	}, krtOpts.ToOptions("KubernetesServiceBackends")...)
+	k8sServiceBackends := krt.NewManyCollection(
+		services,
+		func(kctx krt.HandlerContext, svc *corev1.Service) []ir.BackendObjectIR {
+			uss := []ir.BackendObjectIR{}
+			for _, port := range svc.Spec.Ports {
+				uss = append(
+					uss,
+					BuildServiceBackendObjectIR(
+						svc,
+						port.Port,
+						ptr.OrDefault(port.AppProtocol, port.Name),
+					),
+				)
+			}
+			return uss
+		},
+		krtOpts.ToOptions("KubernetesServiceBackends")...)
 
-	inputs := krtcollections.NewGlooK8sEndpointInputs(stngs, krtOpts, endpointSlices, pods, k8sServiceBackends)
+	inputs := krtcollections.NewGlooK8sEndpointInputs(
+		stngs,
+		krtOpts,
+		endpointSlices,
+		pods,
+		k8sServiceBackends,
+	)
 	k8sServiceEndpoints := krtcollections.NewK8sEndpoints(ctx, inputs)
 
 	return extensionsplug.Plugin{
@@ -68,7 +93,11 @@ func NewPluginFromCollections(
 	}
 }
 
-func BuildServiceBackendObjectIR(svc *corev1.Service, svcPort int32, svcProtocol string) ir.BackendObjectIR {
+func BuildServiceBackendObjectIR(
+	svc *corev1.Service,
+	svcPort int32,
+	svcProtocol string,
+) ir.BackendObjectIR {
 	return ir.BackendObjectIR{
 		ObjectSource: ir.ObjectSource{
 			Kind:      wellknown.ServiceGVK.Kind,
@@ -82,11 +111,20 @@ func BuildServiceBackendObjectIR(svc *corev1.Service, svcPort int32, svcProtocol
 		AppProtocol: ir.ParseAppProtocol(&svcProtocol),
 		GvPrefix:    BackendClusterPrefix,
 		// TODO: reevaluate knative dep, dedupe with pkg/utils/kubeutils/dns.go
-		CanonicalHostname: fmt.Sprintf("%s.%s.svc.%s", svc.Name, svc.Namespace, network.GetClusterDomainName()),
+		CanonicalHostname: fmt.Sprintf(
+			"%s.%s.svc.%s",
+			svc.Name,
+			svc.Namespace,
+			network.GetClusterDomainName(),
+		),
 	}
 }
 
-func processBackend(ctx context.Context, in ir.BackendObjectIR, out *envoy_config_cluster_v3.Cluster) {
+func processBackend(
+	ctx context.Context,
+	in ir.BackendObjectIR,
+	out *envoy_config_cluster_v3.Cluster,
+) {
 	out.ClusterDiscoveryType = &envoy_config_cluster_v3.Cluster_Type{
 		Type: envoy_config_cluster_v3.Cluster_EDS,
 	}

@@ -52,7 +52,9 @@ func getSupportedProtocolsRoutes() map[protocol]map[groupName][]routeKind {
 	return supportedProtocolToKinds
 }
 
-func buildDefaultRouteKindsForProtocol(supportedRouteKindsForProtocol map[groupName][]routeKind) []gwv1.RouteGroupKind {
+func buildDefaultRouteKindsForProtocol(
+	supportedRouteKindsForProtocol map[groupName][]routeKind,
+) []gwv1.RouteGroupKind {
 	rgks := []gwv1.RouteGroupKind{}
 	for group, kinds := range supportedRouteKindsForProtocol {
 		for _, kind := range kinds {
@@ -65,7 +67,10 @@ func buildDefaultRouteKindsForProtocol(supportedRouteKindsForProtocol map[groupN
 	return rgks
 }
 
-func validateSupportedRoutes(listeners []ir.Listener, reporter reports.GatewayReporter) []ir.Listener {
+func validateSupportedRoutes(
+	listeners []ir.Listener,
+	reporter reports.GatewayReporter,
+) []ir.Listener {
 	supportedProtocolToKinds := getSupportedProtocolsRoutes()
 	validListeners := []ir.Listener{}
 

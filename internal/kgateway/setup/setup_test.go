@@ -60,7 +60,8 @@ func getAssetsDir(t *testing.T) string {
 	var assets string
 	if os.Getenv("KUBEBUILDER_ASSETS") == "" {
 		// set default if not user provided
-		out, err := exec.Command("sh", "-c", "make -sC $(dirname $(go env GOMOD)) envtest-path").CombinedOutput()
+		out, err := exec.Command("sh", "-c", "make -sC $(dirname $(go env GOMOD)) envtest-path").
+			CombinedOutput()
 		t.Log("out:", string(out))
 		if err != nil {
 			t.Fatalf("failed to get assets dir: %v", err)
@@ -199,10 +200,16 @@ func TestPolicyUpdate(t *testing.T) {
 	if err != nil {
 		t.Fatalf("can't get settings %v", err)
 	}
-	setupEnvTestAndRun(t, st, func(t *testing.T, ctx context.Context, kdbg *krt.DebugHandler, client istiokube.CLIClient, xdsPort int) {
-		client.Kube().CoreV1().Namespaces().Create(ctx, &corev1.Namespace{ObjectMeta: metav1.ObjectMeta{Name: "gwtest"}}, metav1.CreateOptions{})
+	setupEnvTestAndRun(
+		t,
+		st,
+		func(t *testing.T, ctx context.Context, kdbg *krt.DebugHandler, client istiokube.CLIClient, xdsPort int) {
+			client.Kube().
+				CoreV1().
+				Namespaces().
+				Create(ctx, &corev1.Namespace{ObjectMeta: metav1.ObjectMeta{Name: "gwtest"}}, metav1.CreateOptions{})
 
-		err = client.ApplyYAMLContents("gwtest", `kind: Gateway
+			err = client.ApplyYAMLContents("gwtest", `kind: Gateway
 apiVersion: gateway.networking.k8s.io/v1
 metadata:
   name: http-gw
@@ -248,9 +255,9 @@ spec:
           kind: TrafficPolicy
           name: transformation`)
 
-		time.Sleep(time.Second / 2)
+			time.Sleep(time.Second / 2)
 
-		err = client.ApplyYAMLContents("gwtest", `apiVersion: gateway.kgateway.dev/v1alpha1
+			err = client.ApplyYAMLContents("gwtest", `apiVersion: gateway.kgateway.dev/v1alpha1
 kind: TrafficPolicy
 metadata:
   name: transformation
@@ -264,57 +271,66 @@ spec:
       remove:
       - x-solo-request321`)
 
-		time.Sleep(time.Second / 2)
+			time.Sleep(time.Second / 2)
 
-		dumper := newXdsDumper(t, ctx, xdsPort, "http-gw")
-		t.Cleanup(dumper.Close)
-		t.Cleanup(func() {
-			if t.Failed() {
-				logKrtState(t, fmt.Sprintf("krt state for failed test: %s", t.Name()), kdbg)
-			} else if os.Getenv("KGW_DUMP_KRT_ON_SUCCESS") == "true" {
-				logKrtState(t, fmt.Sprintf("krt state for successful test: %s", t.Name()), kdbg)
+			dumper := newXdsDumper(t, ctx, xdsPort, "http-gw")
+			t.Cleanup(dumper.Close)
+			t.Cleanup(func() {
+				if t.Failed() {
+					logKrtState(t, fmt.Sprintf("krt state for failed test: %s", t.Name()), kdbg)
+				} else if os.Getenv("KGW_DUMP_KRT_ON_SUCCESS") == "true" {
+					logKrtState(t, fmt.Sprintf("krt state for successful test: %s", t.Name()), kdbg)
+				}
+			})
+
+			dump := dumper.Dump(t, ctx)
+			pfc := dump.Routes[0].GetVirtualHosts()[0].GetRoutes()[0].GetTypedPerFilterConfig()
+			if len(pfc) != 1 {
+				t.Fatalf("expected 1 filter config, got %d", len(pfc))
 			}
-		})
+			if !bytes.Contains(
+				slices.Collect(maps.Values(pfc))[0].Value,
+				[]byte("x-solo-request321"),
+			) {
+				t.Fatalf("expected filter config to contain x-solo-request321")
+			}
 
-		dump := dumper.Dump(t, ctx)
-		pfc := dump.Routes[0].GetVirtualHosts()[0].GetRoutes()[0].GetTypedPerFilterConfig()
-		if len(pfc) != 1 {
-			t.Fatalf("expected 1 filter config, got %d", len(pfc))
-		}
-		if !bytes.Contains(slices.Collect(maps.Values(pfc))[0].Value, []byte("x-solo-request321")) {
-			t.Fatalf("expected filter config to contain x-solo-request321")
-		}
-
-		t.Logf("%s finished", t.Name())
-	})
+			t.Logf("%s finished", t.Name())
+		},
+	)
 }
 
 func runScenario(t *testing.T, scenarioDir string, globalSettings *settings.Settings) {
-	setupEnvTestAndRun(t, globalSettings, func(t *testing.T, ctx context.Context, kdbg *krt.DebugHandler, client istiokube.CLIClient, xdsPort int) {
-		// list all yamls in test data
-		files, err := os.ReadDir(scenarioDir)
-		if err != nil {
-			t.Fatalf("failed to read dir: %v", err)
-		}
-		for _, f := range files {
-			// run tests with the yaml files (but not -out.yaml files)/s
-			parentT := t
-			if strings.HasSuffix(f.Name(), ".yaml") && !strings.HasSuffix(f.Name(), "-out.yaml") {
-				fullpath := filepath.Join(scenarioDir, f.Name())
-				t.Run(strings.TrimSuffix(f.Name(), ".yaml"), func(t *testing.T) {
-					writer.set(t)
-					t.Cleanup(func() {
-						writer.set(parentT)
-					})
-					// sadly tests can't run yet in parallel, as kgateway will add all the k8s services as clusters. this means
-					// that we get test pollution.
-					// once we change it to only include the ones in the proxy, we can re-enable this
-					//				t.Parallel()
-					testScenario(t, ctx, kdbg, client, xdsPort, fullpath)
-				})
+	setupEnvTestAndRun(
+		t,
+		globalSettings,
+		func(t *testing.T, ctx context.Context, kdbg *krt.DebugHandler, client istiokube.CLIClient, xdsPort int) {
+			// list all yamls in test data
+			files, err := os.ReadDir(scenarioDir)
+			if err != nil {
+				t.Fatalf("failed to read dir: %v", err)
 			}
-		}
-	})
+			for _, f := range files {
+				// run tests with the yaml files (but not -out.yaml files)/s
+				parentT := t
+				if strings.HasSuffix(f.Name(), ".yaml") &&
+					!strings.HasSuffix(f.Name(), "-out.yaml") {
+					fullpath := filepath.Join(scenarioDir, f.Name())
+					t.Run(strings.TrimSuffix(f.Name(), ".yaml"), func(t *testing.T) {
+						writer.set(t)
+						t.Cleanup(func() {
+							writer.set(parentT)
+						})
+						// sadly tests can't run yet in parallel, as kgateway will add all the k8s services as clusters. this means
+						// that we get test pollution.
+						// once we change it to only include the ones in the proxy, we can re-enable this
+						//				t.Parallel()
+						testScenario(t, ctx, kdbg, client, xdsPort, fullpath)
+					})
+				}
+			}
+		},
+	)
 }
 
 func setupEnvTestAndRun(t *testing.T, globalSettings *settings.Settings, run func(t *testing.T,
@@ -370,7 +386,10 @@ func setupEnvTestAndRun(t *testing.T, globalSettings *settings.Settings, run fun
 	}
 
 	// create the test ns
-	_, err = client.Kube().CoreV1().Namespaces().Create(ctx, &corev1.Namespace{ObjectMeta: metav1.ObjectMeta{Name: "gwtest"}}, metav1.CreateOptions{})
+	_, err = client.Kube().
+		CoreV1().
+		Namespaces().
+		Create(ctx, &corev1.Namespace{ObjectMeta: metav1.ObjectMeta{Name: "gwtest"}}, metav1.CreateOptions{})
 	if err != nil {
 		t.Fatalf("failed to create namespace: %v", err)
 	}
@@ -553,13 +572,26 @@ func newXdsDumper(t *testing.T, ctx context.Context, xdsPort int, gwname string)
 		dr: &discovery_v3.DiscoveryRequest{Node: &envoycore.Node{
 			Id: "gateway.gwtest",
 			Metadata: &structpb.Struct{
-				Fields: map[string]*structpb.Value{"role": {Kind: &structpb.Value_StringValue{StringValue: fmt.Sprintf("kgateway-kube-gateway-api~%s~%s", "gwtest", gwname)}}},
+				Fields: map[string]*structpb.Value{
+					"role": {
+						Kind: &structpb.Value_StringValue{
+							StringValue: fmt.Sprintf(
+								"kgateway-kube-gateway-api~%s~%s",
+								"gwtest",
+								gwname,
+							),
+						},
+					},
+				},
 			},
 		}},
 	}
 
 	ads := discovery_v3.NewAggregatedDiscoveryServiceClient(d.conn)
-	ctx, cancel := context.WithTimeout(ctx, time.Second*30) // long timeout - just in case. we should never reach it.
+	ctx, cancel := context.WithTimeout(
+		ctx,
+		time.Second*30,
+	) // long timeout - just in case. we should never reach it.
 	adsClient, err := ads.StreamAggregatedResources(ctx)
 	if err != nil {
 		t.Fatalf("failed to get ads client: %v", err)
@@ -988,7 +1020,9 @@ func getroutesnames(l *envoylistener.Listener) []string {
 	var routes []string
 	for _, fc := range l.GetFilterChains() {
 		for _, filter := range fc.GetFilters() {
-			suffix := string((&envoyhttp.HttpConnectionManager{}).ProtoReflect().Descriptor().FullName())
+			suffix := string(
+				(&envoyhttp.HttpConnectionManager{}).ProtoReflect().Descriptor().FullName(),
+			)
 			if strings.HasSuffix(filter.GetTypedConfig().GetTypeUrl(), suffix) {
 				var hcm envoyhttp.HttpConnectionManager
 				switch config := filter.GetConfigType().(type) {
@@ -1049,7 +1083,11 @@ func generateKubeConfiguration(t *testing.T, restconfig *rest.Config) string {
 // and patches their status into the cluster. Skips any Pods not found or lacking a status.
 // This is needed because the other places that apply yaml will only apply spec.
 // We now have tests (ServiceEntry) that rely on IPs from Pod status instead of EndpointSlice.
-func applyPodStatusFromFile(ctx context.Context, c istiokube.CLIClient, defaultNs, filePath string) error {
+func applyPodStatusFromFile(
+	ctx context.Context,
+	c istiokube.CLIClient,
+	defaultNs, filePath string,
+) error {
 	data, err := os.ReadFile(filePath)
 	if err != nil {
 		return fmt.Errorf("reading YAML file %q: %w", filePath, err)

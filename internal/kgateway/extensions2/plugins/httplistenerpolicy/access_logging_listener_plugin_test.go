@@ -52,7 +52,9 @@ func TestConvertJsonFormat_EdgeCases(t *testing.T) {
 					FileSink: &v1alpha1.FileSink{
 						Path: "/var/log/access.json",
 						JsonFormat: &runtime.RawExtension{
-							Raw: []byte(`{"request_method": "%REQ(:METHOD)%", "response_code": "%RESPONSE_CODE%"}`),
+							Raw: []byte(
+								`{"request_method": "%REQ(:METHOD)%", "response_code": "%RESPONSE_CODE%"}`,
+							),
 						},
 					},
 				},
@@ -67,12 +69,18 @@ func TestConvertJsonFormat_EdgeCases(t *testing.T) {
 									LogFormat: &envoycore.SubstitutionFormatString{
 										Formatters: []*envoycore.TypedExtensionConfig{
 											{
-												Name:        "envoy.formatter.req_without_query",
-												TypedConfig: mustMessageToAny(t, &envoy_req_without_query.ReqWithoutQuery{}),
+												Name: "envoy.formatter.req_without_query",
+												TypedConfig: mustMessageToAny(
+													t,
+													&envoy_req_without_query.ReqWithoutQuery{},
+												),
 											},
 											{
-												Name:        "envoy.formatter.metadata",
-												TypedConfig: mustMessageToAny(t, &envoy_metadata_formatter.Metadata{}),
+												Name: "envoy.formatter.metadata",
+												TypedConfig: mustMessageToAny(
+													t,
+													&envoy_metadata_formatter.Metadata{},
+												),
 											},
 										},
 										Format: &envoycore.SubstitutionFormatString_JsonFormat{
@@ -152,12 +160,18 @@ func TestConvertJsonFormat_EdgeCases(t *testing.T) {
 									LogFormat: &envoycore.SubstitutionFormatString{
 										Formatters: []*envoycore.TypedExtensionConfig{
 											{
-												Name:        "envoy.formatter.req_without_query",
-												TypedConfig: mustMessageToAny(t, &envoy_req_without_query.ReqWithoutQuery{}),
+												Name: "envoy.formatter.req_without_query",
+												TypedConfig: mustMessageToAny(
+													t,
+													&envoy_req_without_query.ReqWithoutQuery{},
+												),
 											},
 											{
-												Name:        "envoy.formatter.metadata",
-												TypedConfig: mustMessageToAny(t, &envoy_metadata_formatter.Metadata{}),
+												Name: "envoy.formatter.metadata",
+												TypedConfig: mustMessageToAny(
+													t,
+													&envoy_metadata_formatter.Metadata{},
+												),
 											},
 										},
 										Format: &envoycore.SubstitutionFormatString_TextFormatSource{
@@ -194,12 +208,18 @@ func TestConvertJsonFormat_EdgeCases(t *testing.T) {
 									LogFormat: &envoycore.SubstitutionFormatString{
 										Formatters: []*envoycore.TypedExtensionConfig{
 											{
-												Name:        "envoy.formatter.req_without_query",
-												TypedConfig: mustMessageToAny(t, &envoy_req_without_query.ReqWithoutQuery{}),
+												Name: "envoy.formatter.req_without_query",
+												TypedConfig: mustMessageToAny(
+													t,
+													&envoy_req_without_query.ReqWithoutQuery{},
+												),
 											},
 											{
-												Name:        "envoy.formatter.metadata",
-												TypedConfig: mustMessageToAny(t, &envoy_metadata_formatter.Metadata{}),
+												Name: "envoy.formatter.metadata",
+												TypedConfig: mustMessageToAny(
+													t,
+													&envoy_metadata_formatter.Metadata{},
+												),
 											},
 										},
 										Format: &envoycore.SubstitutionFormatString_TextFormatSource{
@@ -223,7 +243,9 @@ func TestConvertJsonFormat_EdgeCases(t *testing.T) {
 						FileSink: &v1alpha1.FileSink{
 							Path: "/var/log/access.log",
 							JsonFormat: &runtime.RawExtension{
-								Raw: []byte(`{"request_method": "%REQ(:METHOD)%", "response_code": "%RESPONSE_CODE%"}`),
+								Raw: []byte(
+									`{"request_method": "%REQ(:METHOD)%", "response_code": "%RESPONSE_CODE%"}`,
+								),
 							},
 						},
 					},
@@ -238,12 +260,18 @@ func TestConvertJsonFormat_EdgeCases(t *testing.T) {
 									LogFormat: &envoycore.SubstitutionFormatString{
 										Formatters: []*envoycore.TypedExtensionConfig{
 											{
-												Name:        "envoy.formatter.req_without_query",
-												TypedConfig: mustMessageToAny(t, &envoy_req_without_query.ReqWithoutQuery{}),
+												Name: "envoy.formatter.req_without_query",
+												TypedConfig: mustMessageToAny(
+													t,
+													&envoy_req_without_query.ReqWithoutQuery{},
+												),
 											},
 											{
-												Name:        "envoy.formatter.metadata",
-												TypedConfig: mustMessageToAny(t, &envoy_metadata_formatter.Metadata{}),
+												Name: "envoy.formatter.metadata",
+												TypedConfig: mustMessageToAny(
+													t,
+													&envoy_metadata_formatter.Metadata{},
+												),
 											},
 										},
 										Format: &envoycore.SubstitutionFormatString_JsonFormat{
@@ -332,12 +360,18 @@ func TestConvertJsonFormat_EdgeCases(t *testing.T) {
 									LogFormat: &envoycore.SubstitutionFormatString{
 										Formatters: []*envoycore.TypedExtensionConfig{
 											{
-												Name:        "envoy.formatter.req_without_query",
-												TypedConfig: mustMessageToAny(t, &envoy_req_without_query.ReqWithoutQuery{}),
+												Name: "envoy.formatter.req_without_query",
+												TypedConfig: mustMessageToAny(
+													t,
+													&envoy_req_without_query.ReqWithoutQuery{},
+												),
 											},
 											{
-												Name:        "envoy.formatter.metadata",
-												TypedConfig: mustMessageToAny(t, &envoy_metadata_formatter.Metadata{}),
+												Name: "envoy.formatter.metadata",
+												TypedConfig: mustMessageToAny(
+													t,
+													&envoy_metadata_formatter.Metadata{},
+												),
 											},
 										},
 										Format: &envoycore.SubstitutionFormatString_TextFormatSource{
@@ -578,7 +612,9 @@ func TestConvertJsonFormat_EdgeCases(t *testing.T) {
 						Filter: &v33.AccessLogFilter{
 							FilterSpecifier: &v33.AccessLogFilter_GrpcStatusFilter{
 								GrpcStatusFilter: &v33.GrpcStatusFilter{
-									Statuses: []v33.GrpcStatusFilter_Status{v33.GrpcStatusFilter_NOT_FOUND},
+									Statuses: []v33.GrpcStatusFilter_Status{
+										v33.GrpcStatusFilter_NOT_FOUND,
+									},
 								},
 							},
 						},
@@ -650,14 +686,26 @@ func TestConvertJsonFormat_EdgeCases(t *testing.T) {
 					assert.Equal(t, expected.Name, result[i].Name, "name mismatch at index %d", i)
 
 					if expected.GetTypedConfig() != nil {
-						assert.True(t, proto.Equal(expected.GetTypedConfig(), result[i].GetTypedConfig()),
-							"TypedConfig mismatch at index %d\n %v\n %v\n", i, expected.GetTypedConfig(), result[i].GetTypedConfig())
+						assert.True(
+							t,
+							proto.Equal(expected.GetTypedConfig(), result[i].GetTypedConfig()),
+							"TypedConfig mismatch at index %d\n %v\n %v\n",
+							i,
+							expected.GetTypedConfig(),
+							result[i].GetTypedConfig(),
+						)
 					}
 
 					// Compare Filter contents instead of pointers
 					if expected.Filter != nil {
-						assert.True(t, proto.Equal(expected.Filter, result[i].Filter),
-							"Filter mismatch at index %d\n %v\n %v\n", i, expected.Filter, result[i].Filter)
+						assert.True(
+							t,
+							proto.Equal(expected.Filter, result[i].Filter),
+							"Filter mismatch at index %d\n %v\n %v\n",
+							i,
+							expected.Filter,
+							result[i].Filter,
+						)
 					}
 				}
 			})

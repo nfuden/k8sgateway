@@ -25,13 +25,16 @@ func (p *Provider) EventuallyPodReady(
 	currentTimeout, pollingInterval := helpers.GetTimeouts(timeout...)
 
 	p.Gomega.Eventually(func(g gomega.Gomega) {
-		pod, err := p.clusterContext.Clientset.CoreV1().Pods(podNamespace).Get(ctx, podName, metav1.GetOptions{})
+		pod, err := p.clusterContext.Clientset.CoreV1().
+			Pods(podNamespace).
+			Get(ctx, podName, metav1.GetOptions{})
 		g.Expect(err).NotTo(gomega.HaveOccurred(), "Failed to get pod")
 		for _, container := range pod.Status.ContainerStatuses {
 			g.Expect(container.Ready).To(gomega.BeTrue(), "Container should be ready")
 			return
 		}
-		g.Expect(fmt.Sprintf("Waiting for pod %s in namespace %s to be ready", podName, podNamespace)).To(gomega.BeTrue())
+		g.Expect(fmt.Sprintf("Waiting for pod %s in namespace %s to be ready", podName, podNamespace)).
+			To(gomega.BeTrue())
 	}).
 		WithTimeout(currentTimeout).
 		WithPolling(pollingInterval).
@@ -45,7 +48,12 @@ func (p *Provider) EventuallyPodsRunning(
 	listOpt metav1.ListOptions,
 	timeout ...time.Duration,
 ) {
-	p.EventuallyPodsMatches(ctx, podNamespace, listOpt, matchers.PodMatches(matchers.ExpectedPod{Status: corev1.PodRunning}), timeout...)
+	p.EventuallyPodsMatches(
+		ctx,
+		podNamespace,
+		listOpt,
+		matchers.PodMatches(matchers.ExpectedPod{Status: corev1.PodRunning}),
+		timeout...)
 }
 
 // EventuallyPodsMatches asserts that the pod(s) in the given namespace matches the provided matcher

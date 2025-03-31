@@ -51,17 +51,33 @@ type builtinPluginGwPass struct {
 	ir.UnimplementedProxyTranslationPass
 }
 
-func (p *builtinPluginGwPass) ApplyForBackend(ctx context.Context, pCtx *ir.RouteBackendContext, in ir.HttpBackend, out *envoy_config_route_v3.Route) error {
+func (p *builtinPluginGwPass) ApplyForBackend(
+	ctx context.Context,
+	pCtx *ir.RouteBackendContext,
+	in ir.HttpBackend,
+	out *envoy_config_route_v3.Route,
+) error {
 	// no op
 	return nil
 }
 
-func (p *builtinPluginGwPass) ApplyHCM(ctx context.Context, pCtx *ir.HcmContext, out *envoyhttp.HttpConnectionManager) error {
+func (p *builtinPluginGwPass) ApplyHCM(
+	ctx context.Context,
+	pCtx *ir.HcmContext,
+	out *envoyhttp.HttpConnectionManager,
+) error {
 	// no-op
 	return nil
 }
 
-func NewBuiltInIr(kctx krt.HandlerContext, f gwv1.HTTPRouteFilter, fromgk schema.GroupKind, fromns string, refgrants *RefGrantIndex, ups *BackendIndex) ir.PolicyIR {
+func NewBuiltInIr(
+	kctx krt.HandlerContext,
+	f gwv1.HTTPRouteFilter,
+	fromgk schema.GroupKind,
+	fromns string,
+	refgrants *RefGrantIndex,
+	ups *BackendIndex,
+) ir.PolicyIR {
 	return &builtinPlugin{
 		spec:     f,
 		mutation: convert(kctx, f, fromgk, fromns, refgrants, ups),
@@ -79,7 +95,14 @@ func NewBuiltinPlugin(ctx context.Context) extensionplug.Plugin {
 	}
 }
 
-func convert(kctx krt.HandlerContext, f gwv1.HTTPRouteFilter, fromgk schema.GroupKind, fromns string, refgrants *RefGrantIndex, ups *BackendIndex) func(in ir.HttpRouteRuleMatchIR, outputRoute *envoy_config_route_v3.Route) error {
+func convert(
+	kctx krt.HandlerContext,
+	f gwv1.HTTPRouteFilter,
+	fromgk schema.GroupKind,
+	fromns string,
+	refgrants *RefGrantIndex,
+	ups *BackendIndex,
+) func(in ir.HttpRouteRuleMatchIR, outputRoute *envoy_config_route_v3.Route) error {
 	switch f.Type {
 	case gwv1.HTTPRouteFilterRequestMirror:
 		return convertMirror(kctx, f.RequestMirror, fromgk, fromns, refgrants, ups)
@@ -94,7 +117,11 @@ func convert(kctx krt.HandlerContext, f gwv1.HTTPRouteFilter, fromgk schema.Grou
 	}
 	return nil
 }
-func convertURLRewrite(kctx krt.HandlerContext, config *gwv1.HTTPURLRewriteFilter) func(in ir.HttpRouteRuleMatchIR, outputRoute *envoy_config_route_v3.Route) error {
+
+func convertURLRewrite(
+	kctx krt.HandlerContext,
+	config *gwv1.HTTPURLRewriteFilter,
+) func(in ir.HttpRouteRuleMatchIR, outputRoute *envoy_config_route_v3.Route) error {
 	if config == nil {
 		return func(in ir.HttpRouteRuleMatchIR, outputRoute *envoy_config_route_v3.Route) error {
 			return errors.New("missing rewrite filter")
@@ -137,8 +164,10 @@ func convertURLRewrite(kctx krt.HandlerContext, config *gwv1.HTTPURLRewriteFilte
 		if fullReplace != "" {
 			outputRoute.GetRoute().RegexRewrite = &envoy_type_matcher_v3.RegexMatchAndSubstitute{
 				Pattern: &envoy_type_matcher_v3.RegexMatcher{
-					EngineType: &envoy_type_matcher_v3.RegexMatcher_GoogleRe2{GoogleRe2: &envoy_type_matcher_v3.RegexMatcher_GoogleRE2{}},
-					Regex:      ".*",
+					EngineType: &envoy_type_matcher_v3.RegexMatcher_GoogleRe2{
+						GoogleRe2: &envoy_type_matcher_v3.RegexMatcher_GoogleRE2{},
+					},
+					Regex: ".*",
 				},
 				Substitution: fullReplace,
 			}
@@ -157,8 +186,10 @@ func convertURLRewrite(kctx krt.HandlerContext, config *gwv1.HTTPURLRewriteFilte
 			if path != "" && prefixReplace == "/" {
 				outputRoute.GetRoute().RegexRewrite = &envoy_type_matcher_v3.RegexMatchAndSubstitute{
 					Pattern: &envoy_type_matcher_v3.RegexMatcher{
-						EngineType: &envoy_type_matcher_v3.RegexMatcher_GoogleRe2{GoogleRe2: &envoy_type_matcher_v3.RegexMatcher_GoogleRE2{}},
-						Regex:      "^" + path + "\\/*",
+						EngineType: &envoy_type_matcher_v3.RegexMatcher_GoogleRe2{
+							GoogleRe2: &envoy_type_matcher_v3.RegexMatcher_GoogleRE2{},
+						},
+						Regex: "^" + path + "\\/*",
 					},
 					Substitution: "/",
 				}
@@ -170,7 +201,10 @@ func convertURLRewrite(kctx krt.HandlerContext, config *gwv1.HTTPURLRewriteFilte
 	}
 }
 
-func convertRequestRedirect(kctx krt.HandlerContext, config *gwv1.HTTPRequestRedirectFilter) func(in ir.HttpRouteRuleMatchIR, outputRoute *envoy_config_route_v3.Route) error {
+func convertRequestRedirect(
+	kctx krt.HandlerContext,
+	config *gwv1.HTTPRequestRedirectFilter,
+) func(in ir.HttpRouteRuleMatchIR, outputRoute *envoy_config_route_v3.Route) error {
 	if config == nil {
 		return func(in ir.HttpRouteRuleMatchIR, outputRoute *envoy_config_route_v3.Route) error {
 			return errors.New("missing redirect filter")
@@ -196,7 +230,10 @@ func convertRequestRedirect(kctx krt.HandlerContext, config *gwv1.HTTPRequestRed
 	}
 }
 
-func translatePathRewrite(outputRoute *envoy_config_route_v3.RedirectAction, pathRewrite *gwv1.HTTPPathModifier) {
+func translatePathRewrite(
+	outputRoute *envoy_config_route_v3.RedirectAction,
+	pathRewrite *gwv1.HTTPPathModifier,
+) {
 	if pathRewrite == nil {
 		return
 	}
@@ -217,7 +254,9 @@ func translateScheme(out *envoy_config_route_v3.RedirectAction, scheme *string) 
 	}
 
 	if strings.ToLower(*scheme) == "https" {
-		out.SchemeRewriteSpecifier = &envoy_config_route_v3.RedirectAction_HttpsRedirect{HttpsRedirect: true}
+		out.SchemeRewriteSpecifier = &envoy_config_route_v3.RedirectAction_HttpsRedirect{
+			HttpsRedirect: true,
+		}
 	} else {
 		out.SchemeRewriteSpecifier = &envoy_config_route_v3.RedirectAction_SchemeRedirect{SchemeRedirect: *scheme}
 	}
@@ -257,7 +296,10 @@ func translateStatusCode(i *int) envoy_config_route_v3.RedirectAction_RedirectRe
 	}
 }
 
-func convertHeaderModifier(kctx krt.HandlerContext, f *gwv1.HTTPHeaderFilter) func(in ir.HttpRouteRuleMatchIR, outputRoute *envoy_config_route_v3.Route) error {
+func convertHeaderModifier(
+	kctx krt.HandlerContext,
+	f *gwv1.HTTPHeaderFilter,
+) func(in ir.HttpRouteRuleMatchIR, outputRoute *envoy_config_route_v3.Route) error {
 	if f == nil {
 		return nil
 	}
@@ -284,13 +326,20 @@ func convertHeaderModifier(kctx krt.HandlerContext, f *gwv1.HTTPHeaderFilter) fu
 	toremove := f.Remove
 
 	return func(in ir.HttpRouteRuleMatchIR, outputRoute *envoy_config_route_v3.Route) error {
-		outputRoute.RequestHeadersToAdd = append(outputRoute.GetRequestHeadersToAdd(), headersToAddd...)
-		outputRoute.RequestHeadersToRemove = append(outputRoute.GetRequestHeadersToRemove(), toremove...)
+		outputRoute.RequestHeadersToAdd = append(
+			outputRoute.GetRequestHeadersToAdd(),
+			headersToAddd...)
+		outputRoute.RequestHeadersToRemove = append(
+			outputRoute.GetRequestHeadersToRemove(),
+			toremove...)
 		return nil
 	}
 }
 
-func convertResponseHeaderModifier(kctx krt.HandlerContext, f *gwv1.HTTPHeaderFilter) func(in ir.HttpRouteRuleMatchIR, outputRoute *envoy_config_route_v3.Route) error {
+func convertResponseHeaderModifier(
+	kctx krt.HandlerContext,
+	f *gwv1.HTTPHeaderFilter,
+) func(in ir.HttpRouteRuleMatchIR, outputRoute *envoy_config_route_v3.Route) error {
 	if f == nil {
 		return nil
 	}
@@ -317,13 +366,24 @@ func convertResponseHeaderModifier(kctx krt.HandlerContext, f *gwv1.HTTPHeaderFi
 	toremove := f.Remove
 
 	return func(in ir.HttpRouteRuleMatchIR, outputRoute *envoy_config_route_v3.Route) error {
-		outputRoute.ResponseHeadersToAdd = append(outputRoute.GetResponseHeadersToAdd(), headersToAddd...)
-		outputRoute.ResponseHeadersToRemove = append(outputRoute.GetResponseHeadersToRemove(), toremove...)
+		outputRoute.ResponseHeadersToAdd = append(
+			outputRoute.GetResponseHeadersToAdd(),
+			headersToAddd...)
+		outputRoute.ResponseHeadersToRemove = append(
+			outputRoute.GetResponseHeadersToRemove(),
+			toremove...)
 		return nil
 	}
 }
 
-func convertMirror(kctx krt.HandlerContext, f *gwv1.HTTPRequestMirrorFilter, fromgk schema.GroupKind, fromns string, refgrants *RefGrantIndex, ups *BackendIndex) func(in ir.HttpRouteRuleMatchIR, outputRoute *envoy_config_route_v3.Route) error {
+func convertMirror(
+	kctx krt.HandlerContext,
+	f *gwv1.HTTPRequestMirrorFilter,
+	fromgk schema.GroupKind,
+	fromns string,
+	refgrants *RefGrantIndex,
+	ups *BackendIndex,
+) func(in ir.HttpRouteRuleMatchIR, outputRoute *envoy_config_route_v3.Route) error {
 	if f == nil {
 		return nil
 	}
@@ -353,7 +413,9 @@ func convertMirror(kctx krt.HandlerContext, f *gwv1.HTTPRequestMirrorFilter, fro
 	}
 }
 
-func getFractionPercent(f gwv1.HTTPRequestMirrorFilter) *envoy_config_core_v3.RuntimeFractionalPercent {
+func getFractionPercent(
+	f gwv1.HTTPRequestMirrorFilter,
+) *envoy_config_core_v3.RuntimeFractionalPercent {
 	if f.Percent != nil {
 		return &envoy_config_core_v3.RuntimeFractionalPercent{
 			DefaultValue: &envoytype.FractionalPercent{
@@ -384,7 +446,10 @@ func toEnvoyPercentage(percentage float64) *envoytype.FractionalPercent {
 	}
 }
 
-func NewGatewayTranslationPass(ctx context.Context, tctx ir.GwTranslationCtx) ir.ProxyTranslationPass {
+func NewGatewayTranslationPass(
+	ctx context.Context,
+	tctx ir.GwTranslationCtx,
+) ir.ProxyTranslationPass {
 	return &builtinPluginGwPass{}
 }
 func (p *builtinPlugin) Name() string {
@@ -392,14 +457,26 @@ func (p *builtinPlugin) Name() string {
 }
 
 // called 1 time for each listener
-func (p *builtinPluginGwPass) ApplyListenerPlugin(ctx context.Context, pCtx *ir.ListenerContext, out *envoy_config_listener_v3.Listener) {
+func (p *builtinPluginGwPass) ApplyListenerPlugin(
+	ctx context.Context,
+	pCtx *ir.ListenerContext,
+	out *envoy_config_listener_v3.Listener,
+) {
 }
 
-func (p *builtinPluginGwPass) ApplyVhostPlugin(ctx context.Context, pCtx *ir.VirtualHostContext, out *envoy_config_route_v3.VirtualHost) {
+func (p *builtinPluginGwPass) ApplyVhostPlugin(
+	ctx context.Context,
+	pCtx *ir.VirtualHostContext,
+	out *envoy_config_route_v3.VirtualHost,
+) {
 }
 
 // called 0 or more times
-func (p *builtinPluginGwPass) ApplyForRoute(ctx context.Context, pCtx *ir.RouteContext, outputRoute *envoy_config_route_v3.Route) error {
+func (p *builtinPluginGwPass) ApplyForRoute(
+	ctx context.Context,
+	pCtx *ir.RouteContext,
+	outputRoute *envoy_config_route_v3.Route,
+) error {
 	policy, ok := pCtx.Policy.(*builtinPlugin)
 	if !ok {
 		return nil
@@ -421,11 +498,16 @@ func (p *builtinPluginGwPass) ApplyForRouteBackend(
 	return nil
 }
 
-func (p *builtinPluginGwPass) HttpFilters(ctx context.Context, fcc ir.FilterChainCommon) ([]plugins.StagedHttpFilter, error) {
+func (p *builtinPluginGwPass) HttpFilters(
+	ctx context.Context,
+	fcc ir.FilterChainCommon,
+) ([]plugins.StagedHttpFilter, error) {
 	return nil, nil
 }
 
-func (p *builtinPluginGwPass) NetworkFilters(ctx context.Context) ([]plugins.StagedNetworkFilter, error) {
+func (p *builtinPluginGwPass) NetworkFilters(
+	ctx context.Context,
+) ([]plugins.StagedNetworkFilter, error) {
 	return nil, nil
 }
 

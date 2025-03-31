@@ -31,7 +31,10 @@ type PerClientEnvoyEndpoints struct {
 	index     krt.Index[string, UccWithEndpoints]
 }
 
-func (ie *PerClientEnvoyEndpoints) FetchEndpointsForClient(kctx krt.HandlerContext, ucc ir.UniqlyConnectedClient) []UccWithEndpoints {
+func (ie *PerClientEnvoyEndpoints) FetchEndpointsForClient(
+	kctx krt.HandlerContext,
+	ucc ir.UniqlyConnectedClient,
+) []UccWithEndpoints {
 	return krt.Fetch(kctx, ie.endpoints, krt.FilterIndex(ie.index, ucc.ResourceName()))
 }
 
@@ -42,21 +45,24 @@ func NewPerClientEnvoyEndpoints(
 	glooEndpoints krt.Collection[ir.EndpointsForBackend],
 	translateEndpoints func(kctx krt.HandlerContext, ucc ir.UniqlyConnectedClient, ep ir.EndpointsForBackend) (*envoy_config_endpoint_v3.ClusterLoadAssignment, uint64),
 ) PerClientEnvoyEndpoints {
-	eps := krt.NewManyCollection(glooEndpoints, func(kctx krt.HandlerContext, ep ir.EndpointsForBackend) []UccWithEndpoints {
-		uccs := krt.Fetch(kctx, uccs)
-		uccWithEndpointsRet := make([]UccWithEndpoints, 0, len(uccs))
-		for _, ucc := range uccs {
-			cla, additionalHash := translateEndpoints(kctx, ucc, ep)
-			u := UccWithEndpoints{
-				Client:        ucc,
-				Endpoints:     cla,
-				EndpointsHash: ep.LbEpsEqualityHash ^ additionalHash,
-				endpointsName: ep.ResourceName(),
+	eps := krt.NewManyCollection(
+		glooEndpoints,
+		func(kctx krt.HandlerContext, ep ir.EndpointsForBackend) []UccWithEndpoints {
+			uccs := krt.Fetch(kctx, uccs)
+			uccWithEndpointsRet := make([]UccWithEndpoints, 0, len(uccs))
+			for _, ucc := range uccs {
+				cla, additionalHash := translateEndpoints(kctx, ucc, ep)
+				u := UccWithEndpoints{
+					Client:        ucc,
+					Endpoints:     cla,
+					EndpointsHash: ep.LbEpsEqualityHash ^ additionalHash,
+					endpointsName: ep.ResourceName(),
+				}
+				uccWithEndpointsRet = append(uccWithEndpointsRet, u)
 			}
-			uccWithEndpointsRet = append(uccWithEndpointsRet, u)
-		}
-		return uccWithEndpointsRet
-	}, krtopts.ToOptions("PerClientEnvoyEndpoints")...)
+			return uccWithEndpointsRet
+		},
+		krtopts.ToOptions("PerClientEnvoyEndpoints")...)
 	idx := krt.NewIndex(eps, func(ucc UccWithEndpoints) []string {
 		return []string{ucc.Client.ResourceName()}
 	})

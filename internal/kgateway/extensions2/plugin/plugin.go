@@ -28,6 +28,7 @@ func (a AttachmentPoints) Has(p AttachmentPoints) bool {
 }
 
 type GetBackendForRefPlugin func(kctx krt.HandlerContext, key ir.ObjectSource, port int32) *ir.BackendObjectIR
+
 type ProcessBackend func(ctx context.Context, pol ir.PolicyIR, in ir.BackendObjectIR, out *envoy_config_cluster_v3.Cluster)
 type EndpointPlugin func(
 	kctx krt.HandlerContext,

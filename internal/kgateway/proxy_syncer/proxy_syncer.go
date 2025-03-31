@@ -85,7 +85,8 @@ func (r GatewayXdsResources) ResourceName() string {
 
 func (r GatewayXdsResources) Equals(in GatewayXdsResources) bool {
 	return r.NamespacedName == in.NamespacedName && report{r.reports}.Equals(report{in.reports}) && r.ClustersHash == in.ClustersHash &&
-		r.Routes.Version == in.Routes.Version && r.Listeners.Version == in.Listeners.Version
+		r.Routes.Version == in.Routes.Version &&
+		r.Listeners.Version == in.Listeners.Version
 }
 
 func sliceToResourcesHash[T proto.Message](slice []T) ([]envoycachetypes.ResourceWithTTL, uint64) {
@@ -106,7 +107,11 @@ func sliceToResources[T proto.Message](slice []T) envoycache.Resources {
 	return envoycache.NewResourcesWithTTL(fmt.Sprintf("%d", h), r)
 }
 
-func toResources(gw ir.Gateway, xdsSnap irtranslator.TranslationResult, r reports.ReportMap) *GatewayXdsResources {
+func toResources(
+	gw ir.Gateway,
+	xdsSnap irtranslator.TranslationResult,
+	r reports.ReportMap,
+) *GatewayXdsResources {
 	c, ch := sliceToResourcesHash(xdsSnap.ExtraClusters)
 	return &GatewayXdsResources{
 		NamespacedName: types.NamespacedName{
@@ -183,20 +188,29 @@ func (s *ProxySyncer) Init(ctx context.Context, krtopts krtutil.KrtOptions) erro
 	logger := contextutils.LoggerFrom(ctx)
 
 	// all backends with policies attached in a single collection
-	finalBackends := krt.JoinCollection(s.commonCols.BackendIndex.BackendsWithPolicy(), krtopts.ToOptions("FinalBackends")...)
+	finalBackends := krt.JoinCollection(
+		s.commonCols.BackendIndex.BackendsWithPolicy(),
+		krtopts.ToOptions("FinalBackends")...)
 
 	s.translator.Init(ctx)
 
-	s.mostXdsSnapshots = krt.NewCollection(s.commonCols.GatewayIndex.Gateways, func(kctx krt.HandlerContext, gw ir.Gateway) *GatewayXdsResources {
-		logger.Debugf("building proxy for kube gw %s version %s", client.ObjectKeyFromObject(gw.Obj), gw.Obj.GetResourceVersion())
+	s.mostXdsSnapshots = krt.NewCollection(
+		s.commonCols.GatewayIndex.Gateways,
+		func(kctx krt.HandlerContext, gw ir.Gateway) *GatewayXdsResources {
+			logger.Debugf(
+				"building proxy for kube gw %s version %s",
+				client.ObjectKeyFromObject(gw.Obj),
+				gw.Obj.GetResourceVersion(),
+			)
 
-		xdsSnap, rm := s.translator.TranslateGateway(kctx, ctx, gw)
-		if xdsSnap == nil {
-			return nil
-		}
+			xdsSnap, rm := s.translator.TranslateGateway(kctx, ctx, gw)
+			if xdsSnap == nil {
+				return nil
+			}
 
-		return toResources(gw, *xdsSnap, rm)
-	}, krtopts.ToOptions("MostXdsSnapshots")...)
+			return toResources(gw, *xdsSnap, rm)
+		},
+		krtopts.ToOptions("MostXdsSnapshots")...)
 
 	epPerClient := NewPerClientEnvoyEndpoints(
 		logger.Desugar(),
@@ -390,12 +404,23 @@ func (s *ProxySyncer) syncRouteStatus(ctx context.Context, rm reports.ReportMap)
 				route := getRouteFunc()
 				err := s.mgr.GetClient().Get(ctx, routeKey, route)
 				if err != nil {
-					logger.Errorw(fmt.Sprintf("%s get failed", routeType), "error", err, "route", routeKey)
+					logger.Errorw(
+						fmt.Sprintf("%s get failed", routeType),
+						"error",
+						err,
+						"route",
+						routeKey,
+					)
 					return err
 				}
 				if err := statusUpdater(route); err != nil {
-					logger.Debugw(fmt.Sprintf("%s status update attempt failed", routeType), "error", err,
-						"route", fmt.Sprintf("%s.%s", routeKey.Namespace, routeKey.Name))
+					logger.Debugw(
+						fmt.Sprintf("%s status update attempt failed", routeType),
+						"error",
+						err,
+						"route",
+						fmt.Sprintf("%s.%s", routeKey.Namespace, routeKey.Name),
+					)
 					return err
 				}
 				return nil
@@ -450,27 +475,55 @@ func (s *ProxySyncer) syncRouteStatus(ctx context.Context, rm reports.ReportMap)
 			},
 		)
 		if err != nil {
-			logger.Errorw("all attempts failed at updating HTTPRoute status", "error", err, "route", rnn)
+			logger.Errorw(
+				"all attempts failed at updating HTTPRoute status",
+				"error",
+				err,
+				"route",
+				rnn,
+			)
 		}
 	}
 
 	// Sync TCPRoute statuses
 	for rnn := range rm.TCPRoutes {
-		err := syncStatusWithRetry(wellknown.TCPRouteKind, rnn, func() client.Object { return new(gwv1a2.TCPRoute) }, func(route client.Object) error {
-			return buildAndUpdateStatus(route, wellknown.TCPRouteKind)
-		})
+		err := syncStatusWithRetry(
+			wellknown.TCPRouteKind,
+			rnn,
+			func() client.Object { return new(gwv1a2.TCPRoute) },
+			func(route client.Object) error {
+				return buildAndUpdateStatus(route, wellknown.TCPRouteKind)
+			},
+		)
 		if err != nil {
-			logger.Errorw("all attempts failed at updating TCPRoute status", "error", err, "route", rnn)
+			logger.Errorw(
+				"all attempts failed at updating TCPRoute status",
+				"error",
+				err,
+				"route",
+				rnn,
+			)
 		}
 	}
 
 	// Sync TLSRoute statuses
 	for rnn := range rm.TLSRoutes {
-		err := syncStatusWithRetry(wellknown.TLSRouteKind, rnn, func() client.Object { return new(gwv1a2.TLSRoute) }, func(route client.Object) error {
-			return buildAndUpdateStatus(route, wellknown.TLSRouteKind)
-		})
+		err := syncStatusWithRetry(
+			wellknown.TLSRouteKind,
+			rnn,
+			func() client.Object { return new(gwv1a2.TLSRoute) },
+			func(route client.Object) error {
+				return buildAndUpdateStatus(route, wellknown.TLSRouteKind)
+			},
+		)
 		if err != nil {
-			logger.Errorw("all attempts failed at updating TLSRoute status", "error", err, "route", rnn)
+			logger.Errorw(
+				"all attempts failed at updating TLSRoute status",
+				"error",
+				err,
+				"route",
+				rnn,
+			)
 		}
 	}
 }

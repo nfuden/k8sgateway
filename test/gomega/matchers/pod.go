@@ -41,14 +41,21 @@ func (pm *podMatcher) Match(actual interface{}) (bool, error) {
 			}
 		}
 		if !foundContainer {
-			log.Printf("expected pod to have container '%s', but it was not found", pm.expectedPod.ContainerName)
+			log.Printf(
+				"expected pod to have container '%s', but it was not found",
+				pm.expectedPod.ContainerName,
+			)
 			return false, nil
 		}
 	}
 
 	if pm.expectedPod.Status != "" {
 		if pod.Status.Phase != pm.expectedPod.Status {
-			log.Printf("expected pod to have status %s, but it was %s", pm.expectedPod.Status, pod.Status.Phase)
+			log.Printf(
+				"expected pod to have status %s, but it was %s",
+				pm.expectedPod.Status,
+				pod.Status.Phase,
+			)
 			return false, nil
 		}
 	}
@@ -59,10 +66,16 @@ func (pm *podMatcher) Match(actual interface{}) (bool, error) {
 func (pm *podMatcher) FailureMessage(actual interface{}) string {
 	var errorMsg string
 	if pm.expectedPod.ContainerName != "" {
-		errorMsg += fmt.Sprintf("Expected pod to have container '%s', but it was not found", pm.expectedPod.ContainerName)
+		errorMsg += fmt.Sprintf(
+			"Expected pod to have container '%s', but it was not found",
+			pm.expectedPod.ContainerName,
+		)
 	}
 	if pm.expectedPod.Status != "" {
-		errorMsg += fmt.Sprintf("Expected pod to have status '%s', but it was not found", pm.expectedPod.Status)
+		errorMsg += fmt.Sprintf(
+			"Expected pod to have status '%s', but it was not found",
+			pm.expectedPod.Status,
+		)
 	}
 	return errorMsg
 }
@@ -76,10 +89,18 @@ func (pm *podMatcher) NegatedFailureMessage(actual interface{}) string {
 		for _, container := range pod.Spec.Containers {
 			containers += container.Name + ", "
 		}
-		errorMsg += fmt.Sprintf("Expected pod to have container '%s', but it found %s", pm.expectedPod.ContainerName, containers)
+		errorMsg += fmt.Sprintf(
+			"Expected pod to have container '%s', but it found %s",
+			pm.expectedPod.ContainerName,
+			containers,
+		)
 	}
 	if pm.expectedPod.Status != "" {
-		errorMsg += fmt.Sprintf("Expected pod to have status '%s', but it found %s", pm.expectedPod.Status, pod.Status.Phase)
+		errorMsg += fmt.Sprintf(
+			"Expected pod to have status '%s', but it found %s",
+			pm.expectedPod.Status,
+			pod.Status.Phase,
+		)
 	}
 	return errorMsg
 }

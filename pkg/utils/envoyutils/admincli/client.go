@@ -72,7 +72,10 @@ func NewClient() *Client {
 //
 // Designed to be used by tests and CLI from outside of a cluster where `kubectl` is present.
 // In all other cases, `NewClient` is preferred
-func NewPortForwardedClient(ctx context.Context, proxySelector, namespace string) (*Client, func(), error) {
+func NewPortForwardedClient(
+	ctx context.Context,
+	proxySelector, namespace string,
+) (*Client, func(), error) {
 	selector := portforward.WithResourceSelector(proxySelector, namespace)
 
 	// 1. Open a port-forward to the Kubernetes Deployment, so that we can query the Envoy Admin API directly
@@ -181,7 +184,10 @@ func (c *Client) ConfigDumpCmd(ctx context.Context, queryParams map[string]strin
 }
 
 // GetConfigDump returns the structured data that is available at the config_dump endpoint
-func (c *Client) GetConfigDump(ctx context.Context, queryParams map[string]string) (*adminv3.ConfigDump, error) {
+func (c *Client) GetConfigDump(
+	ctx context.Context,
+	queryParams map[string]string,
+) (*adminv3.ConfigDump, error) {
 	var (
 		cfgDump     adminv3.ConfigDump
 		outLocation threadsafe.Buffer
@@ -215,7 +221,10 @@ func (c *Client) GetStaticClusters(ctx context.Context) (map[string]*clusterv3.C
 }
 
 // ModifyRuntimeConfiguration passes the queryParameters to the runtime_modify endpoint
-func (c *Client) ModifyRuntimeConfiguration(ctx context.Context, queryParameters map[string]string) error {
+func (c *Client) ModifyRuntimeConfiguration(
+	ctx context.Context,
+	queryParameters map[string]string,
+) error {
 	return c.RunCommand(ctx,
 		curl.WithPath(ModifyRuntimePath),
 		curl.WithQueryParameters(queryParameters),
@@ -313,7 +322,11 @@ func (c *Client) GetSingleListenerFromDynamicListeners(
 
 // WriteEnvoyDumpToZip will dump config, stats, clusters and listeners to zipfile in the current directory.
 // Useful for diagnostics or testing
-func (c *Client) WriteEnvoyDumpToZip(ctx context.Context, options DumpOptions, zip *zip.Writer) error {
+func (c *Client) WriteEnvoyDumpToZip(
+	ctx context.Context,
+	options DumpOptions,
+	zip *zip.Writer,
+) error {
 	configParams := make(map[string]string)
 	if options.ConfigIncludeEDS {
 		configParams["include_eds"] = "on"

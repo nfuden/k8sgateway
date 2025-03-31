@@ -14,7 +14,12 @@ import (
 	"google.golang.org/protobuf/types/known/wrapperspb"
 )
 
-func PrioritizeEndpoints(logger *zap.Logger, priorityInfo *PriorityInfo, ep ir.EndpointsForBackend, ucc ir.UniqlyConnectedClient) *envoy_config_endpoint_v3.ClusterLoadAssignment {
+func PrioritizeEndpoints(
+	logger *zap.Logger,
+	priorityInfo *PriorityInfo,
+	ep ir.EndpointsForBackend,
+	ucc ir.UniqlyConnectedClient,
+) *envoy_config_endpoint_v3.ClusterLoadAssignment {
 	lbInfo := LoadBalancingInfo{
 		PodLabels:    ucc.Labels,
 		PodLocality:  ucc.Locality,
@@ -91,7 +96,11 @@ func priorityLabelOverrides(labels []string) ([]string, map[string]string) {
 	return priorityLabels, overriddenValueByLabel
 }
 
-func prioritizeWithLbInfo(logger *zap.Logger, ep ir.EndpointsForBackend, lbInfo LoadBalancingInfo) *envoy_config_endpoint_v3.ClusterLoadAssignment {
+func prioritizeWithLbInfo(
+	logger *zap.Logger,
+	ep ir.EndpointsForBackend,
+	lbInfo LoadBalancingInfo,
+) *envoy_config_endpoint_v3.ClusterLoadAssignment {
 	cla := &envoy_config_endpoint_v3.ClusterLoadAssignment{
 		ClusterName: ep.ClusterName,
 	}
@@ -125,7 +134,11 @@ func prioritizeWithLbInfo(logger *zap.Logger, ep ir.EndpointsForBackend, lbInfo 
 		applyLocalityFailover(&proxyLocality, cla, lbInfo.PriorityInfo.Failover)
 	}
 	if logger != nil {
-		logger.Debug("created cla", zap.String("cluster", cla.GetClusterName()), zap.Int("numAddresses", totalEndpoints))
+		logger.Debug(
+			"created cla",
+			zap.String("cluster", cla.GetClusterName()),
+			zap.Int("numAddresses", totalEndpoints),
+		)
 	}
 
 	// in theory we want to run endpoint plugins here.
@@ -134,7 +147,10 @@ func prioritizeWithLbInfo(logger *zap.Logger, ep ir.EndpointsForBackend, lbInfo 
 	return cla
 }
 
-func getEndpoints(eps []ir.EndpointWithMd, lbinfo LoadBalancingInfo) []*envoy_config_endpoint_v3.LocalityLbEndpoints {
+func getEndpoints(
+	eps []ir.EndpointWithMd,
+	lbinfo LoadBalancingInfo,
+) []*envoy_config_endpoint_v3.LocalityLbEndpoints {
 	if lbinfo.PriorityInfo != nil && lbinfo.PriorityInfo.FailoverPriority != nil {
 		return applyFailoverPriorityPerLocality(eps, lbinfo)
 	}
@@ -163,7 +179,10 @@ func applyFailoverPriorityPerLocality(
 	// key is priority, value is the index of LocalityLbEndpoints.LbEndpoints
 	priorityMap := map[int][]int{}
 	for i, ep := range eps {
-		priority := lbinfo.PriorityInfo.FailoverPriority.GetPriority(lbinfo.PodLabels, ep.EndpointMd.Labels)
+		priority := lbinfo.PriorityInfo.FailoverPriority.GetPriority(
+			lbinfo.PodLabels,
+			ep.EndpointMd.Labels,
+		)
 		priorityMap[priority] = append(priorityMap[priority], i)
 	}
 
@@ -217,7 +236,8 @@ func applyLocalityFailover(
 		if priority == 3 {
 			for _, failoverSetting := range failover {
 				if failoverSetting.GetFrom() == proxyLocality.GetRegion() {
-					if localityEndpoint.GetLocality() == nil || localityEndpoint.GetLocality().GetRegion() != failoverSetting.GetTo() {
+					if localityEndpoint.GetLocality() == nil ||
+						localityEndpoint.GetLocality().GetRegion() != failoverSetting.GetTo() {
 						priority = 4
 					}
 					break

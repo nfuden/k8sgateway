@@ -47,9 +47,13 @@ func (d *httpListenerPolicy) Equals(in any) bool {
 	}
 
 	// Check the AccessLog slice
-	if !slices.EqualFunc(d.accessLog, d2.accessLog, func(log *envoyaccesslog.AccessLog, log2 *envoyaccesslog.AccessLog) bool {
-		return proto.Equal(log, log2)
-	}) {
+	if !slices.EqualFunc(
+		d.accessLog,
+		d2.accessLog,
+		func(log *envoyaccesslog.AccessLog, log2 *envoyaccesslog.AccessLog) bool {
+			return proto.Equal(log, log2)
+		},
+	) {
 		return false
 	}
 
@@ -60,12 +64,21 @@ type httpListenerPolicyPluginGwPass struct {
 	ir.UnimplementedProxyTranslationPass
 }
 
-func (p *httpListenerPolicyPluginGwPass) ApplyForBackend(ctx context.Context, pCtx *ir.RouteBackendContext, in ir.HttpBackend, out *envoy_config_route_v3.Route) error {
+func (p *httpListenerPolicyPluginGwPass) ApplyForBackend(
+	ctx context.Context,
+	pCtx *ir.RouteBackendContext,
+	in ir.HttpBackend,
+	out *envoy_config_route_v3.Route,
+) error {
 	// no op
 	return nil
 }
 
-func (p *httpListenerPolicyPluginGwPass) ApplyListenerPlugin(ctx context.Context, pCtx *ir.ListenerContext, out *envoy_config_listener_v3.Listener) {
+func (p *httpListenerPolicyPluginGwPass) ApplyListenerPlugin(
+	ctx context.Context,
+	pCtx *ir.ListenerContext,
+	out *envoy_config_listener_v3.Listener,
+) {
 	// no op
 }
 
@@ -74,10 +87,14 @@ func registerTypes(ourCli versioned.Interface) {
 		wellknown.HTTPListenerPolicyGVR,
 		wellknown.HTTPListenerPolicyGVK,
 		func(c skubeclient.ClientGetter, namespace string, o metav1.ListOptions) (runtime.Object, error) {
-			return ourCli.GatewayV1alpha1().HTTPListenerPolicies(namespace).List(context.Background(), o)
+			return ourCli.GatewayV1alpha1().
+				HTTPListenerPolicies(namespace).
+				List(context.Background(), o)
 		},
 		func(c skubeclient.ClientGetter, namespace string, o metav1.ListOptions) (watch.Interface, error) {
-			return ourCli.GatewayV1alpha1().HTTPListenerPolicies(namespace).Watch(context.Background(), o)
+			return ourCli.GatewayV1alpha1().
+				HTTPListenerPolicies(namespace).
+				Watch(context.Background(), o)
 		},
 	)
 }
@@ -85,36 +102,41 @@ func registerTypes(ourCli versioned.Interface) {
 func NewPlugin(ctx context.Context, commoncol *common.CommonCollections) extensionplug.Plugin {
 	registerTypes(commoncol.OurClient)
 
-	col := krt.WrapClient(kclient.New[*v1alpha1.HTTPListenerPolicy](commoncol.Client), commoncol.KrtOpts.ToOptions("HTTPListenerPolicy")...)
+	col := krt.WrapClient(
+		kclient.New[*v1alpha1.HTTPListenerPolicy](commoncol.Client),
+		commoncol.KrtOpts.ToOptions("HTTPListenerPolicy")...)
 	gk := wellknown.HTTPListenerPolicyGVK.GroupKind()
-	policyCol := krt.NewCollection(col, func(krtctx krt.HandlerContext, i *v1alpha1.HTTPListenerPolicy) *ir.PolicyWrapper {
-		objSrc := ir.ObjectSource{
-			Group:     gk.Group,
-			Kind:      gk.Kind,
-			Namespace: i.Namespace,
-			Name:      i.Name,
-		}
+	policyCol := krt.NewCollection(
+		col,
+		func(krtctx krt.HandlerContext, i *v1alpha1.HTTPListenerPolicy) *ir.PolicyWrapper {
+			objSrc := ir.ObjectSource{
+				Group:     gk.Group,
+				Kind:      gk.Kind,
+				Namespace: i.Namespace,
+				Name:      i.Name,
+			}
 
-		errs := []error{}
-		accessLog, err := convertAccessLogConfig(ctx, i, commoncol, krtctx, objSrc)
-		if err != nil {
-			contextutils.LoggerFrom(ctx).Error(err)
-			errs = append(errs, err)
-		}
+			errs := []error{}
+			accessLog, err := convertAccessLogConfig(ctx, i, commoncol, krtctx, objSrc)
+			if err != nil {
+				contextutils.LoggerFrom(ctx).Error(err)
+				errs = append(errs, err)
+			}
 
-		pol := &ir.PolicyWrapper{
-			ObjectSource: objSrc,
-			Policy:       i,
-			PolicyIR: &httpListenerPolicy{
-				ct:        i.CreationTimestamp.Time,
-				accessLog: accessLog,
-				errors:    errs,
-			},
-			TargetRefs: convert(i.Spec.TargetRefs),
-		}
+			pol := &ir.PolicyWrapper{
+				ObjectSource: objSrc,
+				Policy:       i,
+				PolicyIR: &httpListenerPolicy{
+					ct:        i.CreationTimestamp.Time,
+					accessLog: accessLog,
+					errors:    errs,
+				},
+				TargetRefs: convert(i.Spec.TargetRefs),
+			}
 
-		return pol
-	})
+			return pol
+		},
+	)
 
 	return extensionplug.Plugin{
 		ContributesPolicies: map[schema.GroupKind]extensionsplug.PolicyPlugin{
@@ -125,7 +147,11 @@ func NewPlugin(ctx context.Context, commoncol *common.CommonCollections) extensi
 			},
 		},
 		ContributesRegistration: map[schema.GroupKind]func(){
-			wellknown.HTTPListenerPolicyGVK.GroupKind(): buildRegisterCallback(ctx, commoncol.CrudClient, policyCol),
+			wellknown.HTTPListenerPolicyGVK.GroupKind(): buildRegisterCallback(
+				ctx,
+				commoncol.CrudClient,
+				policyCol,
+			),
 		},
 	}
 }
@@ -142,7 +168,10 @@ func convert(targetRefs []v1alpha1.LocalPolicyTargetReference) []ir.PolicyRef {
 	return refs
 }
 
-func NewGatewayTranslationPass(ctx context.Context, tctx ir.GwTranslationCtx) ir.ProxyTranslationPass {
+func NewGatewayTranslationPass(
+	ctx context.Context,
+	tctx ir.GwTranslationCtx,
+) ir.ProxyTranslationPass {
 	return &httpListenerPolicyPluginGwPass{}
 }
 
@@ -165,11 +194,19 @@ func (p *httpListenerPolicyPluginGwPass) ApplyHCM(
 	return nil
 }
 
-func (p *httpListenerPolicyPluginGwPass) ApplyVhostPlugin(ctx context.Context, pCtx *ir.VirtualHostContext, out *envoy_config_route_v3.VirtualHost) {
+func (p *httpListenerPolicyPluginGwPass) ApplyVhostPlugin(
+	ctx context.Context,
+	pCtx *ir.VirtualHostContext,
+	out *envoy_config_route_v3.VirtualHost,
+) {
 }
 
 // called 0 or more times
-func (p *httpListenerPolicyPluginGwPass) ApplyForRoute(ctx context.Context, pCtx *ir.RouteContext, outputRoute *envoy_config_route_v3.Route) error {
+func (p *httpListenerPolicyPluginGwPass) ApplyForRoute(
+	ctx context.Context,
+	pCtx *ir.RouteContext,
+	outputRoute *envoy_config_route_v3.Route,
+) error {
 	return nil
 }
 
@@ -184,11 +221,16 @@ func (p *httpListenerPolicyPluginGwPass) ApplyForRouteBackend(
 // called 1 time per listener
 // if a plugin emits new filters, they must be with a plugin unique name.
 // any filter returned from listener config must be disabled, so it doesnt impact other listeners.
-func (p *httpListenerPolicyPluginGwPass) HttpFilters(ctx context.Context, fcc ir.FilterChainCommon) ([]plugins.StagedHttpFilter, error) {
+func (p *httpListenerPolicyPluginGwPass) HttpFilters(
+	ctx context.Context,
+	fcc ir.FilterChainCommon,
+) ([]plugins.StagedHttpFilter, error) {
 	return nil, nil
 }
 
-func (p *httpListenerPolicyPluginGwPass) NetworkFilters(ctx context.Context) ([]plugins.StagedNetworkFilter, error) {
+func (p *httpListenerPolicyPluginGwPass) NetworkFilters(
+	ctx context.Context,
+) ([]plugins.StagedNetworkFilter, error) {
 	return nil, nil
 }
 

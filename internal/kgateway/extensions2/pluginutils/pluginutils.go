@@ -11,7 +11,11 @@ import (
 	"github.com/kgateway-dev/kgateway/v2/internal/kgateway/utils"
 )
 
-func EnvoySingleEndpointLoadAssignment(out *envoy_config_cluster_v3.Cluster, address string, port uint32) {
+func EnvoySingleEndpointLoadAssignment(
+	out *envoy_config_cluster_v3.Cluster,
+	address string,
+	port uint32,
+) {
 	out.LoadAssignment = &envoy_config_endpoint_v3.ClusterLoadAssignment{
 		ClusterName: out.GetName(),
 		Endpoints: []*envoy_config_endpoint_v3.LocalityLbEndpoints{
@@ -43,7 +47,11 @@ func EnvoyEndpoint(address string, port uint32) *envoy_config_endpoint_v3.Endpoi
 	}
 }
 
-func SetExtensionProtocolOptions(out *envoy_config_cluster_v3.Cluster, filterName string, protoext proto.Message) error {
+func SetExtensionProtocolOptions(
+	out *envoy_config_cluster_v3.Cluster,
+	filterName string,
+	protoext proto.Message,
+) error {
 	protoextAny, err := utils.MessageToAny(protoext)
 	if err != nil {
 		return errors.Wrapf(err, "converting extension %s protocol options to struct", filterName)

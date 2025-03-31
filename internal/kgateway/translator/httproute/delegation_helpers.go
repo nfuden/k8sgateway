@@ -141,7 +141,8 @@ func isDelegatedRouteMatch(
 	}
 
 	// Validate path
-	if parent.Path == nil || parent.Path.Type == nil || *parent.Path.Type != gwv1.PathMatchPathPrefix {
+	if parent.Path == nil || parent.Path.Type == nil ||
+		*parent.Path.Type != gwv1.PathMatchPathPrefix {
 		return false
 	}
 	parentPath := *parent.Path.Value

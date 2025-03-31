@@ -40,13 +40,15 @@ func TestExtAuthForSpec(t *testing.T) {
 
 	t.Run("creates basic ext auth configuration in one pass", func(t *testing.T) {
 		// Setup
-		spec := &v1alpha1.TrafficPolicy{Spec: v1alpha1.TrafficPolicySpec{ExtAuth: &v1alpha1.ExtAuthPolicy{
-			ExtensionRef: &corev1.LocalObjectReference{
-				Name: "test-extension",
+		spec := &v1alpha1.TrafficPolicy{
+			Spec: v1alpha1.TrafficPolicySpec{ExtAuth: &v1alpha1.ExtAuthPolicy{
+				ExtensionRef: &corev1.LocalObjectReference{
+					Name: "test-extension",
+				},
+				EmitFilterStateStats: truthy,
 			},
-			EmitFilterStateStats: truthy,
-		},
-		}}
+			},
+		}
 		out := &trafficPolicySpecIr{}
 
 		// Execute
@@ -60,13 +62,15 @@ func TestExtAuthForSpec(t *testing.T) {
 	t.Run("configures failure mode allow", func(t *testing.T) {
 		// Setup
 		truthy := true
-		spec := &v1alpha1.TrafficPolicy{Spec: v1alpha1.TrafficPolicySpec{ExtAuth: &v1alpha1.ExtAuthPolicy{
-			ExtensionRef: &corev1.LocalObjectReference{
-				Name: "test-extension",
+		spec := &v1alpha1.TrafficPolicy{
+			Spec: v1alpha1.TrafficPolicySpec{ExtAuth: &v1alpha1.ExtAuthPolicy{
+				ExtensionRef: &corev1.LocalObjectReference{
+					Name: "test-extension",
+				},
+				FailureModeAllow: &truthy,
 			},
-			FailureModeAllow: &truthy,
-		},
-		}}
+			},
+		}
 		out := &trafficPolicySpecIr{}
 
 		// Execute
@@ -80,17 +84,19 @@ func TestExtAuthForSpec(t *testing.T) {
 	t.Run("configures request body settings", func(t *testing.T) {
 		truthy := true
 		// Setup
-		spec := &v1alpha1.TrafficPolicy{Spec: v1alpha1.TrafficPolicySpec{ExtAuth: &v1alpha1.ExtAuthPolicy{
-			ExtensionRef: &corev1.LocalObjectReference{
-				Name: "test-extension",
+		spec := &v1alpha1.TrafficPolicy{
+			Spec: v1alpha1.TrafficPolicySpec{ExtAuth: &v1alpha1.ExtAuthPolicy{
+				ExtensionRef: &corev1.LocalObjectReference{
+					Name: "test-extension",
+				},
+				WithRequestBody: &v1alpha1.BufferSettings{
+					MaxRequestBytes:     1024,
+					AllowPartialMessage: &truthy,
+					PackAsBytes:         &truthy,
+				},
 			},
-			WithRequestBody: &v1alpha1.BufferSettings{
-				MaxRequestBytes:     1024,
-				AllowPartialMessage: &truthy,
-				PackAsBytes:         &truthy,
 			},
-		},
-		}}
+		}
 		out := &trafficPolicySpecIr{}
 
 		// Execute
@@ -106,13 +112,15 @@ func TestExtAuthForSpec(t *testing.T) {
 
 	t.Run("configures metadata context namespaces", func(t *testing.T) {
 		// Setup
-		spec := &v1alpha1.TrafficPolicy{Spec: v1alpha1.TrafficPolicySpec{ExtAuth: &v1alpha1.ExtAuthPolicy{
-			ExtensionRef: &corev1.LocalObjectReference{
-				Name: "test-extension",
+		spec := &v1alpha1.TrafficPolicy{
+			Spec: v1alpha1.TrafficPolicySpec{ExtAuth: &v1alpha1.ExtAuthPolicy{
+				ExtensionRef: &corev1.LocalObjectReference{
+					Name: "test-extension",
+				},
+				MetadataContextNamespaces: []string{"jwt", "custom"},
 			},
-			MetadataContextNamespaces: []string{"jwt", "custom"},
-		},
-		}}
+			},
+		}
 		out := &trafficPolicySpecIr{}
 
 		// Execute
@@ -126,14 +134,16 @@ func TestExtAuthForSpec(t *testing.T) {
 	t.Run("configures TLS settings", func(t *testing.T) {
 		// Setup
 		truthy := true
-		spec := &v1alpha1.TrafficPolicy{Spec: v1alpha1.TrafficPolicySpec{ExtAuth: &v1alpha1.ExtAuthPolicy{
-			ExtensionRef: &corev1.LocalObjectReference{
-				Name: "test-extension",
+		spec := &v1alpha1.TrafficPolicy{
+			Spec: v1alpha1.TrafficPolicySpec{ExtAuth: &v1alpha1.ExtAuthPolicy{
+				ExtensionRef: &corev1.LocalObjectReference{
+					Name: "test-extension",
+				},
+				IncludePeerCertificate: &truthy,
+				IncludeTLSSession:      &truthy,
 			},
-			IncludePeerCertificate: &truthy,
-			IncludeTLSSession:      &truthy,
-		},
-		}}
+			},
+		}
 		out := &trafficPolicySpecIr{}
 
 		// Execute

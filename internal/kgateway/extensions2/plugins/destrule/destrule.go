@@ -57,11 +57,19 @@ func (c DestinationRuleWrapper) Equals(k DestinationRuleWrapper) bool {
 }
 
 func NewDestRuleIndex(istioClient kube.Client, krtopts *krtutil.KrtOptions) DestinationRuleIndex {
-	destRuleClient := kclient.NewDelayedInformer[*networkingclient.DestinationRule](istioClient, gvr.DestinationRule, kubetypes.StandardInformer, kclient.Filter{})
+	destRuleClient := kclient.NewDelayedInformer[*networkingclient.DestinationRule](
+		istioClient,
+		gvr.DestinationRule,
+		kubetypes.StandardInformer,
+		kclient.Filter{},
+	)
 	rawDestrules := krt.WrapClient(destRuleClient, krtopts.ToOptions("DestinationRules")...)
-	destrules := krt.NewCollection(rawDestrules, func(kctx krt.HandlerContext, dr *networkingclient.DestinationRule) *DestinationRuleWrapper {
-		return &DestinationRuleWrapper{dr}
-	})
+	destrules := krt.NewCollection(
+		rawDestrules,
+		func(kctx krt.HandlerContext, dr *networkingclient.DestinationRule) *DestinationRuleWrapper {
+			return &DestinationRuleWrapper{dr}
+		},
+	)
 	return DestinationRuleIndex{
 		Destrules:  destrules,
 		ByHostname: newDestruleIndex(destrules),
@@ -78,7 +86,9 @@ func NewEmptyDestRuleIndex() DestinationRuleIndex {
 
 const exportAllNs = "*"
 
-func newDestruleIndex(destRuleCollection krt.Collection[DestinationRuleWrapper]) krt.Index[NsWithHostname, DestinationRuleWrapper] {
+func newDestruleIndex(
+	destRuleCollection krt.Collection[DestinationRuleWrapper],
+) krt.Index[NsWithHostname, DestinationRuleWrapper] {
 	idx := krt.NewIndex(destRuleCollection, func(d DestinationRuleWrapper) []NsWithHostname {
 		exportTo := d.Spec.GetExportTo()
 		if len(exportTo) == 0 {
@@ -103,7 +113,12 @@ func newDestruleIndex(destRuleCollection krt.Collection[DestinationRuleWrapper])
 	return idx
 }
 
-func (d *DestinationRuleIndex) FetchDestRulesFor(kctx krt.HandlerContext, proxyNs string, hostname string, podLabels map[string]string) *DestinationRuleWrapper {
+func (d *DestinationRuleIndex) FetchDestRulesFor(
+	kctx krt.HandlerContext,
+	proxyNs string,
+	hostname string,
+	podLabels map[string]string,
+) *DestinationRuleWrapper {
 	if hostname == "" {
 		return nil
 	}
@@ -112,25 +127,40 @@ func (d *DestinationRuleIndex) FetchDestRulesFor(kctx krt.HandlerContext, proxyN
 		Ns:       exportAllNs,
 		Hostname: hostname,
 	}
-	destrules := krt.Fetch(kctx, d.Destrules, krt.FilterIndex(d.ByHostname, key), krt.FilterSelects(podLabels))
+	destrules := krt.Fetch(
+		kctx,
+		d.Destrules,
+		krt.FilterIndex(d.ByHostname, key),
+		krt.FilterSelects(podLabels),
+	)
 	if len(destrules) == 0 {
 		key := NsWithHostname{
 			Ns:       proxyNs,
 			Hostname: hostname,
 		}
-		destrules = krt.Fetch(kctx, d.Destrules, krt.FilterIndex(d.ByHostname, key), krt.FilterSelects(podLabels))
+		destrules = krt.Fetch(
+			kctx,
+			d.Destrules,
+			krt.FilterIndex(d.ByHostname, key),
+			krt.FilterSelects(podLabels),
+		)
 	}
 	if len(destrules) == 0 {
 		return nil
 	}
 	// use oldest. TODO -  we need to merge them.
-	oldestDestRule := slices.MinFunc(destrules, func(i DestinationRuleWrapper, j DestinationRuleWrapper) int {
-		return i.CreationTimestamp.Time.Compare(j.CreationTimestamp.Time)
-	})
+	oldestDestRule := slices.MinFunc(
+		destrules,
+		func(i DestinationRuleWrapper, j DestinationRuleWrapper) int {
+			return i.CreationTimestamp.Time.Compare(j.CreationTimestamp.Time)
+		},
+	)
 	return &oldestDestRule
 }
 
-func getLocalityLbSetting(trafficPolicy *v1alpha3.TrafficPolicy) *v1alpha3.LocalityLoadBalancerSetting {
+func getLocalityLbSetting(
+	trafficPolicy *v1alpha3.TrafficPolicy,
+) *v1alpha3.LocalityLoadBalancerSetting {
 	if trafficPolicy == nil {
 		return nil
 	}

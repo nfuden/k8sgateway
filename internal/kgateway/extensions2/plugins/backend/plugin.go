@@ -79,32 +79,41 @@ func registerTypes(ourCli versioned.Interface) {
 func NewPlugin(ctx context.Context, commoncol *common.CommonCollections) extensionsplug.Plugin {
 	registerTypes(commoncol.OurClient)
 
-	col := krt.WrapClient(kclient.New[*v1alpha1.Backend](commoncol.Client), commoncol.KrtOpts.ToOptions("Backends")...)
+	col := krt.WrapClient(
+		kclient.New[*v1alpha1.Backend](commoncol.Client),
+		commoncol.KrtOpts.ToOptions("Backends")...)
 
 	gk := wellknown.BackendGVK.GroupKind()
 	translateFn := buildTranslateFunc(ctx, commoncol.Secrets)
-	bcol := krt.NewCollection(col, func(krtctx krt.HandlerContext, i *v1alpha1.Backend) *ir.BackendObjectIR {
-		backendIR := translateFn(krtctx, i)
-		if len(backendIR.Errors) > 0 {
-			contextutils.LoggerFrom(ctx).Error("failed to translate backend", "backend", i.GetName(), "error", errors.Join(backendIR.Errors...))
-		}
-		return &ir.BackendObjectIR{
-			ObjectSource: ir.ObjectSource{
-				Kind:      gk.Kind,
-				Group:     gk.Group,
-				Namespace: i.GetNamespace(),
-				Name:      i.GetName(),
-			},
-			GvPrefix:          ExtensionName,
-			CanonicalHostname: hostname(i),
-			Obj:               i,
-			ObjIr:             backendIR,
-			Errors:            backendIR.Errors,
-		}
-	})
-	endpoints := krt.NewCollection(col, func(krtctx krt.HandlerContext, i *v1alpha1.Backend) *ir.EndpointsForBackend {
-		return processEndpoints(i)
-	})
+	bcol := krt.NewCollection(
+		col,
+		func(krtctx krt.HandlerContext, i *v1alpha1.Backend) *ir.BackendObjectIR {
+			backendIR := translateFn(krtctx, i)
+			if len(backendIR.Errors) > 0 {
+				contextutils.LoggerFrom(ctx).
+					Error("failed to translate backend", "backend", i.GetName(), "error", errors.Join(backendIR.Errors...))
+			}
+			return &ir.BackendObjectIR{
+				ObjectSource: ir.ObjectSource{
+					Kind:      gk.Kind,
+					Group:     gk.Group,
+					Namespace: i.GetNamespace(),
+					Name:      i.GetName(),
+				},
+				GvPrefix:          ExtensionName,
+				CanonicalHostname: hostname(i),
+				Obj:               i,
+				ObjIr:             backendIR,
+				Errors:            backendIR.Errors,
+			}
+		},
+	)
+	endpoints := krt.NewCollection(
+		col,
+		func(krtctx krt.HandlerContext, i *v1alpha1.Backend) *ir.EndpointsForBackend {
+			return processEndpoints(i)
+		},
+	)
 	return extensionsplug.Plugin{
 		ContributesBackends: map[schema.GroupKind]extensionsplug.BackendPlugin{
 			gk: {
@@ -122,7 +131,11 @@ func NewPlugin(ctx context.Context, commoncol *common.CommonCollections) extensi
 			},
 		},
 		ContributesRegistration: map[schema.GroupKind]func(){
-			wellknown.BackendGVK.GroupKind(): buildRegisterCallback(ctx, commoncol.CrudClient, bcol),
+			wellknown.BackendGVK.GroupKind(): buildRegisterCallback(
+				ctx,
+				commoncol.CrudClient,
+				bcol,
+			),
 		},
 	}
 }
@@ -170,7 +183,12 @@ func buildTranslateFunc(
 			var secret *ir.Secret
 			if i.Spec.Aws.Auth != nil && i.Spec.Aws.Auth.Type == v1alpha1.AwsAuthTypeSecret {
 				var err error
-				secret, err = pluginutils.GetSecretIr(secrets, krtctx, i.Spec.Aws.Auth.SecretRef.Name, i.GetNamespace())
+				secret, err = pluginutils.GetSecretIr(
+					secrets,
+					krtctx,
+					i.Spec.Aws.Auth.SecretRef.Name,
+					i.GetNamespace(),
+				)
 				if err != nil {
 					backendIr.Errors = append(backendIr.Errors, err)
 				}
@@ -244,7 +262,11 @@ func getAISecretRef(llm v1alpha1.SupportedLLMProvider) *corev1.LocalObjectRefere
 	return secretRef
 }
 
-func processBackend(ctx context.Context, in ir.BackendObjectIR, out *envoy_config_cluster_v3.Cluster) {
+func processBackend(
+	ctx context.Context,
+	in ir.BackendObjectIR,
+	out *envoy_config_cluster_v3.Cluster,
+) {
 	log := contextutils.LoggerFrom(ctx)
 	up, ok := in.Obj.(*v1alpha1.Backend)
 	if !ok {
@@ -316,22 +338,43 @@ func (p *backendPlugin) Name() string {
 	return ExtensionName
 }
 
-func (p *backendPlugin) ApplyListenerPlugin(ctx context.Context, pCtx *ir.ListenerContext, out *envoy_config_listener_v3.Listener) {
+func (p *backendPlugin) ApplyListenerPlugin(
+	ctx context.Context,
+	pCtx *ir.ListenerContext,
+	out *envoy_config_listener_v3.Listener,
+) {
 }
 
-func (p *backendPlugin) ApplyHCM(ctx context.Context, pCtx *ir.HcmContext, out *envoy_hcm.HttpConnectionManager) error { //no-op
+func (p *backendPlugin) ApplyHCM(
+	ctx context.Context,
+	pCtx *ir.HcmContext,
+	out *envoy_hcm.HttpConnectionManager,
+) error { //no-op
 	return nil
 }
 
-func (p *backendPlugin) ApplyVhostPlugin(ctx context.Context, pCtx *ir.VirtualHostContext, out *envoy_config_route_v3.VirtualHost) {
+func (p *backendPlugin) ApplyVhostPlugin(
+	ctx context.Context,
+	pCtx *ir.VirtualHostContext,
+	out *envoy_config_route_v3.VirtualHost,
+) {
 }
 
 // called 0 or more times
-func (p *backendPlugin) ApplyForRoute(ctx context.Context, pCtx *ir.RouteContext, outputRoute *envoy_config_route_v3.Route) error {
+func (p *backendPlugin) ApplyForRoute(
+	ctx context.Context,
+	pCtx *ir.RouteContext,
+	outputRoute *envoy_config_route_v3.Route,
+) error {
 	return nil
 }
 
-func (p *backendPlugin) ApplyForBackend(ctx context.Context, pCtx *ir.RouteBackendContext, in ir.HttpBackend, out *envoy_config_route_v3.Route) error {
+func (p *backendPlugin) ApplyForBackend(
+	ctx context.Context,
+	pCtx *ir.RouteBackendContext,
+	in ir.HttpBackend,
+	out *envoy_config_route_v3.Route,
+) error {
 	backend := pCtx.Backend.Obj.(*v1alpha1.Backend)
 	backendIr := pCtx.Backend.ObjIr.(*BackendIr)
 	switch backend.Spec.Type {
@@ -354,7 +397,10 @@ func (p *backendPlugin) ApplyForBackend(ctx context.Context, pCtx *ir.RouteBacke
 				Disabled: true,
 			},
 		}
-		pCtx.TypedFilterConfig.AddTypedConfig(wellknown.AIExtProcFilterName, disabledExtprocSettings)
+		pCtx.TypedFilterConfig.AddTypedConfig(
+			wellknown.AIExtProcFilterName,
+			disabledExtprocSettings,
+		)
 	}
 
 	return nil
@@ -371,7 +417,10 @@ func (p *backendPlugin) ApplyForRouteBackend(
 // called 1 time per listener
 // if a plugin emits new filters, they must be with a plugin unique name.
 // any filter returned from route config must be disabled, so it doesnt impact other routes.
-func (p *backendPlugin) HttpFilters(ctx context.Context, fc ir.FilterChainCommon) ([]plugins.StagedHttpFilter, error) {
+func (p *backendPlugin) HttpFilters(
+	ctx context.Context,
+	fc ir.FilterChainCommon,
+) ([]plugins.StagedHttpFilter, error) {
 	result := []plugins.StagedHttpFilter{}
 
 	var errs []error
@@ -385,7 +434,10 @@ func (p *backendPlugin) HttpFilters(ctx context.Context, fc ir.FilterChainCommon
 	return result, errors.Join(errs...)
 }
 
-func (p *backendPlugin) UpstreamHttpFilters(ctx context.Context, fcc ir.FilterChainCommon) ([]plugins.StagedUpstreamHttpFilter, error) {
+func (p *backendPlugin) UpstreamHttpFilters(
+	ctx context.Context,
+	fcc ir.FilterChainCommon,
+) ([]plugins.StagedUpstreamHttpFilter, error) {
 	return nil, nil
 }
 

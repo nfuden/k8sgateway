@@ -93,7 +93,11 @@ func (p XdsSnapWrapper) MarshalJSON() (out []byte, err error) {
 	})
 }
 
-func addToSnap(snapJson map[string]map[string]any, k string, resources map[string]envoycachetypes.ResourceWithTTL) {
+func addToSnap(
+	snapJson map[string]map[string]any,
+	k string,
+	resources map[string]envoycachetypes.ResourceWithTTL,
+) {
 	for rname, r := range resources {
 		rJson, _ := protojson.Marshal(r.Resource)
 		var rAny any
@@ -174,7 +178,12 @@ func visitFields(msg protoreflect.Message, ancestor_sensitive bool) {
 	})
 }
 
-func visitMessage(msg protoreflect.Message, fd protoreflect.FieldDescriptor, v protoreflect.Value, sensitive bool) {
+func visitMessage(
+	msg protoreflect.Message,
+	fd protoreflect.FieldDescriptor,
+	v protoreflect.Value,
+	sensitive bool,
+) {
 	visitMsg := v.Message()
 	var anyMsg proto.Message
 	m := visitMsg.Interface()

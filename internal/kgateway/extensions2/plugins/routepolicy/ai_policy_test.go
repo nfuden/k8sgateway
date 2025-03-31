@@ -93,7 +93,13 @@ func TestProcessAITrafficPolicy(t *testing.T) {
 		transformation, ok := typedFilterConfig.GetTypedConfig(wellknown.AIPolicyTransformationFilterName).(*envoytransformation.RouteTransformations)
 		assert.True(t, ok)
 		assert.True(t, len(transformation.Transformations) == 1)
-		assert.True(t, transformation.Transformations[0].GetRequestMatch().GetRequestTransformation().GetLogRequestResponseInfo().GetValue())
+		assert.True(
+			t,
+			transformation.Transformations[0].GetRequestMatch().
+				GetRequestTransformation().
+				GetLogRequestResponseInfo().
+				GetValue(),
+		)
 	})
 
 	t.Run("applies defaults and prompt enrichment", func(t *testing.T) {
@@ -215,7 +221,9 @@ func TestProcessAITrafficPolicy(t *testing.T) {
 		assert.True(t, foundRespHash, "response guardrails hash not found")
 
 		// Check transformation
-		outputTransformationProto := typedFilterConfig.GetTypedConfig(wellknown.AIPolicyTransformationFilterName)
+		outputTransformationProto := typedFilterConfig.GetTypedConfig(
+			wellknown.AIPolicyTransformationFilterName,
+		)
 		assert.NotNil(t, outputTransformationProto)
 		outputTransformation := outputTransformationProto.(*envoytransformation.RouteTransformations)
 		assert.Len(t, outputTransformation.Transformations, 1)

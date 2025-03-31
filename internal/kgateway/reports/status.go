@@ -32,9 +32,12 @@ func (r *ReportMap) BuildGWStatus(ctx context.Context, gw gwv1.Gateway) *gwv1.Ga
 		addMissingListenerConditions(lisReport)
 
 		finalConditions := make([]metav1.Condition, 0, len(lisReport.Status.Conditions))
-		oldLisStatusIndex := slices.IndexFunc(gw.Status.Listeners, func(l gwv1.ListenerStatus) bool {
-			return l.Name == lis.Name
-		})
+		oldLisStatusIndex := slices.IndexFunc(
+			gw.Status.Listeners,
+			func(l gwv1.ListenerStatus) bool {
+				return l.Name == lis.Name
+			},
+		)
 		for _, lisCondition := range lisReport.Status.Conditions {
 			lisCondition.ObservedGeneration = gwReport.observedGeneration
 
@@ -90,7 +93,8 @@ func (r *ReportMap) BuildRouteStatus(
 ) *gwv1.RouteStatus {
 	routeReport := r.route(obj)
 	if routeReport == nil {
-		contextutils.LoggerFrom(ctx).Infof("missing route report for %T %s/%s", obj, obj.GetName(), obj.GetNamespace())
+		contextutils.LoggerFrom(ctx).
+			Infof("missing route report for %T %s/%s", obj, obj.GetName(), obj.GetNamespace())
 		return nil
 	}
 
@@ -141,9 +145,12 @@ func (r *ReportMap) BuildRouteStatus(
 
 		// Get the status of the current parentRef conditions if they exist
 		var currentParentRefConditions []metav1.Condition
-		currentParentRefIdx := slices.IndexFunc(existingStatus.Parents, func(s gwv1.RouteParentStatus) bool {
-			return reflect.DeepEqual(s.ParentRef, parentRef)
-		})
+		currentParentRefIdx := slices.IndexFunc(
+			existingStatus.Parents,
+			func(s gwv1.RouteParentStatus) bool {
+				return reflect.DeepEqual(s.ParentRef, parentRef)
+			},
+		)
 		if currentParentRefIdx != -1 {
 			currentParentRefConditions = existingStatus.Parents[currentParentRefIdx].Conditions
 		}

@@ -36,7 +36,10 @@ type PerClientEnvoyClusters struct {
 	index    krt.Index[string, uccWithCluster]
 }
 
-func (iu *PerClientEnvoyClusters) FetchClustersForClient(kctx krt.HandlerContext, ucc ir.UniqlyConnectedClient) []uccWithCluster {
+func (iu *PerClientEnvoyClusters) FetchClustersForClient(
+	kctx krt.HandlerContext,
+	ucc ir.UniqlyConnectedClient,
+) []uccWithCluster {
 	return krt.Fetch(kctx, iu.clusters, krt.FilterIndex(iu.index, ucc.ResourceName()))
 }
 
@@ -50,29 +53,35 @@ func NewPerClientEnvoyClusters(
 	ctx = contextutils.WithLogger(ctx, "backend-translator")
 	logger := contextutils.LoggerFrom(ctx).Desugar()
 
-	clusters := krt.NewManyCollection(finalBackends, func(kctx krt.HandlerContext, backendObj ir.BackendObjectIR) []uccWithCluster {
-		logger := logger.With(zap.Stringer("backend", backendObj))
-		uccs := krt.Fetch(kctx, uccs)
-		uccWithClusterRet := make([]uccWithCluster, 0, len(uccs))
+	clusters := krt.NewManyCollection(
+		finalBackends,
+		func(kctx krt.HandlerContext, backendObj ir.BackendObjectIR) []uccWithCluster {
+			logger := logger.With(zap.Stringer("backend", backendObj))
+			uccs := krt.Fetch(kctx, uccs)
+			uccWithClusterRet := make([]uccWithCluster, 0, len(uccs))
 
-		for _, ucc := range uccs {
-			logger.Debug("applying destination rules for backend", zap.String("ucc", ucc.ResourceName()))
+			for _, ucc := range uccs {
+				logger.Debug(
+					"applying destination rules for backend",
+					zap.String("ucc", ucc.ResourceName()),
+				)
 
-			c, err := translator.TranslateBackend(kctx, ucc, backendObj)
-			if c == nil {
-				continue
+				c, err := translator.TranslateBackend(kctx, ucc, backendObj)
+				if c == nil {
+					continue
+				}
+				uccWithClusterRet = append(uccWithClusterRet, uccWithCluster{
+					Client:  ucc,
+					Cluster: c,
+					Name:    c.GetName(),
+					// pass along the error(s) indicating to consumers that this cluster is not usable
+					Error:          err,
+					ClusterVersion: utils.HashProto(c),
+				})
 			}
-			uccWithClusterRet = append(uccWithClusterRet, uccWithCluster{
-				Client:  ucc,
-				Cluster: c,
-				Name:    c.GetName(),
-				// pass along the error(s) indicating to consumers that this cluster is not usable
-				Error:          err,
-				ClusterVersion: utils.HashProto(c),
-			})
-		}
-		return uccWithClusterRet
-	}, krtopts.ToOptions("PerClientEnvoyClusters")...)
+			return uccWithClusterRet
+		},
+		krtopts.ToOptions("PerClientEnvoyClusters")...)
 	idx := krt.NewIndex(clusters, func(ucc uccWithCluster) []string {
 		return []string{ucc.Client.ResourceName()}
 	})

@@ -11,7 +11,8 @@ import (
 // RefIsHTTPRoute checks if the BackendObjectReference is an HTTPRoute
 // Parent routes may delegate to child routes using an HTTPRoute backend reference.
 func RefIsHTTPRoute(ref gwv1.BackendObjectReference) bool {
-	return (ref.Kind != nil && *ref.Kind == wellknown.HTTPRouteKind) && (ref.Group != nil && *ref.Group == gwv1.GroupName)
+	return (ref.Kind != nil && *ref.Kind == wellknown.HTTPRouteKind) &&
+		(ref.Group != nil && *ref.Group == gwv1.GroupName)
 }
 
 // ToString returns a string representation of the BackendObjectReference

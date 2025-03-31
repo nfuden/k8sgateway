@@ -54,7 +54,8 @@ func StartServer(ctx context.Context, params ServerParams) {
 			Addr:    fmt.Sprintf(":%d", params.Port),
 			Handler: mux,
 		}
-		contextutils.LoggerFrom(ctx).Infof("probe server starting at %s listening for %s", server.Addr, params.Path)
+		contextutils.LoggerFrom(ctx).
+			Infof("probe server starting at %s listening for %s", server.Addr, params.Path)
 		err := server.ListenAndServe()
 		if err == http.ErrServerClosed {
 			contextutils.LoggerFrom(ctx).Info("probe server closed")
@@ -70,7 +71,8 @@ func StartServer(ctx context.Context, params ServerParams) {
 			shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), 2*time.Second)
 			defer shutdownCancel()
 			if err := server.Shutdown(shutdownCtx); err != nil {
-				contextutils.LoggerFrom(shutdownCtx).Warnf("probe server shutdown returned error: %v", err)
+				contextutils.LoggerFrom(shutdownCtx).
+					Warnf("probe server shutdown returned error: %v", err)
 			}
 		}
 	}()

@@ -120,7 +120,13 @@ func (f *apiPortForwarder) startOnce(ctx context.Context) error {
 		}
 		// Set local port now, as it may have been 0 as input
 		f.properties.localPort = int(p[0].Local)
-		logger.Debugf("Port forward established %v -> %v.%v:%v", f.Address(), podName, podName, f.properties.remotePort)
+		logger.Debugf(
+			"Port forward established %v -> %v.%v:%v",
+			f.Address(),
+			podName,
+			podName,
+			f.properties.remotePort,
+		)
 		// The apiPortForwarder is now ready.
 		return nil
 	}
@@ -144,17 +150,29 @@ func (f *apiPortForwarder) WaitForStop() {
 	<-f.stopCh
 }
 
-func (f *apiPortForwarder) portForwarderToPod(podName string, readyCh chan struct{}) (*portforward.PortForwarder, error) {
+func (f *apiPortForwarder) portForwarderToPod(
+	podName string,
+	readyCh chan struct{},
+) (*portforward.PortForwarder, error) {
 	// the following code is based on this reference, https://github.com/kubernetes/client-go/issues/51
 	roundTripper, upgrader, err := spdy.RoundTripperFor(f.restConfig)
 	if err != nil {
 		return nil, err
 	}
 
-	path := fmt.Sprintf("/api/v1/namespaces/%s/pods/%s/portforward", f.properties.resourceNamespace, podName)
+	path := fmt.Sprintf(
+		"/api/v1/namespaces/%s/pods/%s/portforward",
+		f.properties.resourceNamespace,
+		podName,
+	)
 	hostIP := strings.TrimLeft(f.restConfig.Host, "https:/")
 	serverURL := url.URL{Scheme: "https", Path: path, Host: hostIP}
-	dialer := spdy.NewDialer(upgrader, &http.Client{Transport: roundTripper}, http.MethodPost, &serverURL)
+	dialer := spdy.NewDialer(
+		upgrader,
+		&http.Client{Transport: roundTripper},
+		http.MethodPost,
+		&serverURL,
+	)
 
 	return portforward.NewOnAddresses(dialer,
 		[]string{f.properties.localAddress},
@@ -170,26 +188,44 @@ func (f *apiPortForwarder) getPodName(ctx context.Context) (string, error) {
 	case "deploy":
 		fallthrough
 	case "deployment":
-		pods, err := kubeutils.GetPodsForDeployment(ctx, f.restConfig, f.properties.resourceName, f.properties.resourceNamespace)
+		pods, err := kubeutils.GetPodsForDeployment(
+			ctx,
+			f.restConfig,
+			f.properties.resourceName,
+			f.properties.resourceNamespace,
+		)
 		if err != nil {
 			return "", err
 		}
 
 		if len(pods) == 0 {
-			return "", eris.Errorf("No pods found for deployment %s: %s", f.properties.resourceNamespace, f.properties.resourceName)
+			return "", eris.Errorf(
+				"No pods found for deployment %s: %s",
+				f.properties.resourceNamespace,
+				f.properties.resourceName,
+			)
 		}
 		return pods[0], nil
 
 	case "svc":
 		fallthrough
 	case "service":
-		pods, err := kubeutils.GetPodsForService(ctx, f.restConfig, f.properties.resourceName, f.properties.resourceNamespace)
+		pods, err := kubeutils.GetPodsForService(
+			ctx,
+			f.restConfig,
+			f.properties.resourceName,
+			f.properties.resourceNamespace,
+		)
 		if err != nil {
 			return "", err
 		}
 
 		if len(pods) == 0 {
-			return "", eris.Errorf("No pods found for service %s: %s", f.properties.resourceNamespace, f.properties.resourceName)
+			return "", eris.Errorf(
+				"No pods found for service %s: %s",
+				f.properties.resourceNamespace,
+				f.properties.resourceName,
+			)
 		}
 		return pods[0], nil
 
@@ -197,12 +233,17 @@ func (f *apiPortForwarder) getPodName(ctx context.Context) (string, error) {
 		return f.properties.resourceName, nil
 	}
 
-	return "", eris.Errorf("Could not determine pod name for resourceType: %s", f.properties.resourceType)
+	return "", eris.Errorf(
+		"Could not determine pod name for resourceType: %s",
+		f.properties.resourceType,
+	)
 }
 
 // Fetch ClientConfig. If kubeConfigPath is not specified, retrieve the kubeconfig from environment in which this is invoked.
 // Override the API Server URL and current context if specified.
-func GetClientConfigWithContext(kubeConfigPath, kubeContext, apiServerUrl string) (clientcmd.ClientConfig, error) {
+func GetClientConfigWithContext(
+	kubeConfigPath, kubeContext, apiServerUrl string,
+) (clientcmd.ClientConfig, error) {
 	// default loading rules checks for KUBECONFIG env var
 	loadingRules := clientcmd.NewDefaultClientConfigLoadingRules()
 	// also check recommended default kubeconfig file locations
@@ -227,7 +268,9 @@ func GetClientConfigWithContext(kubeConfigPath, kubeContext, apiServerUrl string
 }
 
 // Fetch rest.Config for environment in which this is invoked, override the API Server URL and current context if specified.
-func GetRestConfigWithContext(kubeConfigPath, kubeContext, apiServerUrl string) (*rest.Config, error) {
+func GetRestConfigWithContext(
+	kubeConfigPath, kubeContext, apiServerUrl string,
+) (*rest.Config, error) {
 	clientConfig, err := GetClientConfigWithContext(kubeConfigPath, kubeContext, apiServerUrl)
 	if err != nil {
 		return nil, err

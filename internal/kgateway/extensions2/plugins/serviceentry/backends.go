@@ -70,29 +70,44 @@ func backendsCollections(
 	ServiceEntries krt.Collection[*networkingclient.ServiceEntry],
 	krtOpts krtutil.KrtOptions,
 ) krt.Collection[ir.BackendObjectIR] {
-	return krt.NewManyCollection(ServiceEntries, func(ctx krt.HandlerContext, se *networkingclient.ServiceEntry) []ir.BackendObjectIR {
-		// passthrough not supported here
-		if se.Spec.GetResolution() == networking.ServiceEntry_NONE {
-			logger.Debugw("skipping ServiceEntry with resolution: NONE", "name", se.GetName(), "namespace", se.GetNamespace())
-			return nil
-		}
-
-		logger.Debugw("converting ServiceEntry to Upstream", "name", se.GetName(), "namespace", se.GetNamespace())
-		var out []ir.BackendObjectIR
-
-		for _, hostname := range se.Spec.GetHosts() {
-			for _, svcPort := range se.Spec.GetPorts() {
-				out = append(out, BuildServiceEntryBackendObjectIR(
-					se,
-					hostname,
-					int32(svcPort.GetNumber()),
-					svcPort.GetProtocol(),
-				))
+	return krt.NewManyCollection(
+		ServiceEntries,
+		func(ctx krt.HandlerContext, se *networkingclient.ServiceEntry) []ir.BackendObjectIR {
+			// passthrough not supported here
+			if se.Spec.GetResolution() == networking.ServiceEntry_NONE {
+				logger.Debugw(
+					"skipping ServiceEntry with resolution: NONE",
+					"name",
+					se.GetName(),
+					"namespace",
+					se.GetNamespace(),
+				)
+				return nil
 			}
-		}
 
-		return out
-	}, krtOpts.ToOptions("ServiceEntryBackends")...)
+			logger.Debugw(
+				"converting ServiceEntry to Upstream",
+				"name",
+				se.GetName(),
+				"namespace",
+				se.GetNamespace(),
+			)
+			var out []ir.BackendObjectIR
+
+			for _, hostname := range se.Spec.GetHosts() {
+				for _, svcPort := range se.Spec.GetPorts() {
+					out = append(out, BuildServiceEntryBackendObjectIR(
+						se,
+						hostname,
+						int32(svcPort.GetNumber()),
+						svcPort.GetProtocol(),
+					))
+				}
+			}
+
+			return out
+		},
+		krtOpts.ToOptions("ServiceEntryBackends")...)
 }
 
 func BuildServiceEntryBackendObjectIR(

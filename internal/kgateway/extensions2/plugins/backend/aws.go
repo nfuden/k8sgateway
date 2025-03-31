@@ -81,7 +81,12 @@ func (u *AwsIr) Equals(other any) bool {
 }
 
 // processAws processes an AWS backend and returns an envoy cluster.
-func processAws(ctx context.Context, in *v1alpha1.AwsBackend, ir *AwsIr, out *envoy_config_cluster_v3.Cluster) error {
+func processAws(
+	ctx context.Context,
+	in *v1alpha1.AwsBackend,
+	ir *AwsIr,
+	out *envoy_config_cluster_v3.Cluster,
+) error {
 	// defensive check; this should never happen with union types
 	if ir == nil {
 		return fmt.Errorf("aws ir is nil")
@@ -129,12 +134,19 @@ func processAws(ctx context.Context, in *v1alpha1.AwsBackend, ir *AwsIr, out *en
 		return fmt.Errorf("failed to mutate http options: %v", err)
 	}
 
-	pluginutils.EnvoySingleEndpointLoadAssignment(out, ir.lambdaEndpoint.hostname, ir.lambdaEndpoint.port)
+	pluginutils.EnvoySingleEndpointLoadAssignment(
+		out,
+		ir.lambdaEndpoint.hostname,
+		ir.lambdaEndpoint.port,
+	)
 	return nil
 }
 
 // configureAWSAuth configures AWS authentication for the given backend.
-func configureAWSAuth(secret *ir.Secret, region string) (*envoy_request_signing_v3.AwsRequestSigning, error) {
+func configureAWSAuth(
+	secret *ir.Secret,
+	region string,
+) (*envoy_request_signing_v3.AwsRequestSigning, error) {
 	// when no auth is specified, use the default aws auth provider documented by the lambda filter:
 	// https://www.envoyproxy.io/docs/envoy/latest/configuration/http/http_filters/aws_lambda_filter#credentials.
 	if secret == nil || secret.Data == nil {
@@ -188,7 +200,11 @@ func (u *lambdaFilters) Equals(other *lambdaFilters) bool {
 }
 
 // buildLambdaFilters configures cluster's upstream HTTP filters for the given backend.
-func buildLambdaFilters(arn, region string, secret *ir.Secret, invokeMode envoy_lambda_v3.Config_InvocationMode) (*lambdaFilters, error) {
+func buildLambdaFilters(
+	arn, region string,
+	secret *ir.Secret,
+	invokeMode envoy_lambda_v3.Config_InvocationMode,
+) (*lambdaFilters, error) {
 	lambdaConfigAny, err := utils.MessageToAny(&envoy_lambda_v3.Config{
 		Arn:            arn,
 		InvocationMode: invokeMode,
@@ -254,7 +270,13 @@ func buildLambdaARN(in *v1alpha1.AwsBackend, region string) (string, error) {
 		qualifier = in.Lambda.Qualifier
 	}
 	// TODO(tim): url.QueryEscape(...)?
-	arnStr := fmt.Sprintf("arn:aws:lambda:%s:%s:function:%s:%s", region, in.AccountId, in.Lambda.FunctionName, qualifier)
+	arnStr := fmt.Sprintf(
+		"arn:aws:lambda:%s:%s:function:%s:%s",
+		region,
+		in.AccountId,
+		in.Lambda.FunctionName,
+		qualifier,
+	)
 	parsedARN, err := arnutils.Parse(arnStr)
 	if err != nil {
 		return "", fmt.Errorf("failed to parse lambda arn: %v", err)

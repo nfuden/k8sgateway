@@ -51,7 +51,12 @@ func (s *testingSuite) SetupSuite() {
 	if err != nil {
 		s.FailNow("failed creating suite namespace", nsYAML, err)
 	}
-	err = s.testInstallation.ClusterContext.Cli.ApplyFilePath(s.ctx, commonYAML, "-n", testNamespace)
+	err = s.testInstallation.ClusterContext.Cli.ApplyFilePath(
+		s.ctx,
+		commonYAML,
+		"-n",
+		testNamespace,
+	)
 	if err != nil {
 		s.FailNow("failed applying suite yaml", commonYAML, err)
 	}
@@ -80,12 +85,22 @@ func (s *testingSuite) SetupSuite() {
 		listOpts := metav1.ListOptions{
 			LabelSelector: app.lbl + "=" + app.val,
 		}
-		s.testInstallation.Assertions.EventuallyPodsRunning(s.ctx, testNamespace, listOpts, readyTimeout)
+		s.testInstallation.Assertions.EventuallyPodsRunning(
+			s.ctx,
+			testNamespace,
+			listOpts,
+			readyTimeout,
+		)
 	}
 }
 
 func (s *testingSuite) TearDownSuite() {
-	err := s.testInstallation.ClusterContext.Cli.DeleteFilePath(s.ctx, commonYAML, "-n", testNamespace)
+	err := s.testInstallation.ClusterContext.Cli.DeleteFilePath(
+		s.ctx,
+		commonYAML,
+		"-n",
+		testNamespace,
+	)
 	if err != nil {
 		s.Error(err)
 	}

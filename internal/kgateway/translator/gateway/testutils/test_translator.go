@@ -82,7 +82,10 @@ type ActualTestResult struct {
 	ReportsMap reports.ReportMap
 }
 
-func CompareProxy(expectedFile string, actualProxy *irtranslator.TranslationResult) (string, error) {
+func CompareProxy(
+	expectedFile string,
+	actualProxy *irtranslator.TranslationResult,
+) (string, error) {
 	if os.Getenv("UPDATE_OUTPUTS") == "1" {
 		d, err := MarshalAnyYaml(actualProxy)
 		if err != nil {
@@ -103,8 +106,14 @@ func AreReportsSuccess(gwNN types.NamespacedName, reportsMap reports.ReportMap) 
 		for ref, parentRefReport := range routeReport.Parents {
 			for _, c := range parentRefReport.Conditions {
 				// most route conditions true is good, except RouteConditionPartiallyInvalid
-				if c.Type == string(gwv1.RouteConditionPartiallyInvalid) && c.Status != metav1.ConditionFalse {
-					return fmt.Errorf("condition error for httproute: %v ref: %v condition: %v", nns, ref, c)
+				if c.Type == string(gwv1.RouteConditionPartiallyInvalid) &&
+					c.Status != metav1.ConditionFalse {
+					return fmt.Errorf(
+						"condition error for httproute: %v ref: %v condition: %v",
+						nns,
+						ref,
+						c,
+					)
 				} else if c.Status != metav1.ConditionTrue {
 					return fmt.Errorf("condition error for httproute: %v ref: %v condition: %v", nns, ref, c)
 				}
@@ -115,8 +124,14 @@ func AreReportsSuccess(gwNN types.NamespacedName, reportsMap reports.ReportMap) 
 		for ref, parentRefReport := range routeReport.Parents {
 			for _, c := range parentRefReport.Conditions {
 				// most route conditions true is good, except RouteConditionPartiallyInvalid
-				if c.Type == string(gwv1.RouteConditionPartiallyInvalid) && c.Status != metav1.ConditionFalse {
-					return fmt.Errorf("condition error for tcproute: %v ref: %v condition: %v", nns, ref, c)
+				if c.Type == string(gwv1.RouteConditionPartiallyInvalid) &&
+					c.Status != metav1.ConditionFalse {
+					return fmt.Errorf(
+						"condition error for tcproute: %v ref: %v condition: %v",
+						nns,
+						ref,
+						c,
+					)
 				} else if c.Status != metav1.ConditionTrue {
 					return fmt.Errorf("condition error for tcproute: %v ref: %v condition: %v", nns, ref, c)
 				}
@@ -128,8 +143,14 @@ func AreReportsSuccess(gwNN types.NamespacedName, reportsMap reports.ReportMap) 
 		for ref, parentRefReport := range routeReport.Parents {
 			for _, c := range parentRefReport.Conditions {
 				// most route conditions true is good, except RouteConditionPartiallyInvalid
-				if c.Type == string(gwv1.RouteConditionPartiallyInvalid) && c.Status != metav1.ConditionFalse {
-					return fmt.Errorf("condition error for tlsroute: %v ref: %v condition: %v", nns, ref, c)
+				if c.Type == string(gwv1.RouteConditionPartiallyInvalid) &&
+					c.Status != metav1.ConditionFalse {
+					return fmt.Errorf(
+						"condition error for tlsroute: %v ref: %v condition: %v",
+						nns,
+						ref,
+						c,
+					)
 				} else if c.Status != metav1.ConditionTrue {
 					return fmt.Errorf("condition error for tlsroute: %v ref: %v condition: %v", nns, ref, c)
 				}
@@ -153,7 +174,11 @@ var _ extensionsplug.GetBackendForRefPlugin = testBackendPlugin{}.GetBackendForR
 type testBackendPlugin struct{}
 
 // GetBackendForRef implements query.BackendRefResolver.
-func (tp testBackendPlugin) GetBackendForRefPlugin(kctx krt.HandlerContext, key ir.ObjectSource, port int32) *ir.BackendObjectIR {
+func (tp testBackendPlugin) GetBackendForRefPlugin(
+	kctx krt.HandlerContext,
+	key ir.ObjectSource,
+	port int32,
+) *ir.BackendObjectIR {
 	if key.Kind != "test-backend-plugin" {
 		return nil
 	}
@@ -168,7 +193,10 @@ func (tp testBackendPlugin) GetBackendForRefPlugin(kctx krt.HandlerContext, key 
 	}
 }
 
-func (tc TestCase) Run(t test.Failer, ctx context.Context) (map[types.NamespacedName]ActualTestResult, error) {
+func (tc TestCase) Run(
+	t test.Failer,
+	ctx context.Context,
+) (map[types.NamespacedName]ActualTestResult, error) {
 	var (
 		anyObjs []runtime.Object
 		ourObjs []runtime.Object

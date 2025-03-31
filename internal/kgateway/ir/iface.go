@@ -137,29 +137,70 @@ type UnimplementedProxyTranslationPass struct{}
 
 var _ ProxyTranslationPass = UnimplementedProxyTranslationPass{}
 
-func (s UnimplementedProxyTranslationPass) ApplyListenerPlugin(ctx context.Context, pCtx *ListenerContext, out *envoy_config_listener_v3.Listener) {
-}
-func (s UnimplementedProxyTranslationPass) ApplyHCM(ctx context.Context, pCtx *HcmContext, out *envoy_hcm.HttpConnectionManager) error {
-	return nil
-}
-func (s UnimplementedProxyTranslationPass) ApplyForBackend(ctx context.Context, pCtx *RouteBackendContext, in HttpBackend, out *envoy_config_route_v3.Route) error {
-	return nil
-}
-func (s UnimplementedProxyTranslationPass) ApplyRouteConfigPlugin(ctx context.Context, pCtx *RouteConfigContext, out *envoy_config_route_v3.RouteConfiguration) {
+func (s UnimplementedProxyTranslationPass) ApplyListenerPlugin(
+	ctx context.Context,
+	pCtx *ListenerContext,
+	out *envoy_config_listener_v3.Listener,
+) {
 }
 
-func (s UnimplementedProxyTranslationPass) ApplyVhostPlugin(ctx context.Context, pCtx *VirtualHostContext, out *envoy_config_route_v3.VirtualHost) {
-}
-func (s UnimplementedProxyTranslationPass) ApplyForRoute(ctx context.Context, pCtx *RouteContext, out *envoy_config_route_v3.Route) error {
+func (s UnimplementedProxyTranslationPass) ApplyHCM(
+	ctx context.Context,
+	pCtx *HcmContext,
+	out *envoy_hcm.HttpConnectionManager,
+) error {
 	return nil
 }
-func (s UnimplementedProxyTranslationPass) ApplyForRouteBackend(ctx context.Context, policy PolicyIR, pCtx *RouteBackendContext) error {
+
+func (s UnimplementedProxyTranslationPass) ApplyForBackend(
+	ctx context.Context,
+	pCtx *RouteBackendContext,
+	in HttpBackend,
+	out *envoy_config_route_v3.Route,
+) error {
 	return nil
 }
-func (s UnimplementedProxyTranslationPass) HttpFilters(ctx context.Context, fc FilterChainCommon) ([]plugins.StagedHttpFilter, error) {
+
+func (s UnimplementedProxyTranslationPass) ApplyRouteConfigPlugin(
+	ctx context.Context,
+	pCtx *RouteConfigContext,
+	out *envoy_config_route_v3.RouteConfiguration,
+) {
+}
+
+func (s UnimplementedProxyTranslationPass) ApplyVhostPlugin(
+	ctx context.Context,
+	pCtx *VirtualHostContext,
+	out *envoy_config_route_v3.VirtualHost,
+) {
+}
+
+func (s UnimplementedProxyTranslationPass) ApplyForRoute(
+	ctx context.Context,
+	pCtx *RouteContext,
+	out *envoy_config_route_v3.Route,
+) error {
+	return nil
+}
+
+func (s UnimplementedProxyTranslationPass) ApplyForRouteBackend(
+	ctx context.Context,
+	policy PolicyIR,
+	pCtx *RouteBackendContext,
+) error {
+	return nil
+}
+
+func (s UnimplementedProxyTranslationPass) HttpFilters(
+	ctx context.Context,
+	fc FilterChainCommon,
+) ([]plugins.StagedHttpFilter, error) {
 	return nil, nil
 }
-func (s UnimplementedProxyTranslationPass) NetworkFilters(ctx context.Context) ([]plugins.StagedNetworkFilter, error) {
+
+func (s UnimplementedProxyTranslationPass) NetworkFilters(
+	ctx context.Context,
+) ([]plugins.StagedNetworkFilter, error) {
 	return nil, nil
 }
 func (s UnimplementedProxyTranslationPass) ResourcesToAdd(ctx context.Context) Resources {
@@ -228,5 +269,9 @@ type PolicyRun interface {
 	// Allocate state for single listener+rotue translation pass.
 	NewGatewayTranslationPass(ctx context.Context, tctx GwTranslationCtx) ProxyTranslationPass
 	// Process cluster for a backend
-	ProcessBackend(ctx context.Context, in BackendObjectIR, out *envoy_config_cluster_v3.Cluster) error
+	ProcessBackend(
+		ctx context.Context,
+		in BackendObjectIR,
+		out *envoy_config_cluster_v3.Cluster,
+	) error
 }

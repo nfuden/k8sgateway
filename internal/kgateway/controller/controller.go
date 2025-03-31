@@ -93,7 +93,11 @@ type InferencePoolConfig struct {
 	InferenceExt   *deployer.InferenceExtInfo
 }
 
-func NewBaseInferencePoolController(ctx context.Context, poolCfg *InferencePoolConfig, gwCfg *GatewayConfig) error {
+func NewBaseInferencePoolController(
+	ctx context.Context,
+	poolCfg *InferencePoolConfig,
+	gwCfg *GatewayConfig,
+) error {
 	log := log.FromContext(ctx)
 	log.V(5).Info("starting inferencepool controller", "controllerName", poolCfg.ControllerName)
 
@@ -163,7 +167,15 @@ func (c *controllerBuilder) watchGw(ctx context.Context) error {
 	// setup a deployer
 	log := log.FromContext(ctx)
 
-	log.Info("creating gateway deployer", "ctrlname", c.cfg.ControllerName, "server", c.cfg.ControlPlane.XdsHost, "port", c.cfg.ControlPlane.XdsPort)
+	log.Info(
+		"creating gateway deployer",
+		"ctrlname",
+		c.cfg.ControllerName,
+		"server",
+		c.cfg.ControlPlane.XdsHost,
+		"port",
+		c.cfg.ControlPlane.XdsPort,
+	)
 	d, err := deployer.NewDeployer(c.cfg.Mgr.GetClient(), &deployer.Inputs{
 		ControllerName:       c.cfg.ControllerName,
 		Dev:                  c.cfg.Dev,
@@ -199,9 +211,23 @@ func (c *controllerBuilder) watchGw(ctx context.Context) error {
 			gwpNamespace := obj.GetNamespace()
 			// look up the Gateways that are using this GatewayParameters object
 			var gwList apiv1.GatewayList
-			err := cli.List(ctx, &gwList, client.InNamespace(gwpNamespace), client.MatchingFieldsSelector{Selector: fields.OneTermEqualSelector(GatewayParamsField, gwpName)})
+			err := cli.List(
+				ctx,
+				&gwList,
+				client.InNamespace(gwpNamespace),
+				client.MatchingFieldsSelector{
+					Selector: fields.OneTermEqualSelector(GatewayParamsField, gwpName),
+				},
+			)
 			if err != nil {
-				log.Error(err, "could not list Gateways using GatewayParameters", "gwpNamespace", gwpNamespace, "gwpName", gwpName)
+				log.Error(
+					err,
+					"could not list Gateways using GatewayParameters",
+					"gwpNamespace",
+					gwpNamespace,
+					"gwpName",
+					gwpName,
+				)
 				return []reconcile.Request{}
 			}
 			// requeue each Gateway that is using this GatewayParameters object
@@ -217,28 +243,30 @@ func (c *controllerBuilder) watchGw(ctx context.Context) error {
 	// watch for gatewayclasses managed by our controller and enqueue related gateways
 	buildr.Watches(
 		&apiv1.GatewayClass{},
-		handler.EnqueueRequestsFromMapFunc(func(ctx context.Context, obj client.Object) []reconcile.Request {
-			gc, ok := obj.(*apiv1.GatewayClass)
-			if !ok {
-				return nil
-			}
-			var gwList apiv1.GatewayList
-			if err := c.cfg.Mgr.GetClient().List(
-				ctx,
-				&gwList,
-				client.MatchingFields{GatewayClassField: gc.Name},
-			); err != nil {
-				log.Error(err, "failed listing GatewayClasses in predicate")
-				return nil
-			}
-			reqs := make([]reconcile.Request, 0, len(gwList.Items))
-			for _, gw := range gwList.Items {
-				reqs = append(reqs,
-					reconcile.Request{NamespacedName: client.ObjectKeyFromObject(&gw)},
-				)
-			}
-			return reqs
-		}),
+		handler.EnqueueRequestsFromMapFunc(
+			func(ctx context.Context, obj client.Object) []reconcile.Request {
+				gc, ok := obj.(*apiv1.GatewayClass)
+				if !ok {
+					return nil
+				}
+				var gwList apiv1.GatewayList
+				if err := c.cfg.Mgr.GetClient().List(
+					ctx,
+					&gwList,
+					client.MatchingFields{GatewayClassField: gc.Name},
+				); err != nil {
+					log.Error(err, "failed listing GatewayClasses in predicate")
+					return nil
+				}
+				reqs := make([]reconcile.Request, 0, len(gwList.Items))
+				for _, gw := range gwList.Items {
+					reqs = append(reqs,
+						reconcile.Request{NamespacedName: client.ObjectKeyFromObject(&gw)},
+					)
+				}
+				return reqs
+			},
+		),
 		builder.WithPredicates(
 			predicate.NewPredicateFuncs(func(o client.Object) bool {
 				gc, ok := o.(*apiv1.GatewayClass)
@@ -276,7 +304,8 @@ func (c *controllerBuilder) watchGw(ctx context.Context) error {
 }
 
 func (c *controllerBuilder) addHTTPRouteIndexes(ctx context.Context) error {
-	return c.cfg.Mgr.GetFieldIndexer().IndexField(ctx, new(apiv1.HTTPRoute), InferencePoolField, httpRouteInferencePoolIndex)
+	return c.cfg.Mgr.GetFieldIndexer().
+		IndexField(ctx, new(apiv1.HTTPRoute), InferencePoolField, httpRouteInferencePoolIndex)
 }
 
 func httpRouteInferencePoolIndex(obj client.Object) []string {
@@ -415,7 +444,8 @@ func (c *controllerBuilder) watchGwClass(_ context.Context) error {
 		WithEventFilter(predicate.NewPredicateFuncs(func(object client.Object) bool {
 			// we only care about GatewayClasses that use our controller name
 			gwClass, ok := object.(*apiv1.GatewayClass)
-			return ok && gwClass.Spec.ControllerName == apiv1.GatewayController(c.cfg.ControllerName)
+			return ok &&
+				gwClass.Spec.ControllerName == apiv1.GatewayController(c.cfg.ControllerName)
 		})).
 		Complete(c.reconciler)
 }
@@ -425,7 +455,10 @@ type controllerReconciler struct {
 	scheme *runtime.Scheme
 }
 
-func (r *controllerReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
+func (r *controllerReconciler) Reconcile(
+	ctx context.Context,
+	req ctrl.Request,
+) (ctrl.Result, error) {
 	log := log.FromContext(ctx).WithValues("gwclass", req.NamespacedName)
 
 	gwclass := &apiv1.GatewayClass{}

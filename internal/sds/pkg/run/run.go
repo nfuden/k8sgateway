@@ -56,7 +56,8 @@ func Run(ctx context.Context, secrets []server.Secret, sdsClient, sdsServerAddre
 				watchFiles(ctx, watcher, secrets)
 			// watch for errors
 			case err := <-watcher.Errors:
-				contextutils.LoggerFrom(ctx).Warnw("Received error from file watcher", zap.Error(err))
+				contextutils.LoggerFrom(ctx).
+					Warnw("Received error from file watcher", zap.Error(err))
 			case <-ctx.Done():
 				return
 			}
@@ -76,7 +77,8 @@ func Run(ctx context.Context, secrets []server.Secret, sdsClient, sdsServerAddre
 
 func watchFiles(ctx context.Context, watcher *fsnotify.Watcher, secrets []server.Secret) {
 	for _, s := range secrets {
-		contextutils.LoggerFrom(ctx).Infow("watcher started", zap.String("sslKeyFile", s.SslKeyFile), zap.String("sshCertFile", s.SslCertFile), zap.String("sslCaFile", s.SslCaFile))
+		contextutils.LoggerFrom(ctx).
+			Infow("watcher started", zap.String("sslKeyFile", s.SslKeyFile), zap.String("sshCertFile", s.SslCertFile), zap.String("sslCaFile", s.SslCaFile))
 		if err := watcher.Add(s.SslKeyFile); err != nil {
 			contextutils.LoggerFrom(ctx).Warn(zap.Error(err))
 		}

@@ -120,7 +120,13 @@ func (t *Translator) ComputeListener(
 	return ret, routes
 }
 
-func (t *Translator) runListenerPlugins(ctx context.Context, pass TranslationPassPlugins, gw ir.GatewayIR, l ir.ListenerIR, out *envoy_config_listener_v3.Listener) {
+func (t *Translator) runListenerPlugins(
+	ctx context.Context,
+	pass TranslationPassPlugins,
+	gw ir.GatewayIR,
+	l ir.ListenerIR,
+	out *envoy_config_listener_v3.Listener,
+) {
 	attachedPoliciesSlice := []ir.AttachedPolicies{
 		l.AttachedPolicies,
 		gw.AttachedPolicies,

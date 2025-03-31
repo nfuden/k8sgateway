@@ -11,7 +11,11 @@ import (
 )
 
 var (
-	translationTime      = stats.Float64("io.kgateway/translation_time_sec", "how long the translator takes in seconds", "s")
+	translationTime = stats.Float64(
+		"io.kgateway/translation_time_sec",
+		"how long the translator takes in seconds",
+		"s",
+	)
 	translatorNameKey, _ = tag.NewKey("translator_name")
 )
 

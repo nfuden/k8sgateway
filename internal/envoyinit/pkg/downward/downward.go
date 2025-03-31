@@ -83,7 +83,10 @@ func (td *TestWhichIsNeedDownwardAPI) PodAnnotations() map[string]string {
 	return map[string]string{}
 }
 
-func RetrieveDownwardAPIFrom(read func(string) ([]byte, error), getenv func(string) string) DownwardAPI {
+func RetrieveDownwardAPIFrom(
+	read func(string) ([]byte, error),
+	getenv func(string) string,
+) DownwardAPI {
 	// read annotations
 	var ret downwardInjectable
 	if labels, err := read("labels"); err == nil {

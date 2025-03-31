@@ -62,7 +62,12 @@ func TestRefIsHTTPRoute(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			result := RefIsHTTPRoute(test.ref)
 			if result != test.expected {
-				t.Errorf("Test case %q failed: expected %t but got %t", test.name, test.expected, result)
+				t.Errorf(
+					"Test case %q failed: expected %t but got %t",
+					test.name,
+					test.expected,
+					result,
+				)
 			}
 		})
 	}

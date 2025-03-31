@@ -77,7 +77,8 @@ func (s *Server) Run(ctx context.Context) (<-chan struct{}, error) {
 	contextutils.LoggerFrom(ctx).Infof("sds server listening on %s", s.address)
 	go func() {
 		if err = s.grpcServer.Serve(lis); err != nil {
-			contextutils.LoggerFrom(ctx).Fatalw("fatal error in gRPC server", zap.String("address", s.address), zap.Error(err))
+			contextutils.LoggerFrom(ctx).
+				Fatalw("fatal error in gRPC server", zap.String("address", s.address), zap.Error(err))
 		}
 	}()
 	serverStopped := make(chan struct{})
@@ -127,7 +128,8 @@ func (s *Server) UpdateSDSConfig(ctx context.Context) error {
 		contextutils.LoggerFrom(ctx).Info("error getting snapshot version", zap.Error(err))
 		return err
 	}
-	contextutils.LoggerFrom(ctx).Infof("Updating SDS config. sdsClient is %s. Snapshot version is %s", s.sdsClient, snapshotVersion)
+	contextutils.LoggerFrom(ctx).
+		Infof("Updating SDS config. sdsClient is %s. Snapshot version is %s", s.sdsClient, snapshotVersion)
 
 	secretSnapshot := &cache.Snapshot{}
 	secretSnapshot.Resources[cache_types.Secret] = cache.NewResources(snapshotVersion, items)
@@ -195,7 +197,10 @@ func checkCert(certs []byte) bool {
 	return true
 }
 
-func serverCertSecret(privateKey, certChain, ocspStaple []byte, serverCert string) cache_types.Resource {
+func serverCertSecret(
+	privateKey, certChain, ocspStaple []byte,
+	serverCert string,
+) cache_types.Resource {
 	tlsCert := &envoy_extensions_transport_sockets_tls_v3.TlsCertificate{
 		CertificateChain: inlineBytesDataSource(certChain),
 		PrivateKey:       inlineBytesDataSource(privateKey),

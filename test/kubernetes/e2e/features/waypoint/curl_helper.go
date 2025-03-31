@@ -15,7 +15,11 @@ var (
 	testAppPort = 8080
 
 	fromCurl    = kubectl.PodExecOptions{Name: "curl", Namespace: testNamespace, Container: "curl"}
-	fromNotCurl = kubectl.PodExecOptions{Name: "notcurl", Namespace: testNamespace, Container: "notcurl"}
+	fromNotCurl = kubectl.PodExecOptions{
+		Name:      "notcurl",
+		Namespace: testNamespace,
+		Container: "notcurl",
+	}
 )
 
 func (s *testingSuite) assertCurlService(

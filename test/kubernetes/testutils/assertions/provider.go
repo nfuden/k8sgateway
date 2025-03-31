@@ -55,5 +55,8 @@ func (p *Provider) WithInstallContext(installContext *install.Context) *Provider
 // if the provider has been configured to point to a kgateway installation
 // There are certain Assertions that can be invoked that do not require that kgateway be installed for them to be invoked
 func (p *Provider) expectInstallContextDefined() {
-	p.Require.NotNil(p.installContext, "Provider attempted to create an Assertion that requires a kgateway installation, but none was configured")
+	p.Require.NotNil(
+		p.installContext,
+		"Provider attempted to create an Assertion that requires a kgateway installation, but none was configured",
+	)
 }

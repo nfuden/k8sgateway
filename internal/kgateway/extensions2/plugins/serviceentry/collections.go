@@ -147,12 +147,18 @@ func initServiceEntryCollections(
 		kubetypes.StandardInformer,
 		defaultFilter,
 	)
-	WorkloadEntries := krt.WrapClient(weInformer, commonCols.KrtOpts.ToOptions("WorkloadEntries")...)
+	WorkloadEntries := krt.WrapClient(
+		weInformer,
+		commonCols.KrtOpts.ToOptions("WorkloadEntries")...)
 
 	// compute intermediate state collections
-	SelectingServiceEntries := krt.NewCollection(commonCols.ServiceEntries, func(ctx krt.HandlerContext, i *networkingclient.ServiceEntry) *seSelector {
-		return &seSelector{ServiceEntry: i}
-	}, krt.WithName("SelectingServiceEntries"))
+	SelectingServiceEntries := krt.NewCollection(
+		commonCols.ServiceEntries,
+		func(ctx krt.HandlerContext, i *networkingclient.ServiceEntry) *seSelector {
+			return &seSelector{ServiceEntry: i}
+		},
+		krt.WithName("SelectingServiceEntries"),
+	)
 	SelectedWorkloads, selectedWorkloadsIndex := selectedWorkloads(
 		SelectingServiceEntries,
 		WorkloadEntries,
@@ -161,7 +167,12 @@ func initServiceEntryCollections(
 
 	// init the outputs
 	Backends := backendsCollections(logger, commonCols.ServiceEntries, commonCols.KrtOpts)
-	Endpoints := endpointsCollection(Backends, SelectedWorkloads, selectedWorkloadsIndex, commonCols.KrtOpts)
+	Endpoints := endpointsCollection(
+		Backends,
+		SelectedWorkloads,
+		selectedWorkloadsIndex,
+		commonCols.KrtOpts,
+	)
 	backendsByHostPort := krt.NewIndex(Backends, func(be ir.BackendObjectIR) []hostPortKey {
 		return []hostPortKey{makeHostPortKey(be.CanonicalHostname, int(be.Port))}
 	})
@@ -217,51 +228,62 @@ func selectedWorkloads(
 	})
 
 	// WorkloadEntries: selection logic and conver to LocalityPod
-	selectedWorkloadEntries := krt.NewCollection(WorkloadEntries, func(ctx krt.HandlerContext, we *networkingclient.WorkloadEntry) *selectedWorkload {
-		// find all the SEs that select this we
-		// if there are none, we can stop early
-		selectedByServiceEntries := krt.Fetch(
-			ctx,
-			ServiceEntries,
-			krt.FilterSelectsNonEmpty(we.GetLabels()),
-			krt.FilterIndex(seNsIndex, we.GetNamespace()),
-		)
-		if len(selectedByServiceEntries) == 0 {
-			return nil
-		}
+	selectedWorkloadEntries := krt.NewCollection(
+		WorkloadEntries,
+		func(ctx krt.HandlerContext, we *networkingclient.WorkloadEntry) *selectedWorkload {
+			// find all the SEs that select this we
+			// if there are none, we can stop early
+			selectedByServiceEntries := krt.Fetch(
+				ctx,
+				ServiceEntries,
+				krt.FilterSelectsNonEmpty(we.GetLabels()),
+				krt.FilterIndex(seNsIndex, we.GetNamespace()),
+			)
+			if len(selectedByServiceEntries) == 0 {
+				return nil
+			}
 
-		workload := selectedWorkloadFromEntry(
-			we.GetName(), we.GetNamespace(),
-			we.GetObjectMeta().GetLabels(),
-			&we.Spec,
-			selectedByServiceEntries,
-		)
+			workload := selectedWorkloadFromEntry(
+				we.GetName(), we.GetNamespace(),
+				we.GetObjectMeta().GetLabels(),
+				&we.Spec,
+				selectedByServiceEntries,
+			)
 
-		return &workload
-	}, krt.WithName("ServiceEntrySelectWorkloadEntry"))
+			return &workload
+		},
+		krt.WithName("ServiceEntrySelectWorkloadEntry"),
+	)
 
 	// Pods: selection logic
-	selectedPods := krt.NewCollection(Pods, func(ctx krt.HandlerContext, workload krtcollections.LocalityPod) *selectedWorkload {
-		serviceEntries := krt.Fetch(
-			ctx,
-			ServiceEntries,
-			krt.FilterSelectsNonEmpty(workload.AugmentedLabels),
-			krt.FilterIndex(seNsIndex, workload.Namespace),
-		)
-		if len(serviceEntries) == 0 {
-			return nil
-		}
-		return &selectedWorkload{
-			LocalityPod: workload,
-			selectedBy: slices.Map(serviceEntries, func(s seSelector) krt.Named {
-				return krt.NewNamed(s)
-			}),
-			network: workload.AugmentedLabels[label.TopologyNetwork.Name],
-		}
-	}, krt.WithName("ServiceEntrySelectPod"))
+	selectedPods := krt.NewCollection(
+		Pods,
+		func(ctx krt.HandlerContext, workload krtcollections.LocalityPod) *selectedWorkload {
+			serviceEntries := krt.Fetch(
+				ctx,
+				ServiceEntries,
+				krt.FilterSelectsNonEmpty(workload.AugmentedLabels),
+				krt.FilterIndex(seNsIndex, workload.Namespace),
+			)
+			if len(serviceEntries) == 0 {
+				return nil
+			}
+			return &selectedWorkload{
+				LocalityPod: workload,
+				selectedBy: slices.Map(serviceEntries, func(s seSelector) krt.Named {
+					return krt.NewNamed(s)
+				}),
+				network: workload.AugmentedLabels[label.TopologyNetwork.Name],
+			}
+		},
+		krt.WithName("ServiceEntrySelectPod"),
+	)
 
 	// consolidate Pods and WorkloadEntries
-	allWorkloads := krt.JoinCollection([]krt.Collection[selectedWorkload]{selectedPods, selectedWorkloadEntries}, krt.WithName("ServiceEntrySelectWorkloads"))
+	allWorkloads := krt.JoinCollection(
+		[]krt.Collection[selectedWorkload]{selectedPods, selectedWorkloadEntries},
+		krt.WithName("ServiceEntrySelectWorkloads"),
+	)
 	workloadsByServiceEntry := krt.NewIndex(allWorkloads, func(o selectedWorkload) []string {
 		return slices.Map(o.selectedBy, func(n krt.Named) string {
 			return n.ResourceName()

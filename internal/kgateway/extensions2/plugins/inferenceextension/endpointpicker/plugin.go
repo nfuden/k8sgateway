@@ -80,7 +80,9 @@ func NewPlugin(ctx context.Context, commonCol *common.CommonCollections) *extplu
 	registerTypes(cli)
 
 	// Create an InferencePool krt collection.
-	poolCol := krt.WrapClient(kclient.New[*infextv1a2.InferencePool](commonCol.Client), commonCol.KrtOpts.ToOptions("InferencePool")...)
+	poolCol := krt.WrapClient(
+		kclient.New[*infextv1a2.InferencePool](commonCol.Client),
+		commonCol.KrtOpts.ToOptions("InferencePool")...)
 
 	return NewPluginFromCollections(ctx, commonCol, poolCol)
 }
@@ -96,36 +98,42 @@ func NewPluginFromCollections(
 		Kind:  wellknown.InferencePoolKind,
 	}
 
-	backendCol := krt.NewCollection(poolCol, func(kctx krt.HandlerContext, pool *infextv1a2.InferencePool) *ir.BackendObjectIR {
-		// Create a BackendObjectIR IR representation from the given InferencePool.
-		return &ir.BackendObjectIR{
-			ObjectSource: ir.ObjectSource{
-				Kind:      gk.Kind,
-				Group:     gk.Group,
-				Namespace: pool.Namespace,
-				Name:      pool.Name,
-			},
-			Obj:               pool,
-			Port:              pool.Spec.TargetPortNumber,
-			GvPrefix:          "endpoint-picker",
-			CanonicalHostname: "",
-			ObjIr:             newInferencePool(pool),
-		}
-	}, commonCol.KrtOpts.ToOptions("InferencePoolIR")...)
+	backendCol := krt.NewCollection(
+		poolCol,
+		func(kctx krt.HandlerContext, pool *infextv1a2.InferencePool) *ir.BackendObjectIR {
+			// Create a BackendObjectIR IR representation from the given InferencePool.
+			return &ir.BackendObjectIR{
+				ObjectSource: ir.ObjectSource{
+					Kind:      gk.Kind,
+					Group:     gk.Group,
+					Namespace: pool.Namespace,
+					Name:      pool.Name,
+				},
+				Obj:               pool,
+				Port:              pool.Spec.TargetPortNumber,
+				GvPrefix:          "endpoint-picker",
+				CanonicalHostname: "",
+				ObjIr:             newInferencePool(pool),
+			}
+		},
+		commonCol.KrtOpts.ToOptions("InferencePoolIR")...)
 
-	policyCol := krt.NewCollection(poolCol, func(krtctx krt.HandlerContext, pool *infextv1a2.InferencePool) *ir.PolicyWrapper {
-		// Create a PolicyWrapper IR representation from the given InferencePool.
-		return &ir.PolicyWrapper{
-			ObjectSource: ir.ObjectSource{
-				Group:     gk.Group,
-				Kind:      gk.Kind,
-				Namespace: pool.Namespace,
-				Name:      pool.Name,
-			},
-			Policy:   pool,
-			PolicyIR: newInferencePool(pool),
-		}
-	})
+	policyCol := krt.NewCollection(
+		poolCol,
+		func(krtctx krt.HandlerContext, pool *infextv1a2.InferencePool) *ir.PolicyWrapper {
+			// Create a PolicyWrapper IR representation from the given InferencePool.
+			return &ir.PolicyWrapper{
+				ObjectSource: ir.ObjectSource{
+					Group:     gk.Group,
+					Kind:      gk.Kind,
+					Namespace: pool.Namespace,
+					Name:      pool.Name,
+				},
+				Policy:   pool,
+				PolicyIR: newInferencePool(pool),
+			}
+		},
+	)
 
 	// Return a plugin that contributes a policy and backend.
 	return &extplug.Plugin{
@@ -164,25 +172,45 @@ func (p *endpointPickerPass) Name() string {
 }
 
 // No-op for these standard translation pass methods.
-func (p *endpointPickerPass) ApplyListenerPlugin(ctx context.Context, lctx *ir.ListenerContext, out *listenerv3.Listener) {
+func (p *endpointPickerPass) ApplyListenerPlugin(
+	ctx context.Context,
+	lctx *ir.ListenerContext,
+	out *listenerv3.Listener,
+) {
 }
 
-func (p *endpointPickerPass) ApplyHCM(ctx context.Context, hctx *ir.HcmContext, out *hcmv3.HttpConnectionManager) error {
+func (p *endpointPickerPass) ApplyHCM(
+	ctx context.Context,
+	hctx *ir.HcmContext,
+	out *hcmv3.HttpConnectionManager,
+) error {
 	return nil
 }
 
-func (p *endpointPickerPass) NetworkFilters(ctx context.Context) ([]plugins.StagedNetworkFilter, error) {
+func (p *endpointPickerPass) NetworkFilters(
+	ctx context.Context,
+) ([]plugins.StagedNetworkFilter, error) {
 	return nil, nil
 }
 
-func (p *endpointPickerPass) UpstreamHttpFilters(ctx context.Context) ([]plugins.StagedUpstreamHttpFilter, error) {
+func (p *endpointPickerPass) UpstreamHttpFilters(
+	ctx context.Context,
+) ([]plugins.StagedUpstreamHttpFilter, error) {
 	return nil, nil
 }
 
-func (p *endpointPickerPass) ApplyVhostPlugin(ctx context.Context, vctx *ir.VirtualHostContext, out *routev3.VirtualHost) {
+func (p *endpointPickerPass) ApplyVhostPlugin(
+	ctx context.Context,
+	vctx *ir.VirtualHostContext,
+	out *routev3.VirtualHost,
+) {
 }
 
-func (p *endpointPickerPass) ApplyForRoute(ctx context.Context, rctx *ir.RouteContext, out *routev3.Route) error {
+func (p *endpointPickerPass) ApplyForRoute(
+	ctx context.Context,
+	rctx *ir.RouteContext,
+	out *routev3.Route,
+) error {
 	return nil
 }
 
@@ -267,7 +295,10 @@ func (p *endpointPickerPass) ApplyForBackend(
 }
 
 // HttpFilters inserts one ext_proc filter per used InferencePool.
-func (p *endpointPickerPass) HttpFilters(ctx context.Context, fc ir.FilterChainCommon) ([]plugins.StagedHttpFilter, error) {
+func (p *endpointPickerPass) HttpFilters(
+	ctx context.Context,
+	fc ir.FilterChainCommon,
+) ([]plugins.StagedHttpFilter, error) {
 	if p == nil || len(p.usedPools) == 0 {
 		return nil, nil
 	}
@@ -399,7 +430,11 @@ func buildExtProcCluster(pool *inferencePool) *clusterv3.Cluster {
 							Address: &corev3.Address{
 								Address: &corev3.Address_SocketAddress{
 									SocketAddress: &corev3.SocketAddress{
-										Address:  fmt.Sprintf("%s.%s.svc", pool.configRef.Name, pool.objMeta.Namespace),
+										Address: fmt.Sprintf(
+											"%s.%s.svc",
+											pool.configRef.Name,
+											pool.objMeta.Namespace,
+										),
 										Protocol: corev3.SocketAddress_TCP,
 										PortSpecifier: &corev3.SocketAddress_PortValue{
 											PortValue: uint32(pool.configRef.ports[0].portNum),

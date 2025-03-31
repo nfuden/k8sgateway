@@ -17,7 +17,9 @@ const (
 	filterEnforcedRuntimeKey = "local_rate_limit_enforced"
 )
 
-func toLocalRateLimitFilterConfig(t *v1alpha1.LocalRateLimitPolicy) (*localratelimitv3.LocalRateLimit, error) {
+func toLocalRateLimitFilterConfig(
+	t *v1alpha1.LocalRateLimitPolicy,
+) (*localratelimitv3.LocalRateLimit, error) {
 	if t == nil || *t == (v1alpha1.LocalRateLimitPolicy{}) {
 		return nil, nil
 	}

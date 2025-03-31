@@ -56,7 +56,9 @@ var _ = Describe("Transform", func() {
 
 			err := TransformConfigTemplatesWithApi(bootstrapConfig, api)
 			Expect(err).NotTo(HaveOccurred())
-			Expect(bootstrapConfig.Node.Metadata.Fields["foo"].Kind.(*structpb.Value_StringValue).StringValue).To(Equal("Test"))
+			Expect(
+				bootstrapConfig.Node.Metadata.Fields["foo"].Kind.(*structpb.Value_StringValue).StringValue,
+			).To(Equal("Test"))
 		})
 
 		It("should transform static resources", func() {
@@ -85,7 +87,10 @@ var _ = Describe("Transform", func() {
 			err := TransformConfigTemplatesWithApi(bootstrapConfig, api)
 			Expect(err).NotTo(HaveOccurred())
 
-			expectedAddress := bootstrapConfig.GetStaticResources().GetClusters()[0].GetLoadAssignment().GetEndpoints()[0].GetLbEndpoints()[0].GetEndpoint().GetAddress().GetSocketAddress().GetAddress()
+			expectedAddress := bootstrapConfig.GetStaticResources().GetClusters()[0].GetLoadAssignment().GetEndpoints()[0].GetLbEndpoints()[0].GetEndpoint().
+				GetAddress().
+				GetSocketAddress().
+				GetAddress()
 			Expect(expectedAddress).To(Equal("5.5.5.5"))
 		})
 

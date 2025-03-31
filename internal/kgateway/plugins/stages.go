@@ -134,10 +134,13 @@ func (s StagedFilterList[WellKnown, FilterType]) Swap(i, j int) {
 
 type StagedHttpFilter = StagedFilter[WellKnownFilterStage, *envoyhttp.HttpFilter]
 type StagedNetworkFilter = StagedFilter[WellKnownFilterStage, *envoy_config_listener_v3.Filter]
+
 type StagedUpstreamHttpFilter = StagedFilter[WellKnownUpstreamHTTPFilterStage, *envoyhttp.HttpFilter]
 
 type StagedHttpFilterList = StagedFilterList[WellKnownFilterStage, *envoyhttp.HttpFilter]
+
 type StagedNetworkFilterList = StagedFilterList[WellKnownFilterStage, *envoy_config_listener_v3.Filter]
+
 type StagedUpstreamHttpFilterList = StagedFilterList[WellKnownUpstreamHTTPFilterStage, *envoyhttp.HttpFilter]
 
 // MustNewStagedFilter creates an instance of the named filter with the desired stage.
@@ -145,7 +148,11 @@ type StagedUpstreamHttpFilterList = StagedFilterList[WellKnownUpstreamHTTPFilter
 // Should rarely be used as disregarding an error is bad practice but does make
 // appending easier.
 // If not directly appending consider using NewStagedFilter instead of this function.
-func MustNewStagedFilter(name string, config proto.Message, stage FilterStage[WellKnownFilterStage]) StagedHttpFilter {
+func MustNewStagedFilter(
+	name string,
+	config proto.Message,
+	stage FilterStage[WellKnownFilterStage],
+) StagedHttpFilter {
 	s, _ := NewStagedFilter(name, config, stage)
 	return s
 }
@@ -153,7 +160,11 @@ func MustNewStagedFilter(name string, config proto.Message, stage FilterStage[We
 // NewStagedFilter creates an instance of the named filter with the desired stage.
 // Errors if the config is nil or we cannot determine the type of the config.
 // Config type determination may fail if the config is both  unknown and has no fields.
-func NewStagedFilter(name string, config proto.Message, stage FilterStage[WellKnownFilterStage]) (StagedHttpFilter, error) {
+func NewStagedFilter(
+	name string,
+	config proto.Message,
+	stage FilterStage[WellKnownFilterStage],
+) (StagedHttpFilter, error) {
 	s := StagedHttpFilter{
 		Filter: &envoyhttp.HttpFilter{
 			Name: name,
@@ -162,7 +173,10 @@ func NewStagedFilter(name string, config proto.Message, stage FilterStage[WellKn
 	}
 
 	if config == nil {
-		return s, fmt.Errorf("filters must have a config specified to derive its type filtername:%s", name)
+		return s, fmt.Errorf(
+			"filters must have a config specified to derive its type filtername:%s",
+			name,
+		)
 	}
 
 	marshalledConf, err := utils.MessageToAny(config)

@@ -19,7 +19,11 @@ import (
 // by the deployer.
 
 var ComponentLogLevelEmptyError = func(key string, value string) error {
-	return eris.Errorf("an empty key or value was provided in componentLogLevels: key=%s, value=%s", key, value)
+	return eris.Errorf(
+		"an empty key or value was provided in componentLogLevels: key=%s, value=%s",
+		key,
+		value,
+	)
 }
 
 // Extract the listener ports from a Gateway. These will be used to populate:
@@ -31,7 +35,10 @@ func getPortsValues(gw *api.Gateway) []helmPort {
 		listenerPort := uint16(l.Port)
 
 		// only process this port if we haven't already processed a listener with the same port
-		if slices.IndexFunc(gwPorts, func(p helmPort) bool { return *p.Port == listenerPort }) != -1 {
+		if slices.IndexFunc(
+			gwPorts,
+			func(p helmPort) bool { return *p.Port == listenerPort },
+		) != -1 {
 			continue
 		}
 
@@ -133,7 +140,10 @@ func getIstioContainerValues(config *v1alpha1.IstioContainer) *helmIstioContaine
 }
 
 // Convert istio values from GatewayParameters into helm values to be used by the deployer.
-func getIstioValues(istioIntegrationEnabled bool, istioConfig *v1alpha1.IstioIntegration) *helmIstio {
+func getIstioValues(
+	istioIntegrationEnabled bool,
+	istioConfig *v1alpha1.IstioIntegration,
+) *helmIstio {
 	// if istioConfig is nil, istio sds is disabled and values can be ignored
 	if istioConfig == nil {
 		return &helmIstio{

@@ -55,7 +55,10 @@ func (c LocalityPod) Equals(in LocalityPod) bool {
 		slices.Equal(c.Addresses, in.Addresses)
 }
 
-func newNodeCollection(istioClient kube.Client, krtOptions krtutil.KrtOptions) krt.Collection[NodeMetadata] {
+func newNodeCollection(
+	istioClient kube.Client,
+	krtOptions krtutil.KrtOptions,
+) krt.Collection[NodeMetadata] {
 	nodeClient := kclient.New[*corev1.Node](istioClient)
 	nodes := krt.WrapClient(nodeClient, krtOptions.ToOptions("Nodes")...)
 	return NewNodeMetadataCollection(nodes)
@@ -70,7 +73,10 @@ func NewNodeMetadataCollection(nodes krt.Collection[*corev1.Node]) krt.Collectio
 	})
 }
 
-func NewPodsCollection(istioClient kube.Client, krtOptions krtutil.KrtOptions) krt.Collection[LocalityPod] {
+func NewPodsCollection(
+	istioClient kube.Client,
+	krtOptions krtutil.KrtOptions,
+) krt.Collection[LocalityPod] {
 	podClient := kclient.NewFiltered[*corev1.Pod](istioClient, kclient.Filter{
 		ObjectTransform: kube.StripPodUnusedFields,
 	})
@@ -79,11 +85,17 @@ func NewPodsCollection(istioClient kube.Client, krtOptions krtutil.KrtOptions) k
 	return NewLocalityPodsCollection(nodes, pods, krtOptions)
 }
 
-func NewLocalityPodsCollection(nodes krt.Collection[NodeMetadata], pods krt.Collection[*corev1.Pod], krtOptions krtutil.KrtOptions) krt.Collection[LocalityPod] {
+func NewLocalityPodsCollection(
+	nodes krt.Collection[NodeMetadata],
+	pods krt.Collection[*corev1.Pod],
+	krtOptions krtutil.KrtOptions,
+) krt.Collection[LocalityPod] {
 	return krt.NewCollection(pods, augmentPodLabels(nodes), krtOptions.ToOptions("AugmentPod")...)
 }
 
-func augmentPodLabels(nodes krt.Collection[NodeMetadata]) func(kctx krt.HandlerContext, pod *corev1.Pod) *LocalityPod {
+func augmentPodLabels(
+	nodes krt.Collection[NodeMetadata],
+) func(kctx krt.HandlerContext, pod *corev1.Pod) *LocalityPod {
 	return func(kctx krt.HandlerContext, pod *corev1.Pod) *LocalityPod {
 		labels := maps.Clone(pod.Labels)
 		if labels == nil {

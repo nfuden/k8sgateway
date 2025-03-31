@@ -91,7 +91,15 @@ func (c *Cli) RunCommandWithOutput(ctx context.Context, args ...string) (string,
 
 // Namespaces returns a sorted list of namespaces or an error if one occurred
 func (c *Cli) Namespaces(ctx context.Context) ([]string, error) {
-	stdout, _, err := c.Execute(ctx, "get", "namespaces", "--sort-by", "metadata.name", "-o", "jsonpath={.items[*].metadata.name}")
+	stdout, _, err := c.Execute(
+		ctx,
+		"get",
+		"namespaces",
+		"--sort-by",
+		"metadata.name",
+		"-o",
+		"jsonpath={.items[*].metadata.name}",
+	)
 	if err != nil {
 		return nil, err
 	}
@@ -133,7 +141,11 @@ func (c *Cli) ApplyFilePath(ctx context.Context, filePath string, extraArgs ...s
 
 // ApplyFileWithOutput applies the resources defined in a file,
 // if an error occurred, it will be returned along with the output of the command
-func (c *Cli) ApplyFileWithOutput(ctx context.Context, fileName string, extraArgs ...string) (string, error) {
+func (c *Cli) ApplyFileWithOutput(
+	ctx context.Context,
+	fileName string,
+	extraArgs ...string,
+) (string, error) {
 	applyArgs := append([]string{"apply", "-f", fileName}, extraArgs...)
 
 	fileInput, err := os.Open(fileName)
@@ -183,7 +195,11 @@ func (c *Cli) DeleteFilePath(ctx context.Context, filePath string, extraArgs ...
 
 // DeleteFileWithOutput deletes the resources defined in a file,
 // if an error occurred, it will be returned along with the output of the command
-func (c *Cli) DeleteFileWithOutput(ctx context.Context, fileName string, extraArgs ...string) (string, error) {
+func (c *Cli) DeleteFileWithOutput(
+	ctx context.Context,
+	fileName string,
+	extraArgs ...string,
+) (string, error) {
 	applyArgs := append([]string{"delete", "-f", fileName}, extraArgs...)
 
 	fileInput, err := os.Open(fileName)
@@ -249,7 +265,11 @@ func (c *Cli) labelInner(
 }
 
 // DeploymentRolloutStatus waits for the deployment to complete rolling out
-func (c *Cli) DeploymentRolloutStatus(ctx context.Context, deployment string, extraArgs ...string) error {
+func (c *Cli) DeploymentRolloutStatus(
+	ctx context.Context,
+	deployment string,
+	extraArgs ...string,
+) error {
 	rolloutArgs := append([]string{
 		"rollout",
 		"status",
@@ -261,7 +281,10 @@ func (c *Cli) DeploymentRolloutStatus(ctx context.Context, deployment string, ex
 // StartPortForward creates a PortForwarder based on the provides options, starts it, and returns the PortForwarder
 // If an error was encountered while starting the PortForwarder, it is returned as well
 // NOTE: It is the callers responsibility to close this port-forward
-func (c *Cli) StartPortForward(ctx context.Context, options ...portforward.Option) (portforward.PortForwarder, error) {
+func (c *Cli) StartPortForward(
+	ctx context.Context,
+	options ...portforward.Option,
+) (portforward.PortForwarder, error) {
 	options = append([]portforward.Option{
 		// We define some default values, which users can then override
 		portforward.WithWriters(c.receiver, c.receiver),
@@ -281,7 +304,11 @@ func (c *Cli) StartPortForward(ctx context.Context, options ...portforward.Optio
 
 // CurlFromPod executes a Curl request from the given pod for the given options.
 // It differs from CurlFromEphemeralPod in that it does not use an ephemeral container to execute the Curl command
-func (c *Cli) CurlFromPod(ctx context.Context, podOpts PodExecOptions, options ...curl.Option) (*CurlResponse, error) {
+func (c *Cli) CurlFromPod(
+	ctx context.Context,
+	podOpts PodExecOptions,
+	options ...curl.Option,
+) (*CurlResponse, error) {
 	appendOption := func(option curl.Option) {
 		options = append(options, option)
 	}
@@ -317,7 +344,11 @@ func (c *Cli) CurlFromPod(ctx context.Context, podOpts PodExecOptions, options .
 	return &CurlResponse{StdOut: stdout, StdErr: stderr}, err
 }
 
-func (c *Cli) ExecuteOn(ctx context.Context, kubeContext string, args ...string) (string, string, error) {
+func (c *Cli) ExecuteOn(
+	ctx context.Context,
+	kubeContext string,
+	args ...string,
+) (string, string, error) {
 	args = append([]string{"--context", kubeContext}, args...)
 	return c.Execute(ctx, args...)
 }
@@ -342,12 +373,28 @@ func (c *Cli) Execute(ctx context.Context, args ...string) (string, string, erro
 }
 
 func (c *Cli) Scale(ctx context.Context, namespace string, resource string, replicas uint) error {
-	err := c.RunCommand(ctx, "scale", "-n", namespace, fmt.Sprintf("--replicas=%d", replicas), resource, "--timeout=300s")
+	err := c.RunCommand(
+		ctx,
+		"scale",
+		"-n",
+		namespace,
+		fmt.Sprintf("--replicas=%d", replicas),
+		resource,
+		"--timeout=300s",
+	)
 	if err != nil {
 		return err
 	}
 	time.Sleep(2 * time.Second) // Sleep a bit so the container starts
-	return c.RunCommand(ctx, "wait", "-n", namespace, "--for=condition=available", resource, "--timeout=300s")
+	return c.RunCommand(
+		ctx,
+		"wait",
+		"-n",
+		namespace,
+		"--for=condition=available",
+		resource,
+		"--timeout=300s",
+	)
 }
 
 // RestartDeployment restarts a deployment. It does not wait for the deployment to be ready.
@@ -361,7 +408,11 @@ func (c *Cli) RestartDeployment(ctx context.Context, name string, extraArgs ...s
 }
 
 // RestartDeploymentAndWait restarts a deployment and waits for it to become healthy.
-func (c *Cli) RestartDeploymentAndWait(ctx context.Context, name string, extraArgs ...string) error {
+func (c *Cli) RestartDeploymentAndWait(
+	ctx context.Context,
+	name string,
+	extraArgs ...string,
+) error {
 	if err := c.RestartDeployment(ctx, name, extraArgs...); err != nil {
 		return err
 	}
@@ -381,7 +432,11 @@ func (c *Cli) GetContainerLogs(ctx context.Context, namespace string, name strin
 }
 
 // GetPodsInNsWithLabel returns the pods in the specified namespace with the specified label
-func (c *Cli) GetPodsInNsWithLabel(ctx context.Context, namespace string, label string) ([]string, error) {
+func (c *Cli) GetPodsInNsWithLabel(
+	ctx context.Context,
+	namespace string,
+	label string,
+) ([]string, error) {
 	podStdOut := bytes.NewBuffer(nil)
 	podStdErr := bytes.NewBuffer(nil)
 

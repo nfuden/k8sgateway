@@ -174,7 +174,10 @@ func jsonConvert(in *helmConfig, out interface{}) error {
 	return json.Unmarshal(b, out)
 }
 
-func (d *Deployer) renderChartToObjects(ns, name string, vals map[string]any) ([]client.Object, error) {
+func (d *Deployer) renderChartToObjects(
+	ns, name string,
+	vals map[string]any,
+) ([]client.Object, error) {
 	objs, err := d.Render(name, ns, vals)
 	if err != nil {
 		return nil, err
@@ -189,7 +192,10 @@ func (d *Deployer) renderChartToObjects(ns, name string, vals map[string]any) ([
 
 // getGatewayParametersForGateway returns the a merged GatewayParameters object resulting from the default GwParams object and
 // the GwParam object specifically associated with the given Gateway (if one exists).
-func (d *Deployer) getGatewayParametersForGateway(ctx context.Context, gw *api.Gateway) (*v1alpha1.GatewayParameters, error) {
+func (d *Deployer) getGatewayParametersForGateway(
+	ctx context.Context,
+	gw *api.Gateway,
+) (*v1alpha1.GatewayParameters, error) {
 	logger := log.FromContext(ctx)
 
 	// attempt to get the GatewayParameters name from the Gateway. If we can't find it,
@@ -206,7 +212,9 @@ func (d *Deployer) getGatewayParametersForGateway(ctx context.Context, gw *api.G
 	if group := gw.Spec.Infrastructure.ParametersRef.Group; group != v1alpha1.GroupName {
 		return nil, eris.Errorf("invalid group %s for GatewayParameters", group)
 	}
-	if kind := gw.Spec.Infrastructure.ParametersRef.Kind; kind != api.Kind(wellknown.GatewayParametersGVK.Kind) {
+	if kind := gw.Spec.Infrastructure.ParametersRef.Kind; kind != api.Kind(
+		wellknown.GatewayParametersGVK.Kind,
+	) {
 		return nil, eris.Errorf("invalid kind %s for GatewayParameters", kind)
 	}
 
@@ -215,7 +223,14 @@ func (d *Deployer) getGatewayParametersForGateway(ctx context.Context, gw *api.G
 	gwp := &v1alpha1.GatewayParameters{}
 	err := d.cli.Get(ctx, client.ObjectKey{Namespace: gwpNamespace, Name: gwpName}, gwp)
 	if err != nil {
-		return nil, getGatewayParametersError(err, gwpNamespace, gwpName, gw.GetNamespace(), gw.GetName(), "Gateway")
+		return nil, getGatewayParametersError(
+			err,
+			gwpNamespace,
+			gwpName,
+			gw.GetNamespace(),
+			gw.GetName(),
+			"Gateway",
+		)
 	}
 
 	defaultGwp, err := d.getDefaultGatewayParameters(ctx, gw)
@@ -229,7 +244,10 @@ func (d *Deployer) getGatewayParametersForGateway(ctx context.Context, gw *api.G
 }
 
 // gets the default GatewayParameters associated with the GatewayClass of the provided Gateway
-func (d *Deployer) getDefaultGatewayParameters(ctx context.Context, gw *api.Gateway) (*v1alpha1.GatewayParameters, error) {
+func (d *Deployer) getDefaultGatewayParameters(
+	ctx context.Context,
+	gw *api.Gateway,
+) (*v1alpha1.GatewayParameters, error) {
 	gwc, err := d.getGatewayClassFromGateway(ctx, gw)
 	if err != nil {
 		return nil, err
@@ -238,7 +256,10 @@ func (d *Deployer) getDefaultGatewayParameters(ctx context.Context, gw *api.Gate
 }
 
 // Gets the GatewayParameters object associated with a given GatewayClass.
-func (d *Deployer) getGatewayParametersForGatewayClass(ctx context.Context, gwc *api.GatewayClass) (*v1alpha1.GatewayParameters, error) {
+func (d *Deployer) getGatewayParametersForGatewayClass(
+	ctx context.Context,
+	gwc *api.GatewayClass,
+) (*v1alpha1.GatewayParameters, error) {
 	logger := log.FromContext(ctx)
 
 	defaultGwp := getInMemoryGatewayParameters(gwc.GetName(), d.inputs.ImageInfo)
@@ -282,7 +303,10 @@ func (d *Deployer) getGatewayParametersForGatewayClass(ctx context.Context, gwc 
 	return mergedGwp, nil
 }
 
-func (d *Deployer) getGatewayClassFromGateway(ctx context.Context, gw *api.Gateway) (*api.GatewayClass, error) {
+func (d *Deployer) getGatewayClassFromGateway(
+	ctx context.Context,
+	gw *api.Gateway,
+) (*api.GatewayClass, error) {
 	if gw == nil {
 		return nil, eris.New("nil Gateway")
 	}
@@ -293,13 +317,20 @@ func (d *Deployer) getGatewayClassFromGateway(ctx context.Context, gw *api.Gatew
 	gwc := &api.GatewayClass{}
 	err := d.cli.Get(ctx, client.ObjectKey{Name: string(gw.Spec.GatewayClassName)}, gwc)
 	if err != nil {
-		return nil, eris.Errorf("failed to get GatewayClass for Gateway %s/%s", gw.GetName(), gw.GetNamespace())
+		return nil, eris.Errorf(
+			"failed to get GatewayClass for Gateway %s/%s",
+			gw.GetName(),
+			gw.GetNamespace(),
+		)
 	}
 
 	return gwc, nil
 }
 
-func (d *Deployer) getValues(gw *api.Gateway, gwParam *v1alpha1.GatewayParameters) (*helmConfig, error) {
+func (d *Deployer) getValues(
+	gw *api.Gateway,
+	gwParam *v1alpha1.GatewayParameters,
+) (*helmConfig, error) {
 	// construct the default values
 	vals := &helmConfig{
 		Gateway: &helmGateway{
@@ -442,12 +473,24 @@ func (d *Deployer) Render(name, ns string, vals map[string]any) ([]client.Object
 
 	release, err := install.RunWithContext(installCtx, d.chart, vals)
 	if err != nil {
-		return nil, fmt.Errorf("failed to render helm chart for %s %s.%s: %w", chartType, ns, name, err)
+		return nil, fmt.Errorf(
+			"failed to render helm chart for %s %s.%s: %w",
+			chartType,
+			ns,
+			name,
+			err,
+		)
 	}
 
 	objs, err := ConvertYAMLToObjects(d.cli.Scheme(), []byte(release.Manifest))
 	if err != nil {
-		return nil, fmt.Errorf("failed to convert helm manifest yaml to objects for %s %s.%s: %w", chartType, ns, name, err)
+		return nil, fmt.Errorf(
+			"failed to convert helm manifest yaml to objects for %s %s.%s: %w",
+			chartType,
+			ns,
+			name,
+			err,
+		)
 	}
 	return objs, nil
 }
@@ -475,7 +518,12 @@ func (d *Deployer) GetObjsToDeploy(ctx context.Context, gw *api.Gateway) ([]clie
 
 	vals, err := d.getValues(gw, gwParam)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get values to render objects for gateway %s.%s: %w", gw.GetNamespace(), gw.GetName(), err)
+		return nil, fmt.Errorf(
+			"failed to get values to render objects for gateway %s.%s: %w",
+			gw.GetNamespace(),
+			gw.GetName(),
+			err,
+		)
 	}
 	logger.V(1).Info("got deployer helm values",
 		"gatewayName", gw.GetName(),
@@ -487,11 +535,21 @@ func (d *Deployer) GetObjsToDeploy(ctx context.Context, gw *api.Gateway) ([]clie
 	var convertedVals map[string]any
 	err = jsonConvert(vals, &convertedVals)
 	if err != nil {
-		return nil, fmt.Errorf("failed to convert helm values for gateway %s.%s: %w", gw.GetNamespace(), gw.GetName(), err)
+		return nil, fmt.Errorf(
+			"failed to convert helm values for gateway %s.%s: %w",
+			gw.GetNamespace(),
+			gw.GetName(),
+			err,
+		)
 	}
 	objs, err := d.renderChartToObjects(gw.Namespace, gw.Name, convertedVals)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get objects to deploy for gateway %s.%s: %w", gw.GetNamespace(), gw.GetName(), err)
+		return nil, fmt.Errorf(
+			"failed to get objects to deploy for gateway %s.%s: %w",
+			gw.GetNamespace(),
+			gw.GetName(),
+			err,
+		)
 	}
 
 	// Set owner ref
@@ -558,9 +616,15 @@ func (d *Deployer) GetEndpointPickerObjs(pool *infextv1a2.InferencePool) ([]clie
 func (d *Deployer) DeployObjs(ctx context.Context, objs []client.Object) error {
 	logger := log.FromContext(ctx)
 	for _, obj := range objs {
-		logger.V(1).Info("deploying object", "kind", obj.GetObjectKind(), "namespace", obj.GetNamespace(), "name", obj.GetName())
+		logger.V(1).
+			Info("deploying object", "kind", obj.GetObjectKind(), "namespace", obj.GetNamespace(), "name", obj.GetName())
 		if err := d.cli.Patch(ctx, obj, client.Apply, client.ForceOwnership, client.FieldOwner(d.inputs.ControllerName)); err != nil {
-			return fmt.Errorf("failed to apply object %s %s: %w", obj.GetObjectKind().GroupVersionKind().String(), obj.GetName(), err)
+			return fmt.Errorf(
+				"failed to apply object %s %s: %w",
+				obj.GetObjectKind().GroupVersionKind().String(),
+				obj.GetName(),
+				err,
+			)
 		}
 	}
 	return nil
@@ -580,7 +644,10 @@ func (d *Deployer) EnsureFinalizer(ctx context.Context, pool *infextv1a2.Inferen
 
 // CleanupClusterScopedResources deletes the ClusterRoleBinding for the given pool.
 // TODO [danehans]: EPP should use role and rolebinding RBAC: https://github.com/kubernetes-sigs/gateway-api-inference-extension/issues/224
-func (d *Deployer) CleanupClusterScopedResources(ctx context.Context, pool *infextv1a2.InferencePool) error {
+func (d *Deployer) CleanupClusterScopedResources(
+	ctx context.Context,
+	pool *infextv1a2.InferencePool,
+) error {
 	// The same release name as in the Helm template.
 	releaseName := fmt.Sprintf("%s-endpoint-picker", pool.Name)
 

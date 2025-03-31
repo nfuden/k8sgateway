@@ -240,9 +240,11 @@ func FromService(svc *corev1.Service) Service {
 }
 
 func FromServiceEntry(se *istionetworking.ServiceEntry) Service {
-	addrs := append(se.Spec.GetAddresses(), slices.Map(se.Status.GetAddresses(), func(a *networkingv1beta1.ServiceEntryAddress) string {
-		return a.Value
-	})...)
+	addrs := append(
+		se.Spec.GetAddresses(),
+		slices.Map(se.Status.GetAddresses(), func(a *networkingv1beta1.ServiceEntryAddress) string {
+			return a.Value
+		})...)
 
 	return Service{
 		Object:    se,

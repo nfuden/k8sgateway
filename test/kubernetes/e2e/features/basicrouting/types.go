@@ -13,7 +13,11 @@ import (
 var (
 	// manifests
 	exampleServiceManifest   = filepath.Join(fsutils.MustGetThisDir(), "testdata", "service.yaml")
-	gatewayWithRouteManifest = filepath.Join(fsutils.MustGetThisDir(), "testdata", "gateway-with-route.yaml")
+	gatewayWithRouteManifest = filepath.Join(
+		fsutils.MustGetThisDir(),
+		"testdata",
+		"gateway-with-route.yaml",
+	)
 
 	// objects
 	proxyObjectMeta = metav1.ObjectMeta{

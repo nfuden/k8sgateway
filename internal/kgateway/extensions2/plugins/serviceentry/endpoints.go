@@ -24,7 +24,11 @@ import (
 // TODO it would be nice to re-use the EndpointsForBackend collection to handle this.
 // rather than doing it as part of `initBackend` which doesn't have a way to apply
 // DestinationRule (or any per-client policy) properly.
-func buildInlineCLA(ctx context.Context, be ir.BackendObjectIR, se *networkingclient.ServiceEntry) *endpointv3.ClusterLoadAssignment {
+func buildInlineCLA(
+	ctx context.Context,
+	be ir.BackendObjectIR,
+	se *networkingclient.ServiceEntry,
+) *endpointv3.ClusterLoadAssignment {
 	logger := contextutils.LoggerFrom(ctx)
 
 	var inlineWorkloads []selectedWorkload
@@ -58,7 +62,11 @@ func buildInlineCLA(ctx context.Context, be ir.BackendObjectIR, se *networkingcl
 	if endpointsForBackend == nil {
 		// this is pretty much impossible, but `ir.NewEndpointsForBackend(be)`
 		// returns a pointer, so this is for safety
-		logger.DPanicw("buildInlineCLA for ServiceEntry had nil endpointsForBackend", "ServiceEntry", krt.NewNamed(se).ResourceName())
+		logger.DPanicw(
+			"buildInlineCLA for ServiceEntry had nil endpointsForBackend",
+			"ServiceEntry",
+			krt.NewNamed(se).ResourceName(),
+		)
 		return nil
 	}
 
@@ -86,7 +94,11 @@ func endpointsCollection(
 			if !isEDSServiceEntry(se) {
 				return nil
 			}
-			workloads := krt.Fetch(ctx, SelectedWorkloads, krt.FilterIndex(selectedWorkloadsIndex, serviceEntryKey(se)))
+			workloads := krt.Fetch(
+				ctx,
+				SelectedWorkloads,
+				krt.FilterIndex(selectedWorkloadsIndex, serviceEntryKey(se)),
+			)
 
 			return endpointsFromWorkloads(se, be, workloads)
 		},
@@ -145,7 +157,12 @@ func endpointsFromWorkloads(
 		allowAutoMTLS := se.Spec.GetLocation() == networking.ServiceEntry_MESH_INTERNAL
 
 		ep := ir.EndpointWithMd{
-			LbEndpoint: krtcollections.CreateLBEndpoint(address, uint32(epPort), workload.AugmentedLabels, allowAutoMTLS),
+			LbEndpoint: krtcollections.CreateLBEndpoint(
+				address,
+				uint32(epPort),
+				workload.AugmentedLabels,
+				allowAutoMTLS,
+			),
 			EndpointMd: ir.EndpointMetadata{
 				Labels: workload.AugmentedLabels,
 			},

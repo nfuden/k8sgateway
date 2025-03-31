@@ -1085,7 +1085,11 @@ func TestEndpoints(t *testing.T) {
 			g := gomega.NewWithT(t)
 			mock := krttest.NewMock(t, tc.inputs)
 			nodes := NewNodeMetadataCollection(krttest.GetMockCollection[*corev1.Node](mock))
-			pods := NewLocalityPodsCollection(nodes, krttest.GetMockCollection[*corev1.Pod](mock), krtutil.KrtOptions{})
+			pods := NewLocalityPodsCollection(
+				nodes,
+				krttest.GetMockCollection[*corev1.Pod](mock),
+				krtutil.KrtOptions{},
+			)
 			pods.WaitUntilSynced(context.Background().Done())
 			endpointSettings := EndpointsSettings{
 				EnableAutoMtls: false,
@@ -1095,16 +1099,19 @@ func TestEndpoints(t *testing.T) {
 			endpointSlices := krttest.GetMockCollection[*discoveryv1.EndpointSlice](mock)
 
 			// Initialize the EndpointSlicesByService index
-			endpointSlicesByService := krt.NewIndex(endpointSlices, func(es *discoveryv1.EndpointSlice) []types.NamespacedName {
-				svcName, ok := es.Labels[discoveryv1.LabelServiceName]
-				if !ok {
-					return nil
-				}
-				return []types.NamespacedName{{
-					Namespace: es.Namespace,
-					Name:      svcName,
-				}}
-			})
+			endpointSlicesByService := krt.NewIndex(
+				endpointSlices,
+				func(es *discoveryv1.EndpointSlice) []types.NamespacedName {
+					svcName, ok := es.Labels[discoveryv1.LabelServiceName]
+					if !ok {
+						return nil
+					}
+					return []types.NamespacedName{{
+						Namespace: es.Namespace,
+						Name:      svcName,
+					}}
+				},
+			)
 
 			ei := EndpointsInputs{
 				Backends:                krttest.GetMockCollection[ir.BackendObjectIR](mock),

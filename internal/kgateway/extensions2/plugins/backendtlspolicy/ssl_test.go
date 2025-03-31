@@ -103,8 +103,14 @@ func TestUpstreamTlsConfig(t *testing.T) {
 			if tlsCtx.Sni != string(tt.expectedTls.Sni) {
 				t.Errorf("expected sni '%v' but got '%v'", tt.expectedTls.Sni, tlsCtx.Sni)
 			}
-			caStr := tlsCtx.GetCommonTlsContext().GetValidationContext().GetTrustedCa().GetInlineString()
-			expectedCaStr := tt.expectedTls.GetCommonTlsContext().GetValidationContext().GetTrustedCa().GetInlineString()
+			caStr := tlsCtx.GetCommonTlsContext().
+				GetValidationContext().
+				GetTrustedCa().
+				GetInlineString()
+			expectedCaStr := tt.expectedTls.GetCommonTlsContext().
+				GetValidationContext().
+				GetTrustedCa().
+				GetInlineString()
 			if caStr != expectedCaStr {
 				t.Error("expected CA:", expectedCaStr, "found CA:", caStr)
 			}

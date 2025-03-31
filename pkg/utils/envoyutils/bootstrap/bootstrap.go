@@ -90,10 +90,12 @@ func FromFilter(filterName string, msg proto.Message) (string, error) {
 	listener := &envoy_config_listener_v3.Listener{
 		Name: "placeholder_listener",
 		Address: &envoy_config_core_v3.Address{
-			Address: &envoy_config_core_v3.Address_SocketAddress{SocketAddress: &envoy_config_core_v3.SocketAddress{
-				Address:       "0.0.0.0",
-				PortSpecifier: &envoy_config_core_v3.SocketAddress_PortValue{PortValue: 8081},
-			}},
+			Address: &envoy_config_core_v3.Address_SocketAddress{
+				SocketAddress: &envoy_config_core_v3.SocketAddress{
+					Address:       "0.0.0.0",
+					PortSpecifier: &envoy_config_core_v3.SocketAddress_PortValue{PortValue: 8081},
+				},
+			},
 		},
 		FilterChains: []*envoy_config_listener_v3.FilterChain{
 			{
@@ -110,7 +112,9 @@ func FromFilter(filterName string, msg proto.Message) (string, error) {
 		},
 	}
 
-	return FromEnvoyResources(&EnvoyResources{Listeners: []*envoy_config_listener_v3.Listener{listener}})
+	return FromEnvoyResources(
+		&EnvoyResources{Listeners: []*envoy_config_listener_v3.Listener{listener}},
+	)
 }
 
 // FromSnapshot accepts an xds Snapshot and converts it into valid bootstrap json.
@@ -272,7 +276,9 @@ func getHcmForFilterChain(fc *envoy_config_listener_v3.FilterChain) (
 	error,
 ) {
 	for _, f := range fc.GetFilters() {
-		if f.GetTypedConfig().GetTypeUrl() == "type.googleapis.com/envoy.extensions.filters.network.http_connection_manager.v3.HttpConnectionManager" {
+		if f.GetTypedConfig().
+			GetTypeUrl() ==
+			"type.googleapis.com/envoy.extensions.filters.network.http_connection_manager.v3.HttpConnectionManager" {
 			hcmAny, err := utils.AnyToMessage(f.GetTypedConfig())
 			if err != nil {
 				return nil, nil, err
@@ -293,7 +299,10 @@ func getHcmForFilterChain(fc *envoy_config_listener_v3.FilterChain) (
 // findTargetedClusters accepts a pointer to a RouteConfiguration and a hash set of strings. It
 // finds all clusters and weighted clusters targeted by routes on the virtual hosts in the RouteConfiguration
 // and adds their names to the routedCluster hash set. routedCluster is mutated in this function.
-func findTargetedClusters(r *envoy_config_route_v3.RouteConfiguration, routedCluster map[string]struct{}) {
+func findTargetedClusters(
+	r *envoy_config_route_v3.RouteConfiguration,
+	routedCluster map[string]struct{},
+) {
 	for _, v := range r.GetVirtualHosts() {
 		for _, r := range v.GetRoutes() {
 			if r.GetRoute() == nil {

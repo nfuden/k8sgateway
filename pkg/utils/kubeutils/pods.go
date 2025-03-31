@@ -65,7 +65,9 @@ func GetPodsForDeploymentWithPredicate(
 	deploy metav1.ObjectMeta,
 	predicate func(pod corev1.Pod) bool,
 ) ([]string, error) {
-	deployment, err := kubeClient.AppsV1().Deployments(deploy.GetNamespace()).Get(ctx, deploy.GetName(), metav1.GetOptions{})
+	deployment, err := kubeClient.AppsV1().
+		Deployments(deploy.GetNamespace()).
+		Get(ctx, deploy.GetName(), metav1.GetOptions{})
 	if err != nil {
 		return nil, err
 	}
@@ -102,7 +104,9 @@ func GetPodsForService(
 		return nil, err
 	}
 
-	service, err := kubeClient.CoreV1().Services(serviceNamespace).Get(ctx, serviceName, metav1.GetOptions{})
+	service, err := kubeClient.CoreV1().
+		Services(serviceNamespace).
+		Get(ctx, serviceName, metav1.GetOptions{})
 	if err != nil {
 		return nil, err
 	}

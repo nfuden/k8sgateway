@@ -76,9 +76,14 @@ func (s *testingSuite) SetupSuite() {
 	s.manifestObjects = map[string][]client.Object{
 		testdefaults.NginxPodManifest: {testdefaults.NginxPod, testdefaults.NginxSvc},
 		gatewayWithoutParameters:      {proxyService, proxyServiceAccount, proxyDeployment},
-		gatewayWithParameters:         {proxyService, proxyServiceAccount, proxyDeployment, gwParamsDefault},
-		gatewayParametersCustom:       {gwParamsCustom},
-		selfManagedGateway:            {gwParamsDefault},
+		gatewayWithParameters: {
+			proxyService,
+			proxyServiceAccount,
+			proxyDeployment,
+			gwParamsDefault,
+		},
+		gatewayParametersCustom: {gwParamsCustom},
+		selfManagedGateway:      {gwParamsDefault},
 	}
 }
 
@@ -100,7 +105,9 @@ func (s *testingSuite) AfterTest(suiteName, testName string) {
 	for _, manifest := range manifests {
 		err := s.testInstallation.Actions.Kubectl().DeleteFileSafe(s.ctx, manifest)
 		s.Require().NoError(err)
-		s.testInstallation.Assertions.EventuallyObjectsNotExist(s.ctx, s.manifestObjects[manifest]...)
+		s.testInstallation.Assertions.EventuallyObjectsNotExist(
+			s.ctx,
+			s.manifestObjects[manifest]...)
 	}
 
 	// make sure the proxy pods are gone before the next test starts
@@ -114,11 +121,19 @@ func (s *testingSuite) AfterTest(suiteName, testName string) {
 }
 
 func (s *testingSuite) TestProvisionDeploymentAndService() {
-	s.testInstallation.Assertions.EventuallyReadyReplicas(s.ctx, proxyDeployment.ObjectMeta, gomega.Equal(1))
+	s.testInstallation.Assertions.EventuallyReadyReplicas(
+		s.ctx,
+		proxyDeployment.ObjectMeta,
+		gomega.Equal(1),
+	)
 }
 
 func (s *testingSuite) TestConfigureProxiesFromGatewayParameters() {
-	s.testInstallation.Assertions.EventuallyReadyReplicas(s.ctx, proxyDeployment.ObjectMeta, gomega.Equal(1))
+	s.testInstallation.Assertions.EventuallyReadyReplicas(
+		s.ctx,
+		proxyDeployment.ObjectMeta,
+		gomega.Equal(1),
+	)
 
 	// check that the labels and annotations got passed through from GatewayParameters to the ServiceAccount
 	sa := &corev1.ServiceAccount{}
@@ -159,7 +174,11 @@ func (s *testingSuite) TestConfigureProxiesFromGatewayParameters() {
 	})
 
 	// Assert that the expected custom configuration exists.
-	s.testInstallation.Assertions.EventuallyReadyReplicas(s.ctx, proxyDeployment.ObjectMeta, gomega.Equal(2))
+	s.testInstallation.Assertions.EventuallyReadyReplicas(
+		s.ctx,
+		proxyDeployment.ObjectMeta,
+		gomega.Equal(2),
+	)
 
 	s.testInstallation.Assertions.AssertEnvoyAdminApi(
 		s.ctx,
@@ -170,20 +189,35 @@ func (s *testingSuite) TestConfigureProxiesFromGatewayParameters() {
 }
 
 func (s *testingSuite) TestProvisionResourcesUpdatedWithValidParameters() {
-	s.testInstallation.Assertions.EventuallyReadyReplicas(s.ctx, proxyDeployment.ObjectMeta, gomega.Equal(1))
+	s.testInstallation.Assertions.EventuallyReadyReplicas(
+		s.ctx,
+		proxyDeployment.ObjectMeta,
+		gomega.Equal(1),
+	)
 
 	// modify the number of replicas in the GatewayParameters
-	s.patchGatewayParameters(gwParamsDefault.ObjectMeta, func(parameters *v1alpha1.GatewayParameters) {
-		parameters.Spec.Kube.Deployment.Replicas = ptr.To(uint32(2))
-	})
+	s.patchGatewayParameters(
+		gwParamsDefault.ObjectMeta,
+		func(parameters *v1alpha1.GatewayParameters) {
+			parameters.Spec.Kube.Deployment.Replicas = ptr.To(uint32(2))
+		},
+	)
 
 	// the GatewayParameters modification should cause the deployer to re-run and update the
 	// deployment to have 2 replicas
-	s.testInstallation.Assertions.EventuallyReadyReplicas(s.ctx, proxyDeployment.ObjectMeta, gomega.Equal(2))
+	s.testInstallation.Assertions.EventuallyReadyReplicas(
+		s.ctx,
+		proxyDeployment.ObjectMeta,
+		gomega.Equal(2),
+	)
 }
 
 func (s *testingSuite) TestProvisionResourcesNotUpdatedWithInvalidParameters() {
-	s.testInstallation.Assertions.EventuallyReadyReplicas(s.ctx, proxyDeployment.ObjectMeta, gomega.Equal(1))
+	s.testInstallation.Assertions.EventuallyReadyReplicas(
+		s.ctx,
+		proxyDeployment.ObjectMeta,
+		gomega.Equal(1),
+	)
 
 	var (
 		// initially, allowPrivilegeEscalation should be true and privileged should not be set
@@ -191,35 +225,45 @@ func (s *testingSuite) TestProvisionResourcesNotUpdatedWithInvalidParameters() {
 		origPrivileged               = gomega.BeNil()
 	)
 
-	s.patchGatewayParameters(gwParamsDefault.ObjectMeta, func(parameters *v1alpha1.GatewayParameters) {
-		gomega.Expect(proxyDeployment.Spec.Template.Spec.Containers).To(gomega.HaveLen(1))
-		envoyContainer := proxyDeployment.Spec.Template.Spec.Containers[0]
-		gomega.Expect(envoyContainer.SecurityContext.AllowPrivilegeEscalation).To(origAllowPrivilegeEscalation)
-		gomega.Expect(envoyContainer.SecurityContext.Privileged).To(origPrivileged)
+	s.patchGatewayParameters(
+		gwParamsDefault.ObjectMeta,
+		func(parameters *v1alpha1.GatewayParameters) {
+			gomega.Expect(proxyDeployment.Spec.Template.Spec.Containers).To(gomega.HaveLen(1))
+			envoyContainer := proxyDeployment.Spec.Template.Spec.Containers[0]
+			gomega.Expect(envoyContainer.SecurityContext.AllowPrivilegeEscalation).
+				To(origAllowPrivilegeEscalation)
+			gomega.Expect(envoyContainer.SecurityContext.Privileged).To(origPrivileged)
 
-		// try to modify GatewayParameters with invalid values
-		// K8s won't allow setting both allowPrivilegeEscalation=false and privileged=true,
-		// so the proposed patch should fail and the original values should be retained.
-		parameters.Spec.Kube.EnvoyContainer = &v1alpha1.EnvoyContainer{
-			SecurityContext: &corev1.SecurityContext{
-				Privileged:               ptr.To(true),
-				AllowPrivilegeEscalation: ptr.To(false),
-			},
-		}
+			// try to modify GatewayParameters with invalid values
+			// K8s won't allow setting both allowPrivilegeEscalation=false and privileged=true,
+			// so the proposed patch should fail and the original values should be retained.
+			parameters.Spec.Kube.EnvoyContainer = &v1alpha1.EnvoyContainer{
+				SecurityContext: &corev1.SecurityContext{
+					Privileged:               ptr.To(true),
+					AllowPrivilegeEscalation: ptr.To(false),
+				},
+			}
 
-		// This is valid, but should be ignored, because another part of this patch is invalid
-		parameters.Spec.Kube.Deployment.Replicas = ptr.To(uint32(2))
-	})
+			// This is valid, but should be ignored, because another part of this patch is invalid
+			parameters.Spec.Kube.Deployment.Replicas = ptr.To(uint32(2))
+		},
+	)
 
 	// We keep checking for some amount of time (30s) to account for the time it might take for
 	// the deployer to run and re-provision resources. If the original values are consistently
 	// retained after that amount of time, we can be confident that the deployer has had time to
 	// consume the new values and fail to apply them.
 	s.testInstallation.Assertions.Gomega.Consistently(func(g gomega.Gomega) {
-		err := s.testInstallation.ClusterContext.Client.Get(s.ctx, client.ObjectKeyFromObject(proxyDeployment), proxyDeployment)
+		err := s.testInstallation.ClusterContext.Client.Get(
+			s.ctx,
+			client.ObjectKeyFromObject(proxyDeployment),
+			proxyDeployment,
+		)
 		g.Expect(err).NotTo(gomega.HaveOccurred())
-		g.Expect(proxyDeployment.Spec.Template.Spec.Containers[0].SecurityContext.AllowPrivilegeEscalation).To(origAllowPrivilegeEscalation)
-		g.Expect(proxyDeployment.Spec.Template.Spec.Containers[0].SecurityContext.Privileged).To(origPrivileged)
+		g.Expect(proxyDeployment.Spec.Template.Spec.Containers[0].SecurityContext.AllowPrivilegeEscalation).
+			To(origAllowPrivilegeEscalation)
+		g.Expect(proxyDeployment.Spec.Template.Spec.Containers[0].SecurityContext.Privileged).
+			To(origPrivileged)
 		g.Expect(proxyDeployment.Spec.Replicas).To(gstruct.PointTo(gomega.Equal(int32(1))))
 	}, "30s", "1s").Should(gomega.Succeed())
 }
@@ -234,7 +278,8 @@ func (s *testingSuite) TestSelfManagedGateway() {
 
 		accepted := false
 		for _, conditions := range gw.Status.Conditions {
-			if conditions.Type == string(gwv1.GatewayConditionAccepted) && conditions.Status == metav1.ConditionTrue {
+			if conditions.Type == string(gwv1.GatewayConditionAccepted) &&
+				conditions.Status == metav1.ConditionTrue {
 				accepted = true
 				break
 			}
@@ -242,7 +287,12 @@ func (s *testingSuite) TestSelfManagedGateway() {
 		assert.True(c, accepted, "gateway status not accepted")
 	}, 10*time.Second, 1*time.Second)
 
-	s.testInstallation.Assertions.ConsistentlyObjectsNotExist(s.ctx, proxyService, proxyServiceAccount, proxyDeployment)
+	s.testInstallation.Assertions.ConsistentlyObjectsNotExist(
+		s.ctx,
+		proxyService,
+		proxyServiceAccount,
+		proxyDeployment,
+	)
 }
 
 // patchGateway accepts a reference to an object, and a patch function. It then queries the object,
@@ -265,7 +315,10 @@ func (s *testingSuite) patchGateway(objectMeta metav1.ObjectMeta, patchFn func(*
 
 // patchGatewayParameters accepts a reference to an object, and a patch function
 // It then queries the object, performs the patch in memory, and writes the object back to the cluster
-func (s *testingSuite) patchGatewayParameters(objectMeta metav1.ObjectMeta, patchFn func(*v1alpha1.GatewayParameters)) {
+func (s *testingSuite) patchGatewayParameters(
+	objectMeta metav1.ObjectMeta,
+	patchFn func(*v1alpha1.GatewayParameters),
+) {
 	gatewayParameters := &v1alpha1.GatewayParameters{}
 	err := s.testInstallation.ClusterContext.Client.Get(s.ctx, client.ObjectKey{
 		Name:      objectMeta.GetName(),
@@ -276,11 +329,18 @@ func (s *testingSuite) patchGatewayParameters(objectMeta metav1.ObjectMeta, patc
 
 	patchFn(modifiedGatewayParameters)
 
-	err = s.testInstallation.ClusterContext.Client.Patch(s.ctx, modifiedGatewayParameters, client.MergeFrom(gatewayParameters))
+	err = s.testInstallation.ClusterContext.Client.Patch(
+		s.ctx,
+		modifiedGatewayParameters,
+		client.MergeFrom(gatewayParameters),
+	)
 	s.Assert().NoError(err, "can update the GatewayParameters object")
 }
 
-func serverInfoLogLevelAssertion(testInstallation *e2e.TestInstallation, expectedLogLevel, expectedComponentLogLevel string) func(ctx context.Context, adminClient *admincli.Client) {
+func serverInfoLogLevelAssertion(
+	testInstallation *e2e.TestInstallation,
+	expectedLogLevel, expectedComponentLogLevel string,
+) func(ctx context.Context, adminClient *admincli.Client) {
 	return func(ctx context.Context, adminClient *admincli.Client) {
 		testInstallation.Assertions.Gomega.Eventually(func(g gomega.Gomega) {
 			serverInfo, err := adminClient.GetServerInfo(ctx)
@@ -297,7 +357,9 @@ func serverInfoLogLevelAssertion(testInstallation *e2e.TestInstallation, expecte
 	}
 }
 
-func xdsClusterAssertion(testInstallation *e2e.TestInstallation) func(ctx context.Context, adminClient *admincli.Client) {
+func xdsClusterAssertion(
+	testInstallation *e2e.TestInstallation,
+) func(ctx context.Context, adminClient *admincli.Client) {
 	return func(ctx context.Context, adminClient *admincli.Client) {
 		testInstallation.Assertions.Gomega.Eventually(func(g gomega.Gomega) {
 			clusters, err := adminClient.GetStaticClusters(ctx)
@@ -307,12 +369,19 @@ func xdsClusterAssertion(testInstallation *e2e.TestInstallation) func(ctx contex
 			g.Expect(ok).To(gomega.BeTrue(), "xds_cluster in list")
 
 			g.Expect(xdsCluster.GetLoadAssignment().GetEndpoints()).To(gomega.HaveLen(1))
-			g.Expect(xdsCluster.GetLoadAssignment().GetEndpoints()[0].GetLbEndpoints()).To(gomega.HaveLen(1))
-			xdsSocketAddress := xdsCluster.GetLoadAssignment().GetEndpoints()[0].GetLbEndpoints()[0].GetEndpoint().GetAddress().GetSocketAddress()
+			g.Expect(xdsCluster.GetLoadAssignment().GetEndpoints()[0].GetLbEndpoints()).
+				To(gomega.HaveLen(1))
+			xdsSocketAddress := xdsCluster.GetLoadAssignment().GetEndpoints()[0].GetLbEndpoints()[0].GetEndpoint().
+				GetAddress().
+				GetSocketAddress()
 			g.Expect(xdsSocketAddress).NotTo(gomega.BeNil())
 
 			g.Expect(xdsSocketAddress.GetAddress()).To(gomega.Equal(
-				fmt.Sprintf("%s.%s.svc.cluster.local", wellknown.DefaultXdsService, testInstallation.Metadata.InstallNamespace),
+				fmt.Sprintf(
+					"%s.%s.svc.cluster.local",
+					wellknown.DefaultXdsService,
+					testInstallation.Metadata.InstallNamespace,
+				),
 			), "xds socket address points to kgateway service, in installation namespace")
 
 			g.Expect(xdsSocketAddress.GetPortValue()).To(gomega.Equal(wellknown.DefaultXdsPort),

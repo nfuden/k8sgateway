@@ -81,7 +81,12 @@ func (s *clientTlsTestingSuite) TestBackendTLSPolicyAndStatus() {
 			err := s.testInstallation.Actions.Kubectl().DeleteFileSafe(s.ctx, manifest)
 			s.Require().NoError(err)
 		}
-		s.testInstallation.Assertions.EventuallyObjectsNotExist(s.ctx, proxyService, proxyDeployment, backendTlsPolicy)
+		s.testInstallation.Assertions.EventuallyObjectsNotExist(
+			s.ctx,
+			proxyService,
+			proxyDeployment,
+			backendTlsPolicy,
+		)
 	})
 
 	toCreate := append(baseManifests, configMapManifest)
@@ -90,17 +95,35 @@ func (s *clientTlsTestingSuite) TestBackendTLSPolicyAndStatus() {
 		s.Require().NoError(err)
 	}
 
-	s.testInstallation.Assertions.EventuallyObjectsExist(s.ctx, proxyService, proxyDeployment, backendTlsPolicy, configMap)
+	s.testInstallation.Assertions.EventuallyObjectsExist(
+		s.ctx,
+		proxyService,
+		proxyDeployment,
+		backendTlsPolicy,
+		configMap,
+	)
 	// TODO: make this a specific assertion to remove the need for c/p the label selector
-	s.testInstallation.Assertions.EventuallyPodsRunning(s.ctx, defaults.CurlPod.GetNamespace(), metav1.ListOptions{
-		LabelSelector: "app.kubernetes.io/name=curl",
-	})
-	s.testInstallation.Assertions.EventuallyPodsRunning(s.ctx, nginxMeta.GetNamespace(), metav1.ListOptions{
-		LabelSelector: "app.kubernetes.io/name=nginx",
-	})
-	s.testInstallation.Assertions.EventuallyPodsRunning(s.ctx, proxyObjMeta.GetNamespace(), metav1.ListOptions{
-		LabelSelector: "app.kubernetes.io/name=gw",
-	})
+	s.testInstallation.Assertions.EventuallyPodsRunning(
+		s.ctx,
+		defaults.CurlPod.GetNamespace(),
+		metav1.ListOptions{
+			LabelSelector: "app.kubernetes.io/name=curl",
+		},
+	)
+	s.testInstallation.Assertions.EventuallyPodsRunning(
+		s.ctx,
+		nginxMeta.GetNamespace(),
+		metav1.ListOptions{
+			LabelSelector: "app.kubernetes.io/name=nginx",
+		},
+	)
+	s.testInstallation.Assertions.EventuallyPodsRunning(
+		s.ctx,
+		proxyObjMeta.GetNamespace(),
+		metav1.ListOptions{
+			LabelSelector: "app.kubernetes.io/name=gw",
+		},
+	)
 
 	s.testInstallation.Assertions.AssertEventualCurlResponse(
 		s.ctx,
@@ -154,11 +177,14 @@ func (s *clientTlsTestingSuite) assertPolicyStatus(inCondition metav1.Condition)
 		}
 		g.Expect(ancestor.AncestorRef).To(gomega.BeEquivalentTo(expectedAncestorRef))
 
-		g.Expect(ancestor.Conditions).To(gomega.HaveLen(1), "ancestors conditions wasn't length of 1")
+		g.Expect(ancestor.Conditions).
+			To(gomega.HaveLen(1), "ancestors conditions wasn't length of 1")
 		cond := meta.FindStatusCondition(ancestor.Conditions, inCondition.Type)
 		g.Expect(cond).NotTo(gomega.BeNil(), "policy should have accepted condition")
-		g.Expect(cond.Status).To(gomega.Equal(inCondition.Status), "policy accepted condition should be true")
-		g.Expect(cond.Reason).To(gomega.Equal(inCondition.Reason), "policy reason should be accepted")
+		g.Expect(cond.Status).
+			To(gomega.Equal(inCondition.Status), "policy accepted condition should be true")
+		g.Expect(cond.Reason).
+			To(gomega.Equal(inCondition.Reason), "policy reason should be accepted")
 		g.Expect(cond.Message).To(gomega.Equal(inCondition.Message))
 	}, currentTimeout, pollingInterval).Should(gomega.Succeed())
 }

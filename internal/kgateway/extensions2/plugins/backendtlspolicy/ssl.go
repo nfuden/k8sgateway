@@ -14,7 +14,10 @@ import (
 
 var noKeyFoundMsg = "no key ca.crt found"
 
-func ResolveUpstreamSslConfig(cm *corev1.ConfigMap, sni string) (*envoyauth.UpstreamTlsContext, error) {
+func ResolveUpstreamSslConfig(
+	cm *corev1.ConfigMap,
+	sni string,
+) (*envoyauth.UpstreamTlsContext, error) {
 	common, err := ResolveCommonSslConfig(cm, false)
 	if err != nil {
 		return nil, err
@@ -26,7 +29,10 @@ func ResolveUpstreamSslConfig(cm *corev1.ConfigMap, sni string) (*envoyauth.Upst
 	}, nil
 }
 
-func ResolveCommonSslConfig(cm *corev1.ConfigMap, mustHaveCert bool) (*envoyauth.CommonTlsContext, error) {
+func ResolveCommonSslConfig(
+	cm *corev1.ConfigMap,
+	mustHaveCert bool,
+) (*envoyauth.CommonTlsContext, error) {
 	caCrt, err := getSslSecrets(cm)
 	if err != nil {
 		return nil, err

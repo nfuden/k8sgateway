@@ -43,7 +43,11 @@ var _ manager.Runnable = &gatewayClassProvisioner{}
 // events to trigger the re-creation of the GatewayClass. Additionally, it ignores
 // update events to allow users to modify the GatewayClasses without this controller
 // overwriting them.
-func NewGatewayClassProvisioner(mgr ctrl.Manager, controllerName string, classConfigs map[string]*ClassInfo) error {
+func NewGatewayClassProvisioner(
+	mgr ctrl.Manager,
+	controllerName string,
+	classConfigs map[string]*ClassInfo,
+) error {
 	initialReconcileCh := make(chan event.TypedGenericEvent[client.Object], 1)
 	provisioner := &gatewayClassProvisioner{
 		Client:             mgr.GetClient(),
@@ -78,10 +82,17 @@ func (r *gatewayClassProvisioner) SetupWithManager(mgr ctrl.Manager) error {
 		Complete(r)
 }
 
-func (r *gatewayClassProvisioner) Reconcile(ctx context.Context, _ ctrl.Request) (ctrl.Result, error) {
+func (r *gatewayClassProvisioner) Reconcile(
+	ctx context.Context,
+	_ ctrl.Request,
+) (ctrl.Result, error) {
 	log := log.FromContext(ctx)
 	log.Info("reconciling GatewayClasses", "controllerName", "gatewayclass-provisioner")
-	defer log.Info("finished reconciling GatewayClasses", "controllerName", "gatewayclass-provisioner")
+	defer log.Info(
+		"finished reconciling GatewayClasses",
+		"controllerName",
+		"gatewayclass-provisioner",
+	)
 
 	var errs []error
 	for name, config := range r.classConfigs {
@@ -94,7 +105,11 @@ func (r *gatewayClassProvisioner) Reconcile(ctx context.Context, _ ctrl.Request)
 	return ctrl.Result{}, errors.Join(errs...)
 }
 
-func (r *gatewayClassProvisioner) createGatewayClass(ctx context.Context, name string, config *ClassInfo) error {
+func (r *gatewayClassProvisioner) createGatewayClass(
+	ctx context.Context,
+	name string,
+	config *ClassInfo,
+) error {
 	gc := &apiv1.GatewayClass{}
 	err := r.Get(ctx, client.ObjectKey{Name: name}, gc)
 	if err != nil && !apierrors.IsNotFound(err) {

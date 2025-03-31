@@ -107,7 +107,8 @@ func processResponseHeader(line string) (string, string) {
 func processResponseCode(line string) int {
 	// check for response status. the line with the response code will be in the format
 	// `< HTTP/1.1 <code> <message>` or `< HTTP/2 <code> <message>`
-	if strings.HasPrefix(line, responseStatusPrefix1dot1) || strings.HasPrefix(line, responseStatusPrefix2) {
+	if strings.HasPrefix(line, responseStatusPrefix1dot1) ||
+		strings.HasPrefix(line, responseStatusPrefix2) {
 		statusParts := strings.Split(line, " ")
 		if len(statusParts) >= 4 {
 			statusCode, err := strconv.Atoi(statusParts[2])

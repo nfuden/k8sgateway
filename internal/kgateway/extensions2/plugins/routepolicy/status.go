@@ -57,7 +57,10 @@ func buildRegisterCallback(
 
 					newCondition := pluginutils.BuildCondition("Policy", routePolIr.spec.errors)
 
-					found := meta.FindStatusCondition(res.Status.Conditions, string(gwv1a2.PolicyConditionAccepted))
+					found := meta.FindStatusCondition(
+						res.Status.Conditions,
+						string(gwv1a2.PolicyConditionAccepted),
+					)
 					if found != nil {
 						typeEq := found.Type == newCondition.Type
 						statusEq := found.Status == newCondition.Status

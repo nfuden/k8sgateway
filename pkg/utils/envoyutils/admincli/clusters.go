@@ -9,7 +9,9 @@ import (
 // GetStaticClustersByName returns a map of static clusters, indexed by their name
 // If there are no static clusters present, an empty map is returned
 // An error is returned if any conversion fails
-func GetStaticClustersByName(configDump *adminv3.ConfigDump) (map[string]*clusterv3.Cluster, error) {
+func GetStaticClustersByName(
+	configDump *adminv3.ConfigDump,
+) (map[string]*clusterv3.Cluster, error) {
 	clustersByName := make(map[string]*clusterv3.Cluster, 10)
 	for _, c := range configDump.GetConfigs() {
 		staticCluster, err := convertToStaticCluster(c)

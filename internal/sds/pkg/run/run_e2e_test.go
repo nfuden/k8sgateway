@@ -124,101 +124,116 @@ var _ = Describe("SDS Server E2E Test", Serial, func() {
 
 	})
 
-	DescribeTable("correctly picks up cert rotations", func(useOcsp bool, expectedHashes []string) {
-		go func() {
-			defer GinkgoRecover()
-			ocsp := ""
+	DescribeTable(
+		"correctly picks up cert rotations",
+		func(useOcsp bool, expectedHashes []string) {
+			go func() {
+				defer GinkgoRecover()
+				ocsp := ""
+				if useOcsp {
+					ocsp = ocspName
+				}
+				secret.SslOcspFile = ocsp
+				_ = run.Run(ctx, []server.Secret{secret}, sdsClient, testServerAddress)
+			}()
+
+			// Give it a second to spin up + read the files
+			time.Sleep(1 * time.Second)
+
+			// Connect with the server
+			var conn *grpc.ClientConn
+			conn, err = grpc.Dial(testServerAddress, grpc.WithInsecure())
+			Expect(err).NotTo(HaveOccurred())
+			defer conn.Close()
+			client := envoy_service_secret_v3.NewSecretDiscoveryServiceClient(conn)
+
+			// Read certs
+			var certs [][]byte
 			if useOcsp {
-				ocsp = ocspName
+				certs, err = testutils.FilesToBytes(
+					keyNameSymlink,
+					certNameSymlink,
+					caNameSymlink,
+					ocspNameSymlink,
+				)
+			} else {
+				certs, err = testutils.FilesToBytes(keyNameSymlink, certNameSymlink, caNameSymlink)
 			}
-			secret.SslOcspFile = ocsp
-			_ = run.Run(ctx, []server.Secret{secret}, sdsClient, testServerAddress)
-		}()
+			Expect(err).NotTo(HaveOccurred())
 
-		// Give it a second to spin up + read the files
-		time.Sleep(1 * time.Second)
+			snapshotVersion, err := server.GetSnapshotVersion(certs)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(snapshotVersion).To(Equal(expectedHashes[0]))
 
-		// Connect with the server
-		var conn *grpc.ClientConn
-		conn, err = grpc.Dial(testServerAddress, grpc.WithInsecure())
-		Expect(err).NotTo(HaveOccurred())
-		defer conn.Close()
-		client := envoy_service_secret_v3.NewSecretDiscoveryServiceClient(conn)
+			var resp *envoy_service_discovery_v3.DiscoveryResponse
 
-		// Read certs
-		var certs [][]byte
-		if useOcsp {
-			certs, err = testutils.FilesToBytes(keyNameSymlink, certNameSymlink, caNameSymlink, ocspNameSymlink)
-		} else {
+			Eventually(func() bool {
+				resp, err = client.FetchSecrets(ctx, &envoy_service_discovery_v3.DiscoveryRequest{})
+				return err == nil
+			}, "15s", "1s").Should(BeTrue())
+
+			Eventually(func() bool {
+				resp, err = client.FetchSecrets(ctx, &envoy_service_discovery_v3.DiscoveryRequest{})
+				return resp.VersionInfo == snapshotVersion
+			}, "15s", "1s").Should(BeTrue())
+
+			// Cert rotation #1
+			err = os.Remove(keyName)
+			Expect(err).NotTo(HaveOccurred())
+			err = afero.WriteFile(fs, keyName, []byte("tls.key-1"), 0644)
+			Expect(err).NotTo(HaveOccurred())
+
+			// Re-read certs
 			certs, err = testutils.FilesToBytes(keyNameSymlink, certNameSymlink, caNameSymlink)
-		}
-		Expect(err).NotTo(HaveOccurred())
-
-		snapshotVersion, err := server.GetSnapshotVersion(certs)
-		Expect(err).NotTo(HaveOccurred())
-		Expect(snapshotVersion).To(Equal(expectedHashes[0]))
-
-		var resp *envoy_service_discovery_v3.DiscoveryResponse
-
-		Eventually(func() bool {
-			resp, err = client.FetchSecrets(ctx, &envoy_service_discovery_v3.DiscoveryRequest{})
-			return err == nil
-		}, "15s", "1s").Should(BeTrue())
-
-		Eventually(func() bool {
-			resp, err = client.FetchSecrets(ctx, &envoy_service_discovery_v3.DiscoveryRequest{})
-			return resp.VersionInfo == snapshotVersion
-		}, "15s", "1s").Should(BeTrue())
-
-		// Cert rotation #1
-		err = os.Remove(keyName)
-		Expect(err).NotTo(HaveOccurred())
-		err = afero.WriteFile(fs, keyName, []byte("tls.key-1"), 0644)
-		Expect(err).NotTo(HaveOccurred())
-
-		// Re-read certs
-		certs, err = testutils.FilesToBytes(keyNameSymlink, certNameSymlink, caNameSymlink)
-		Expect(err).NotTo(HaveOccurred())
-		if useOcsp {
-			ocspBytes, err := os.ReadFile(ocspNameSymlink)
-			Expect(err).ToNot(HaveOccurred())
-			certs = append(certs, ocspBytes)
-		}
-
-		snapshotVersion, err = server.GetSnapshotVersion(certs)
-		Expect(err).NotTo(HaveOccurred())
-		Expect(snapshotVersion).To(Equal(expectedHashes[1]))
-		Eventually(func() bool {
-			resp, err = client.FetchSecrets(ctx, &envoy_service_discovery_v3.DiscoveryRequest{})
 			Expect(err).NotTo(HaveOccurred())
-			return resp.VersionInfo == snapshotVersion
-		}, "15s", "1s").Should(BeTrue())
+			if useOcsp {
+				ocspBytes, err := os.ReadFile(ocspNameSymlink)
+				Expect(err).ToNot(HaveOccurred())
+				certs = append(certs, ocspBytes)
+			}
 
-		// Cert rotation #2
-		err = os.Remove(keyName)
-		Expect(err).NotTo(HaveOccurred())
-		err = afero.WriteFile(fs, keyName, []byte("tls.key-2"), 0644)
-		Expect(err).NotTo(HaveOccurred())
-
-		// Re-read certs again
-		certs, err = testutils.FilesToBytes(keyNameSymlink, certNameSymlink, caNameSymlink)
-		Expect(err).NotTo(HaveOccurred())
-		if useOcsp {
-			ocspBytes, err := os.ReadFile(ocspNameSymlink)
-			Expect(err).ToNot(HaveOccurred())
-			certs = append(certs, ocspBytes)
-		}
-
-		snapshotVersion, err = server.GetSnapshotVersion(certs)
-		Expect(err).NotTo(HaveOccurred())
-		Expect(snapshotVersion).To(Equal(expectedHashes[2]))
-		Eventually(func() bool {
-			resp, err = client.FetchSecrets(ctx, &envoy_service_discovery_v3.DiscoveryRequest{})
+			snapshotVersion, err = server.GetSnapshotVersion(certs)
 			Expect(err).NotTo(HaveOccurred())
-			return resp.VersionInfo == snapshotVersion
-		}, "15s", "1s").Should(BeTrue())
-	},
-		Entry("with ocsp", true, []string{"969835737182439215", "6265739243366543658", "14893951670674740726"}),
-		Entry("without ocsp", false, []string{"6730780456972595554", "16241649556325798095", "7644406922477208950"}),
+			Expect(snapshotVersion).To(Equal(expectedHashes[1]))
+			Eventually(func() bool {
+				resp, err = client.FetchSecrets(ctx, &envoy_service_discovery_v3.DiscoveryRequest{})
+				Expect(err).NotTo(HaveOccurred())
+				return resp.VersionInfo == snapshotVersion
+			}, "15s", "1s").Should(BeTrue())
+
+			// Cert rotation #2
+			err = os.Remove(keyName)
+			Expect(err).NotTo(HaveOccurred())
+			err = afero.WriteFile(fs, keyName, []byte("tls.key-2"), 0644)
+			Expect(err).NotTo(HaveOccurred())
+
+			// Re-read certs again
+			certs, err = testutils.FilesToBytes(keyNameSymlink, certNameSymlink, caNameSymlink)
+			Expect(err).NotTo(HaveOccurred())
+			if useOcsp {
+				ocspBytes, err := os.ReadFile(ocspNameSymlink)
+				Expect(err).ToNot(HaveOccurred())
+				certs = append(certs, ocspBytes)
+			}
+
+			snapshotVersion, err = server.GetSnapshotVersion(certs)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(snapshotVersion).To(Equal(expectedHashes[2]))
+			Eventually(func() bool {
+				resp, err = client.FetchSecrets(ctx, &envoy_service_discovery_v3.DiscoveryRequest{})
+				Expect(err).NotTo(HaveOccurred())
+				return resp.VersionInfo == snapshotVersion
+			}, "15s", "1s").Should(BeTrue())
+		},
+		Entry(
+			"with ocsp",
+			true,
+			[]string{"969835737182439215", "6265739243366543658", "14893951670674740726"},
+		),
+		Entry(
+			"without ocsp",
+			false,
+			[]string{"6730780456972595554", "16241649556325798095", "7644406922477208950"},
+		),
 	)
 })

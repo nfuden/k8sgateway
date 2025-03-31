@@ -203,7 +203,9 @@ func NewControllerBuilder(ctx context.Context, cfg StartConfig) (*ControllerBuil
 	}, nil
 }
 
-func pluginFactoryWithBuiltin(extraPlugins func(ctx context.Context, commoncol *common.CommonCollections) []extensionsplug.Plugin) extensions2.K8sGatewayExtensionsFactory {
+func pluginFactoryWithBuiltin(
+	extraPlugins func(ctx context.Context, commoncol *common.CommonCollections) []extensionsplug.Plugin,
+) extensions2.K8sGatewayExtensionsFactory {
 	return func(ctx context.Context, commoncol *common.CommonCollections) extensionsplug.Plugin {
 		plugins := registry.Plugins(ctx, commoncol)
 		plugins = append(plugins, krtcollections.NewBuiltinPlugin(ctx))
@@ -225,7 +227,11 @@ func (c *ControllerBuilder) Start(ctx context.Context) error {
 		Namespace: namespaces.GetPodNamespace(),
 	})
 	xdsPort := globalSettings.XdsServicePort
-	logger.Info("got xds address for deployer", uzap.String("xds_host", xdsHost), uzap.Uint32("xds_port", xdsPort))
+	logger.Info(
+		"got xds address for deployer",
+		uzap.String("xds_host", xdsHost),
+		uzap.Uint32("xds_port", xdsPort),
+	)
 
 	istioAutoMtlsEnabled := globalSettings.EnableIstioAutoMtls
 

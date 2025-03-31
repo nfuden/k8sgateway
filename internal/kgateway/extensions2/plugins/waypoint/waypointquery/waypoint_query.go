@@ -39,10 +39,18 @@ type WaypointQueries interface {
 	GetWaypointServices(kctx krt.HandlerContext, ctx context.Context, gw *gwv1.Gateway) []Service
 
 	// GetHTTPRoutesForService fetches HTTPRoutes that have the given Service in parentRefs.
-	GetHTTPRoutesForService(kctx krt.HandlerContext, ctx context.Context, svc *Service) []query.RouteInfo
+	GetHTTPRoutesForService(
+		kctx krt.HandlerContext,
+		ctx context.Context,
+		svc *Service,
+	) []query.RouteInfo
 
 	// GetAuthorizationPolicies gets a filtered list of policies in the namespaces that also target services in the targetNamespace
-	GetAuthorizationPolicies(kctx krt.HandlerContext, ctx context.Context, targetNamespace, rootNamespace string) []*istiosecurity.AuthorizationPolicy
+	GetAuthorizationPolicies(
+		kctx krt.HandlerContext,
+		ctx context.Context,
+		targetNamespace, rootNamespace string,
+	) []*istiosecurity.AuthorizationPolicy
 
 	HasSynced() bool
 }
@@ -58,7 +66,9 @@ func NewQueries(
 		kubetypes.StandardInformer,
 		kclient.Filter{ObjectFilter: commonCols.Client.ObjectFilter()},
 	)
-	authzPolicies := krt.WrapClient(authzInformer, commonCols.KrtOpts.ToOptions("AuthorizationPolicies")...)
+	authzPolicies := krt.WrapClient(
+		authzInformer,
+		commonCols.KrtOpts.ToOptions("AuthorizationPolicies")...)
 	byNamespace := krt.NewIndex(authzPolicies, func(p *istiosecurity.AuthorizationPolicy) []string {
 		return []string{p.GetNamespace()}
 	})
@@ -162,7 +172,10 @@ func findParentRef(
 	return nil
 }
 
-func findParentRefsForType(refs []gwv1.ParentReference, targetGroup, targetKind string) []*gwv1.ParentReference {
+func findParentRefsForType(
+	refs []gwv1.ParentReference,
+	targetGroup, targetKind string,
+) []*gwv1.ParentReference {
 	var matchingParentRefs []*gwv1.ParentReference
 	for _, pr := range refs {
 		prGroup := wellknown.GatewayGVK.Group
@@ -190,11 +203,19 @@ func compareCanonicalGroup(a, b string) bool {
 	return a == b
 }
 
-func (w *waypointQueries) GetWaypointServices(kctx krt.HandlerContext, ctx context.Context, gw *gwv1.Gateway) []Service {
-	attached := krt.Fetch(kctx, w.waypointedServices, krt.FilterIndex(w.servicesByWaypoint, types.NamespacedName{
-		Name:      gw.GetName(),
-		Namespace: gw.GetNamespace(),
-	}))
+func (w *waypointQueries) GetWaypointServices(
+	kctx krt.HandlerContext,
+	ctx context.Context,
+	gw *gwv1.Gateway,
+) []Service {
+	attached := krt.Fetch(
+		kctx,
+		w.waypointedServices,
+		krt.FilterIndex(w.servicesByWaypoint, types.NamespacedName{
+			Name:      gw.GetName(),
+			Namespace: gw.GetNamespace(),
+		}),
+	)
 	return slices.Map(attached, func(e WaypointedService) Service {
 		return e.Service
 	})
@@ -266,27 +287,39 @@ func waypointAttachmentIndex(
 	// do basic attachment logic
 	waypointServiceAttachments := krt.JoinCollection(
 		[]krt.Collection[WaypointedService]{
-			krt.NewCollection(commonCols.Services, func(ctx krt.HandlerContext, kubeSvc *corev1.Service) *WaypointedService {
-				return doWaypointAttachment(ctx, commonCols, FromService(kubeSvc))
-			}, commonCols.KrtOpts.ToOptions("WaypointKubeServices")...),
-			krt.NewCollection(commonCols.ServiceEntries, func(ctx krt.HandlerContext, istioSE *networkingclient.ServiceEntry) *WaypointedService {
-				return doWaypointAttachment(ctx, commonCols, FromServiceEntry(istioSE))
-			}, commonCols.KrtOpts.ToOptions("WaypointServiceEntries")...),
+			krt.NewCollection(
+				commonCols.Services,
+				func(ctx krt.HandlerContext, kubeSvc *corev1.Service) *WaypointedService {
+					return doWaypointAttachment(ctx, commonCols, FromService(kubeSvc))
+				},
+				commonCols.KrtOpts.ToOptions("WaypointKubeServices")...),
+			krt.NewCollection(
+				commonCols.ServiceEntries,
+				func(ctx krt.HandlerContext, istioSE *networkingclient.ServiceEntry) *WaypointedService {
+					return doWaypointAttachment(ctx, commonCols, FromServiceEntry(istioSE))
+				},
+				commonCols.KrtOpts.ToOptions("WaypointServiceEntries")...),
 		},
 		commonCols.KrtOpts.ToOptions("WaypointLogicalServices")...,
 	)
 
 	// enable lookup by gateway
-	byWaypointGateway := krt.NewIndex(waypointServiceAttachments, func(o WaypointedService) []types.NamespacedName {
-		return []types.NamespacedName{o.Waypoint}
-	})
+	byWaypointGateway := krt.NewIndex(
+		waypointServiceAttachments,
+		func(o WaypointedService) []types.NamespacedName {
+			return []types.NamespacedName{o.Waypoint}
+		},
+	)
 
 	return waypointServiceAttachments, byWaypointGateway
 }
 
 // getUseWaypoint returns the NamespacedName of the waypoint the given object uses.
 // It also returns a bool that indicates we specifically want NO Waypoint.
-func getUseWaypoint(labels map[string]string, defaultNamespace string) (named *types.NamespacedName, isNone bool) {
+func getUseWaypoint(
+	labels map[string]string,
+	defaultNamespace string,
+) (named *types.NamespacedName, isNone bool) {
 	if labelValue, ok := labels[label.IoIstioUseWaypoint.Name]; ok {
 		if labelValue == "none" {
 			return nil, true

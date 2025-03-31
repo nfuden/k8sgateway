@@ -69,38 +69,52 @@ func registerTypes() {
 		backendTlsPolicyGvr,
 		backendTlsPolicyGroupKind,
 		func(c kubeclient.ClientGetter, namespace string, o metav1.ListOptions) (runtime.Object, error) {
-			return c.GatewayAPI().GatewayV1alpha3().BackendTLSPolicies(namespace).List(context.Background(), o)
+			return c.GatewayAPI().
+				GatewayV1alpha3().
+				BackendTLSPolicies(namespace).
+				List(context.Background(), o)
 		},
 		func(c kubeclient.ClientGetter, namespace string, o metav1.ListOptions) (watch.Interface, error) {
-			return c.GatewayAPI().GatewayV1alpha3().BackendTLSPolicies(namespace).Watch(context.Background(), o)
+			return c.GatewayAPI().
+				GatewayV1alpha3().
+				BackendTLSPolicies(namespace).
+				Watch(context.Background(), o)
 		},
 	)
 }
 
 func NewPlugin(ctx context.Context, commoncol *common.CommonCollections) plug.Plugin {
 	registerTypes()
-	inf := kclient.NewDelayedInformer[*gwv1a3.BackendTLSPolicy](commoncol.Client, backendTlsPolicyGvr, kubetypes.StandardInformer, kclient.Filter{})
+	inf := kclient.NewDelayedInformer[*gwv1a3.BackendTLSPolicy](
+		commoncol.Client,
+		backendTlsPolicyGvr,
+		kubetypes.StandardInformer,
+		kclient.Filter{},
+	)
 	col := krt.WrapClient(inf, commoncol.KrtOpts.ToOptions("BackendTLSPolicy")...)
 
 	translate := buildTranslateFunc(ctx, commoncol.ConfigMaps)
-	tlsPolicyCol := krt.NewCollection(col, func(krtctx krt.HandlerContext, i *gwv1a3.BackendTLSPolicy) *ir.PolicyWrapper {
-		tlsPolicyIR, err := translate(krtctx, i)
-		var pol = &ir.PolicyWrapper{
-			ObjectSource: ir.ObjectSource{
-				Group:     backendTlsPolicyGroupKind.Group,
-				Kind:      backendTlsPolicyGroupKind.Kind,
-				Namespace: i.Namespace,
-				Name:      i.Name,
-			},
-			Policy:     i,
-			PolicyIR:   tlsPolicyIR,
-			TargetRefs: convertTargetRefs(i.Spec.TargetRefs),
-		}
-		if err != nil {
-			pol.Errors = []error{err}
-		}
-		return pol
-	}, commoncol.KrtOpts.ToOptions("BackendTLSPolicyIRs")...)
+	tlsPolicyCol := krt.NewCollection(
+		col,
+		func(krtctx krt.HandlerContext, i *gwv1a3.BackendTLSPolicy) *ir.PolicyWrapper {
+			tlsPolicyIR, err := translate(krtctx, i)
+			var pol = &ir.PolicyWrapper{
+				ObjectSource: ir.ObjectSource{
+					Group:     backendTlsPolicyGroupKind.Group,
+					Kind:      backendTlsPolicyGroupKind.Kind,
+					Namespace: i.Namespace,
+					Name:      i.Name,
+				},
+				Policy:     i,
+				PolicyIR:   tlsPolicyIR,
+				TargetRefs: convertTargetRefs(i.Spec.TargetRefs),
+			}
+			if err != nil {
+				pol.Errors = []error{err}
+			}
+			return pol
+		},
+		commoncol.KrtOpts.ToOptions("BackendTLSPolicyIRs")...)
 
 	return plug.Plugin{
 		ContributesPolicies: map[schema.GroupKind]plug.PolicyPlugin{
@@ -114,7 +128,12 @@ func NewPlugin(ctx context.Context, commoncol *common.CommonCollections) plug.Pl
 	}
 }
 
-func ProcessBackend(ctx context.Context, polir ir.PolicyIR, in ir.BackendObjectIR, out *clusterv3.Cluster) {
+func ProcessBackend(
+	ctx context.Context,
+	polir ir.PolicyIR,
+	in ir.BackendObjectIR,
+	out *clusterv3.Cluster,
+) {
 	tlsPol, ok := polir.(*backendTlsPolicy)
 	if !ok {
 		return
@@ -174,7 +193,9 @@ func buildTranslateFunc(
 	}
 }
 
-func buildProcessStatus(cl client.Client) func(ctx context.Context, gkStr string, polReport plug.PolicyReport) {
+func buildProcessStatus(
+	cl client.Client,
+) func(ctx context.Context, gkStr string, polReport plug.PolicyReport) {
 	return func(ctx context.Context, gkStr string, polReport plug.PolicyReport) {
 		if gkStr != backendTlsPolicyGroupKind.GroupKind().String() {
 			return
@@ -208,12 +229,15 @@ func buildProcessStatus(cl client.Client) func(ctx context.Context, gkStr string
 
 				// check if existing status has this ancestor
 				conditions := make([]metav1.Condition, 0, 1)
-				foundAncestor := slices.FindFunc(res.Status.Ancestors, func(in gwv1a2.PolicyAncestorStatus) bool {
-					groupEq := ptrEquals(newAncestor.Group, in.AncestorRef.Group)
-					kindEq := ptrEquals(newAncestor.Kind, in.AncestorRef.Kind)
-					nameEq := newAncestor.Name == in.AncestorRef.Name
-					return groupEq && kindEq && nameEq
-				})
+				foundAncestor := slices.FindFunc(
+					res.Status.Ancestors,
+					func(in gwv1a2.PolicyAncestorStatus) bool {
+						groupEq := ptrEquals(newAncestor.Group, in.AncestorRef.Group)
+						kindEq := ptrEquals(newAncestor.Kind, in.AncestorRef.Kind)
+						nameEq := newAncestor.Name == in.AncestorRef.Name
+						return groupEq && kindEq && nameEq
+					},
+				)
 				if foundAncestor != nil {
 					copy(conditions, foundAncestor.Conditions)
 				}
@@ -257,7 +281,9 @@ func buildProcessStatus(cl client.Client) func(ctx context.Context, gkStr string
 	}
 }
 
-func convertTargetRefs(targetRefs []gwv1a2.LocalPolicyTargetReferenceWithSectionName) []ir.PolicyRef {
+func convertTargetRefs(
+	targetRefs []gwv1a2.LocalPolicyTargetReferenceWithSectionName,
+) []ir.PolicyRef {
 	return []ir.PolicyRef{{
 		Kind:  string(targetRefs[0].Kind),
 		Name:  string(targetRefs[0].Name),

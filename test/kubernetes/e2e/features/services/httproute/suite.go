@@ -36,7 +36,11 @@ func (s *testingSuite) TestConfigureHTTPRouteBackingDestinationsWithService() {
 		s.NoError(err, "can delete manifest")
 		err = s.testInstallation.Actions.Kubectl().DeleteFile(s.ctx, serviceManifest)
 		s.NoError(err, "can delete manifest")
-		s.testInstallation.Assertions.EventuallyObjectsNotExist(s.ctx, proxyService, proxyDeployment)
+		s.testInstallation.Assertions.EventuallyObjectsNotExist(
+			s.ctx,
+			proxyService,
+			proxyDeployment,
+		)
 	})
 
 	err := s.testInstallation.Actions.Kubectl().ApplyFile(s.ctx, routeWithServiceManifest)
@@ -63,7 +67,11 @@ func (s *testingSuite) TestConfigureHTTPRouteBackingDestinationsWithServiceAndWi
 		s.NoError(err, "can delete manifest")
 		err = s.testInstallation.Actions.Kubectl().DeleteFile(s.ctx, serviceManifest)
 		s.NoError(err, "can delete manifest")
-		s.testInstallation.Assertions.EventuallyObjectsNotExist(s.ctx, proxyService, proxyDeployment)
+		s.testInstallation.Assertions.EventuallyObjectsNotExist(
+			s.ctx,
+			proxyService,
+			proxyDeployment,
+		)
 		err = s.testInstallation.Actions.Kubectl().ApplyFile(s.ctx, tcpRouteCrdManifest)
 		s.NoError(err, "can apply manifest")
 		s.testInstallation.Assertions.EventuallyObjectsExist(s.ctx, &wellknown.TCPRouteCRD)

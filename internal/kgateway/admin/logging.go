@@ -8,7 +8,11 @@ import (
 )
 
 // The logging handler is an AtomicLevel that supports dynamically changing the log level at runtime.
-func addLoggingHandler(path string, mux *http.ServeMux, profiles map[string]dynamicProfileDescription) {
+func addLoggingHandler(
+	path string,
+	mux *http.ServeMux,
+	profiles map[string]dynamicProfileDescription,
+) {
 	mux.Handle(path, contextutils.GetLogHandler())
 	profiles[path] = getLoggingDescription
 }

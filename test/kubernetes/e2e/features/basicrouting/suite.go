@@ -63,15 +63,27 @@ func (s *testingSuite) TestGatewayWithRoute() {
 	s.testInstallation.Assertions.EventuallyObjectsExist(s.ctx, manifestObjects...)
 
 	// make sure pods are running
-	s.testInstallation.Assertions.EventuallyPodsRunning(s.ctx, testdefaults.CurlPod.GetNamespace(), metav1.ListOptions{
-		LabelSelector: testdefaults.CurlPodLabelSelector,
-	})
-	s.testInstallation.Assertions.EventuallyPodsRunning(s.ctx, nginxPod.ObjectMeta.GetNamespace(), metav1.ListOptions{
-		LabelSelector: "app.kubernetes.io/name=nginx",
-	})
-	s.testInstallation.Assertions.EventuallyPodsRunning(s.ctx, proxyObjectMeta.GetNamespace(), metav1.ListOptions{
-		LabelSelector: "app.kubernetes.io/name=gw",
-	})
+	s.testInstallation.Assertions.EventuallyPodsRunning(
+		s.ctx,
+		testdefaults.CurlPod.GetNamespace(),
+		metav1.ListOptions{
+			LabelSelector: testdefaults.CurlPodLabelSelector,
+		},
+	)
+	s.testInstallation.Assertions.EventuallyPodsRunning(
+		s.ctx,
+		nginxPod.ObjectMeta.GetNamespace(),
+		metav1.ListOptions{
+			LabelSelector: "app.kubernetes.io/name=nginx",
+		},
+	)
+	s.testInstallation.Assertions.EventuallyPodsRunning(
+		s.ctx,
+		proxyObjectMeta.GetNamespace(),
+		metav1.ListOptions{
+			LabelSelector: "app.kubernetes.io/name=gw",
+		},
+	)
 
 	// Should have a successful response
 	s.testInstallation.Assertions.AssertEventualCurlResponse(

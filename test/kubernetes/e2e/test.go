@@ -130,8 +130,18 @@ func (i *TestInstallation) InstallMinimalIstio(ctx context.Context) error {
 	return cluster.InstallMinimalIstio(ctx, i.IstioctlBinary, i.ClusterContext.KubeContext)
 }
 
-func (i *TestInstallation) InstallRevisionedIstio(ctx context.Context, rev, profile string, extraArgs ...string) error {
-	return cluster.InstallRevisionedIstio(ctx, i.IstioctlBinary, i.ClusterContext.KubeContext, rev, profile, extraArgs...)
+func (i *TestInstallation) InstallRevisionedIstio(
+	ctx context.Context,
+	rev, profile string,
+	extraArgs ...string,
+) error {
+	return cluster.InstallRevisionedIstio(
+		ctx,
+		i.IstioctlBinary,
+		i.ClusterContext.KubeContext,
+		rev,
+		profile,
+		extraArgs...)
 }
 
 func (i *TestInstallation) UninstallIstio() error {
@@ -139,7 +149,12 @@ func (i *TestInstallation) UninstallIstio() error {
 }
 
 func (i *TestInstallation) CreateIstioBugReport(ctx context.Context) {
-	cluster.CreateIstioBugReport(ctx, i.IstioctlBinary, i.ClusterContext.KubeContext, i.GeneratedFiles.FailureDir)
+	cluster.CreateIstioBugReport(
+		ctx,
+		i.IstioctlBinary,
+		i.ClusterContext.KubeContext,
+		i.GeneratedFiles.FailureDir,
+	)
 }
 
 func (i *TestInstallation) InstallKgatewayFromLocalChart(ctx context.Context) {
@@ -168,9 +183,12 @@ func (i *TestInstallation) InstallKgatewayFromLocalChart(ctx context.Context) {
 		helmutils.InstallOpts{
 			Namespace:       i.Metadata.InstallNamespace,
 			CreateNamespace: true,
-			ValuesFiles:     []string{i.Metadata.ProfileValuesManifestFile, i.Metadata.ValuesManifestFile},
-			ReleaseName:     helmutils.ChartName,
-			ChartUri:        chartUri,
+			ValuesFiles: []string{
+				i.Metadata.ProfileValuesManifestFile,
+				i.Metadata.ValuesManifestFile,
+			},
+			ReleaseName: helmutils.ChartName,
+			ChartUri:    chartUri,
 		})
 	i.Assertions.Require.NoError(err)
 	i.Assertions.EventuallyKgatewayInstallSucceeded(ctx)

@@ -15,7 +15,8 @@ func (p *Provider) EventuallyObjectsExist(ctx context.Context, objects ...client
 	for _, o := range objects {
 		p.Gomega.Eventually(ctx, func(innerG Gomega) {
 			err := p.clusterContext.Client.Get(ctx, client.ObjectKeyFromObject(o), o)
-			innerG.Expect(err).NotTo(HaveOccurred(), "object %s %s should be available in cluster", o.GetObjectKind().GroupVersionKind().String(), client.ObjectKeyFromObject(o).String())
+			innerG.Expect(err).
+				NotTo(HaveOccurred(), "object %s %s should be available in cluster", o.GetObjectKind().GroupVersionKind().String(), client.ObjectKeyFromObject(o).String())
 		}).
 			WithContext(ctx).
 			WithTimeout(time.Second*20).
@@ -28,7 +29,8 @@ func (p *Provider) EventuallyObjectsNotExist(ctx context.Context, objects ...cli
 	for _, o := range objects {
 		p.Gomega.Eventually(ctx, func(innerG Gomega) {
 			err := p.clusterContext.Client.Get(ctx, client.ObjectKeyFromObject(o), o)
-			innerG.Expect(apierrors.IsNotFound(err)).To(BeTrue(), "object %s %s should not be found in cluster", o.GetObjectKind().GroupVersionKind().String(), client.ObjectKeyFromObject(o).String())
+			innerG.Expect(apierrors.IsNotFound(err)).
+				To(BeTrue(), "object %s %s should not be found in cluster", o.GetObjectKind().GroupVersionKind().String(), client.ObjectKeyFromObject(o).String())
 		}).
 			WithContext(ctx).
 			WithTimeout(time.Second*60).
@@ -39,7 +41,10 @@ func (p *Provider) EventuallyObjectsNotExist(ctx context.Context, objects ...cli
 
 // EventuallyObjectTypesNotExist asserts that eventually no objects of the specified types exist on the cluster.
 // The `objectLists` holds the object list types to check, e.g. to check that no HTTPRoutes exist on the cluster, pass in HTTPRouteList{}
-func (p *Provider) EventuallyObjectTypesNotExist(ctx context.Context, objectLists ...client.ObjectList) {
+func (p *Provider) EventuallyObjectTypesNotExist(
+	ctx context.Context,
+	objectLists ...client.ObjectList,
+) {
 	for _, o := range objectLists {
 		p.Gomega.Eventually(ctx, func(innerG Gomega) {
 			err := p.clusterContext.Client.List(ctx, o)
@@ -57,7 +62,8 @@ func (p *Provider) ConsistentlyObjectsNotExist(ctx context.Context, objects ...c
 	for _, o := range objects {
 		p.Gomega.Consistently(ctx, func(innerG Gomega) {
 			err := p.clusterContext.Client.Get(ctx, client.ObjectKeyFromObject(o), o)
-			innerG.Expect(apierrors.IsNotFound(err)).To(BeTrue(), "object %s %s should not be found in cluster", o.GetObjectKind().GroupVersionKind().String(), client.ObjectKeyFromObject(o).String())
+			innerG.Expect(apierrors.IsNotFound(err)).
+				To(BeTrue(), "object %s %s should not be found in cluster", o.GetObjectKind().GroupVersionKind().String(), client.ObjectKeyFromObject(o).String())
 		}).
 			WithContext(ctx).
 			WithTimeout(time.Second*10).
@@ -68,14 +74,19 @@ func (p *Provider) ConsistentlyObjectsNotExist(ctx context.Context, objects ...c
 
 func (p *Provider) ExpectNamespaceNotExist(ctx context.Context, ns string) {
 	_, err := p.clusterContext.Clientset.CoreV1().Namespaces().Get(ctx, ns, metav1.GetOptions{})
-	p.Gomega.Expect(apierrors.IsNotFound(err)).To(BeTrue(), fmt.Sprintf("namespace %s should not be found in cluster", ns))
+	p.Gomega.Expect(apierrors.IsNotFound(err)).
+		To(BeTrue(), fmt.Sprintf("namespace %s should not be found in cluster", ns))
 }
 
 // TODO clean up these functions, as the validation webhook has been removed
 // ExpectObjectAdmitted should be used when applying Policy objects that are subject to the Gloo Gateway Validation Webhook
 // If the testInstallation has validation enabled and the manifest contains a known substring (e.g. `webhook-reject`)
 // we expect the application to fail, with an expected error substring supplied as `expectedOutput`
-func (p *Provider) ExpectObjectAdmitted(manifest string, err error, actualOutput, expectedOutput string) {
+func (p *Provider) ExpectObjectAdmitted(
+	manifest string,
+	err error,
+	actualOutput, expectedOutput string,
+) {
 	p.Assert.NoError(err, "can apply "+manifest)
 	return
 }

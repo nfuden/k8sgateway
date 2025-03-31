@@ -107,7 +107,9 @@ func (objs *clientObjects) findConfigMap(namespace, name string) *corev1.ConfigM
 	return nil
 }
 
-func (objs *clientObjects) getEnvoyConfig(namespace, name string) *envoy_config_bootstrap.Bootstrap {
+func (objs *clientObjects) getEnvoyConfig(
+	namespace, name string,
+) *envoy_config_bootstrap.Bootstrap {
 	cm := objs.findConfigMap(namespace, name).Data
 	var bootstrapCfg envoy_config_bootstrap.Bootstrap
 	err := unmarshalYaml([]byte(cm["envoy.yaml"]), &bootstrapCfg)
@@ -410,18 +412,21 @@ var _ = Describe("Deployer", func() {
 		)
 		BeforeEach(func() {
 			var err error
-			d, err = deployer.NewDeployer(newFakeClientWithObjs(defaultGatewayClass(), defaultGatewayParams()), &deployer.Inputs{
-				ControllerName: wellknown.GatewayControllerName,
-				Dev:            false,
-				ControlPlane: deployer.ControlPlaneInfo{
-					XdsHost: "something.cluster.local",
-					XdsPort: 1234,
+			d, err = deployer.NewDeployer(
+				newFakeClientWithObjs(defaultGatewayClass(), defaultGatewayParams()),
+				&deployer.Inputs{
+					ControllerName: wellknown.GatewayControllerName,
+					Dev:            false,
+					ControlPlane: deployer.ControlPlaneInfo{
+						XdsHost: "something.cluster.local",
+						XdsPort: 1234,
+					},
+					ImageInfo: &deployer.ImageInfo{
+						Registry: "foo",
+						Tag:      "bar",
+					},
 				},
-				ImageInfo: &deployer.ImageInfo{
-					Registry: "foo",
-					Tag:      "bar",
-				},
-			})
+			)
 			Expect(err).NotTo(HaveOccurred())
 		})
 
@@ -447,32 +452,38 @@ var _ = Describe("Deployer", func() {
 		})
 
 		It("deploys multiple GWs with the same GWP", func() {
-			d1, err := deployer.NewDeployer(newFakeClientWithObjs(gwc, defaultGatewayParams()), &deployer.Inputs{
-				ControllerName: wellknown.GatewayControllerName,
-				Dev:            false,
-				ControlPlane: deployer.ControlPlaneInfo{
-					XdsHost: "something.cluster.local",
-					XdsPort: 1234,
+			d1, err := deployer.NewDeployer(
+				newFakeClientWithObjs(gwc, defaultGatewayParams()),
+				&deployer.Inputs{
+					ControllerName: wellknown.GatewayControllerName,
+					Dev:            false,
+					ControlPlane: deployer.ControlPlaneInfo{
+						XdsHost: "something.cluster.local",
+						XdsPort: 1234,
+					},
+					ImageInfo: &deployer.ImageInfo{
+						Registry: "foo",
+						Tag:      "bar",
+					},
 				},
-				ImageInfo: &deployer.ImageInfo{
-					Registry: "foo",
-					Tag:      "bar",
-				},
-			})
+			)
 			Expect(err).NotTo(HaveOccurred())
 
-			d2, err := deployer.NewDeployer(newFakeClientWithObjs(gwc, defaultGatewayParams()), &deployer.Inputs{
-				ControllerName: wellknown.GatewayControllerName,
-				Dev:            false,
-				ControlPlane: deployer.ControlPlaneInfo{
-					XdsHost: "something.cluster.local",
-					XdsPort: 1234,
+			d2, err := deployer.NewDeployer(
+				newFakeClientWithObjs(gwc, defaultGatewayParams()),
+				&deployer.Inputs{
+					ControllerName: wellknown.GatewayControllerName,
+					Dev:            false,
+					ControlPlane: deployer.ControlPlaneInfo{
+						XdsHost: "something.cluster.local",
+						XdsPort: 1234,
+					},
+					ImageInfo: &deployer.ImageInfo{
+						Registry: "foo",
+						Tag:      "bar",
+					},
 				},
-				ImageInfo: &deployer.ImageInfo{
-					Registry: "foo",
-					Tag:      "bar",
-				},
-			})
+			)
 			Expect(err).NotTo(HaveOccurred())
 
 			gw1 := &api.Gateway{
@@ -551,18 +562,21 @@ var _ = Describe("Deployer", func() {
 				},
 			}
 
-			d, err := deployer.NewDeployer(newFakeClientWithObjs(defaultGatewayClass()), &deployer.Inputs{
-				ControllerName: wellknown.GatewayControllerName,
-				Dev:            false,
-				ControlPlane: deployer.ControlPlaneInfo{
-					XdsHost: "something.cluster.local",
-					XdsPort: 1234,
+			d, err := deployer.NewDeployer(
+				newFakeClientWithObjs(defaultGatewayClass()),
+				&deployer.Inputs{
+					ControllerName: wellknown.GatewayControllerName,
+					Dev:            false,
+					ControlPlane: deployer.ControlPlaneInfo{
+						XdsHost: "something.cluster.local",
+						XdsPort: 1234,
+					},
+					ImageInfo: &deployer.ImageInfo{
+						Registry: "foo",
+						Tag:      "bar",
+					},
 				},
-				ImageInfo: &deployer.ImageInfo{
-					Registry: "foo",
-					Tag:      "bar",
-				},
-			})
+			)
 			Expect(err).NotTo(HaveOccurred())
 
 			_, err = d.GetObjsToDeploy(context.Background(), gw)
@@ -588,18 +602,21 @@ var _ = Describe("Deployer", func() {
 				},
 			}
 
-			d, err := deployer.NewDeployer(newFakeClientWithObjs(defaultGatewayClass()), &deployer.Inputs{
-				ControllerName: wellknown.GatewayControllerName,
-				Dev:            false,
-				ControlPlane: deployer.ControlPlaneInfo{
-					XdsHost: "something.cluster.local",
-					XdsPort: 1234,
+			d, err := deployer.NewDeployer(
+				newFakeClientWithObjs(defaultGatewayClass()),
+				&deployer.Inputs{
+					ControllerName: wellknown.GatewayControllerName,
+					Dev:            false,
+					ControlPlane: deployer.ControlPlaneInfo{
+						XdsHost: "something.cluster.local",
+						XdsPort: 1234,
+					},
+					ImageInfo: &deployer.ImageInfo{
+						Registry: "foo",
+						Tag:      "bar",
+					},
 				},
-				ImageInfo: &deployer.ImageInfo{
-					Registry: "foo",
-					Tag:      "bar",
-				},
-			})
+			)
 			Expect(err).NotTo(HaveOccurred())
 
 			_, err = d.GetObjsToDeploy(context.Background(), gw)
@@ -668,7 +685,9 @@ var _ = Describe("Deployer", func() {
 				Expect(objs.findConfigMap(defaultNamespace, "foo")).NotTo(BeNil())
 
 				By("validating the default values are used")
-				Expect(objs.findDeployment(defaultNamespace, "foo").Spec.Template.Spec.Containers[0].Image).To(Equal(fmt.Sprintf("%s/%s:%s", registry, deployer.EnvoyWrapperImage, tag)))
+				Expect(
+					objs.findDeployment(defaultNamespace, "foo").Spec.Template.Spec.Containers[0].Image,
+				).To(Equal(fmt.Sprintf("%s/%s:%s", registry, deployer.EnvoyWrapperImage, tag)))
 			})
 		})
 
@@ -749,7 +768,9 @@ var _ = Describe("Deployer", func() {
 				Expect(objs.findConfigMap(defaultNamespace, "foo")).NotTo(BeNil())
 
 				By("validating the image overrides the default")
-				Expect(objs.findDeployment(defaultNamespace, "foo").Spec.Template.Spec.Containers[0].Image).To(Equal(fmt.Sprintf("bar/%s:2.3.4", deployer.EnvoyWrapperImage)))
+				Expect(
+					objs.findDeployment(defaultNamespace, "foo").Spec.Template.Spec.Containers[0].Image,
+				).To(Equal(fmt.Sprintf("bar/%s:2.3.4", deployer.EnvoyWrapperImage)))
 			})
 		})
 
@@ -862,7 +883,9 @@ var _ = Describe("Deployer", func() {
 				Expect(port.PortValue).To(Equal(uint32(9091)))
 
 				By("verifying image registry and tag were inherited")
-				Expect(envoyContainer.Image).To(Equal(fmt.Sprintf("%s/%s:%s", registry, deployer.EnvoyWrapperImage, tag)))
+				Expect(
+					envoyContainer.Image,
+				).To(Equal(fmt.Sprintf("%s/%s:%s", registry, deployer.EnvoyWrapperImage, tag)))
 			})
 		})
 	})
@@ -1115,11 +1138,17 @@ var _ = Describe("Deployer", func() {
 				}
 			}
 			fullyDefinedGatewayParams = func() *gw2_v1alpha1.GatewayParameters {
-				return fullyDefinedGatewayParameters(wellknown.DefaultGatewayParametersName, defaultNamespace)
+				return fullyDefinedGatewayParameters(
+					wellknown.DefaultGatewayParametersName,
+					defaultNamespace,
+				)
 			}
 
 			fullyDefinedGatewayParamsWithProbes = func() *gw2_v1alpha1.GatewayParameters {
-				params := fullyDefinedGatewayParameters(wellknown.DefaultGatewayParametersName, defaultNamespace)
+				params := fullyDefinedGatewayParameters(
+					wellknown.DefaultGatewayParametersName,
+					defaultNamespace,
+				)
 				params.Spec.Kube.PodTemplate.LivenessProbe = generateLivenessProbe()
 				params.Spec.Kube.PodTemplate.ReadinessProbe = generateReadinessProbe()
 				params.Spec.Kube.PodTemplate.TerminationGracePeriodSeconds = ptr.To(5)
@@ -1131,7 +1160,10 @@ var _ = Describe("Deployer", func() {
 			}
 
 			fullyDefinedGatewayParamsWithFloatingUserId = func() *gw2_v1alpha1.GatewayParameters {
-				params := fullyDefinedGatewayParameters(wellknown.DefaultGatewayParametersName, defaultNamespace)
+				params := fullyDefinedGatewayParameters(
+					wellknown.DefaultGatewayParametersName,
+					defaultNamespace,
+				)
 				params.Spec.Kube.FloatingUserId = ptr.To(true)
 				return params
 			}
@@ -1169,23 +1201,39 @@ var _ = Describe("Deployer", func() {
 					*expectedGwp.EnvoyContainer.Image.Registry,
 					*expectedGwp.EnvoyContainer.Image.Repository,
 				)
-				Expect(dep.Spec.Template.Spec.Containers[0].Image).To(ContainSubstring(expectedImage))
+				Expect(
+					dep.Spec.Template.Spec.Containers[0].Image,
+				).To(ContainSubstring(expectedImage))
 				if expectedTag := expectedGwp.EnvoyContainer.Image.Tag; *expectedTag != "" {
-					Expect(dep.Spec.Template.Spec.Containers[0].Image).To(ContainSubstring(":" + *expectedTag))
+					Expect(
+						dep.Spec.Template.Spec.Containers[0].Image,
+					).To(ContainSubstring(":" + *expectedTag))
 				} else {
 					Expect(dep.Spec.Template.Spec.Containers[0].Image).To(ContainSubstring(":" + version.Version))
 				}
-				Expect(dep.Spec.Template.Spec.Containers[0].ImagePullPolicy).To(Equal(*expectedGwp.EnvoyContainer.Image.PullPolicy))
+				Expect(
+					dep.Spec.Template.Spec.Containers[0].ImagePullPolicy,
+				).To(Equal(*expectedGwp.EnvoyContainer.Image.PullPolicy))
 
-				Expect(dep.Spec.Template.Annotations).To(containMapElements(expectedGwp.PodTemplate.ExtraAnnotations))
-				Expect(dep.Spec.Template.Annotations).To(HaveKeyWithValue("prometheus.io/scrape", "true"))
-				Expect(dep.Spec.Template.Spec.SecurityContext.RunAsUser).To(Equal(expectedGwp.PodTemplate.SecurityContext.RunAsUser))
-				Expect(dep.Spec.Template.Spec.SecurityContext.RunAsGroup).To(Equal(expectedGwp.PodTemplate.SecurityContext.RunAsGroup))
+				Expect(
+					dep.Spec.Template.Annotations,
+				).To(containMapElements(expectedGwp.PodTemplate.ExtraAnnotations))
+				Expect(
+					dep.Spec.Template.Annotations,
+				).To(HaveKeyWithValue("prometheus.io/scrape", "true"))
+				Expect(
+					dep.Spec.Template.Spec.SecurityContext.RunAsUser,
+				).To(Equal(expectedGwp.PodTemplate.SecurityContext.RunAsUser))
+				Expect(
+					dep.Spec.Template.Spec.SecurityContext.RunAsGroup,
+				).To(Equal(expectedGwp.PodTemplate.SecurityContext.RunAsGroup))
 
 				svc := objs.findService(defaultNamespace, defaultServiceName)
 				Expect(svc).ToNot(BeNil())
 				Expect(svc.GetAnnotations()).ToNot(BeNil())
-				Expect(svc.GetAnnotations()).To(containMapElements(expectedGwp.Service.ExtraAnnotations))
+				Expect(
+					svc.GetAnnotations(),
+				).To(containMapElements(expectedGwp.Service.ExtraAnnotations))
 				Expect(svc.GetLabels()).ToNot(BeNil())
 				Expect(svc.GetLabels()).To(containMapElements(expectedGwp.Service.ExtraLabels))
 				Expect(svc.Spec.Type).To(Equal(*expectedGwp.Service.Type))
@@ -1194,9 +1242,13 @@ var _ = Describe("Deployer", func() {
 				sa := objs.findServiceAccount(defaultNamespace, defaultServiceAccountName)
 				Expect(sa).ToNot(BeNil())
 				Expect(sa.GetAnnotations()).ToNot(BeNil())
-				Expect(sa.GetAnnotations()).To(containMapElements(expectedGwp.ServiceAccount.ExtraAnnotations))
+				Expect(
+					sa.GetAnnotations(),
+				).To(containMapElements(expectedGwp.ServiceAccount.ExtraAnnotations))
 				Expect(sa.GetLabels()).ToNot(BeNil())
-				Expect(sa.GetLabels()).To(containMapElements(expectedGwp.ServiceAccount.ExtraLabels))
+				Expect(
+					sa.GetLabels(),
+				).To(containMapElements(expectedGwp.ServiceAccount.ExtraLabels))
 
 				cm := objs.findConfigMap(defaultNamespace, defaultConfigMapName)
 				Expect(cm).ToNot(BeNil())
@@ -1214,7 +1266,9 @@ var _ = Describe("Deployer", func() {
 					And(levels...),
 				}
 
-				Expect(objs.findDeployment(defaultNamespace, defaultDeploymentName).Spec.Template.Spec.Containers[0].Args).To(ContainElements(
+				Expect(
+					objs.findDeployment(defaultNamespace, defaultDeploymentName).Spec.Template.Spec.Containers[0].Args,
+				).To(ContainElements(
 					argsMatchers...,
 				))
 				return nil
@@ -1232,7 +1286,9 @@ var _ = Describe("Deployer", func() {
 			Expect(dep.Spec.Replicas).ToNot(BeNil())
 			Expect(*dep.Spec.Replicas).To(Equal(int32(*expectedGwp.Deployment.Replicas)))
 
-			Expect(dep.Spec.Template.Annotations).To(containMapElements(expectedGwp.PodTemplate.ExtraAnnotations))
+			Expect(
+				dep.Spec.Template.Annotations,
+			).To(containMapElements(expectedGwp.PodTemplate.ExtraAnnotations))
 
 			// assert envoy container
 			expectedEnvoyImage := fmt.Sprintf("%s/%s",
@@ -1246,9 +1302,15 @@ var _ = Describe("Deployer", func() {
 			} else {
 				Expect(envoyContainer.Image).To(ContainSubstring(":" + version.Version))
 			}
-			Expect(envoyContainer.ImagePullPolicy).To(Equal(*expectedGwp.EnvoyContainer.Image.PullPolicy))
-			Expect(envoyContainer.Resources.Limits.Cpu()).To(Equal(expectedGwp.EnvoyContainer.Resources.Limits.Cpu()))
-			Expect(envoyContainer.Resources.Requests.Cpu()).To(Equal(expectedGwp.EnvoyContainer.Resources.Requests.Cpu()))
+			Expect(
+				envoyContainer.ImagePullPolicy,
+			).To(Equal(*expectedGwp.EnvoyContainer.Image.PullPolicy))
+			Expect(
+				envoyContainer.Resources.Limits.Cpu(),
+			).To(Equal(expectedGwp.EnvoyContainer.Resources.Limits.Cpu()))
+			Expect(
+				envoyContainer.Resources.Requests.Cpu(),
+			).To(Equal(expectedGwp.EnvoyContainer.Resources.Requests.Cpu()))
 
 			// assert sds container
 			expectedSdsImage := fmt.Sprintf("%s/%s",
@@ -1262,14 +1324,22 @@ var _ = Describe("Deployer", func() {
 			} else {
 				Expect(sdsContainer.Image).To(ContainSubstring(":" + version.Version))
 			}
-			Expect(sdsContainer.ImagePullPolicy).To(Equal(*expectedGwp.SdsContainer.Image.PullPolicy))
-			Expect(sdsContainer.Resources.Limits.Cpu()).To(Equal(expectedGwp.SdsContainer.Resources.Limits.Cpu()))
-			Expect(sdsContainer.Resources.Requests.Cpu()).To(Equal(expectedGwp.SdsContainer.Resources.Requests.Cpu()))
+			Expect(
+				sdsContainer.ImagePullPolicy,
+			).To(Equal(*expectedGwp.SdsContainer.Image.PullPolicy))
+			Expect(
+				sdsContainer.Resources.Limits.Cpu(),
+			).To(Equal(expectedGwp.SdsContainer.Resources.Limits.Cpu()))
+			Expect(
+				sdsContainer.Resources.Requests.Cpu(),
+			).To(Equal(expectedGwp.SdsContainer.Resources.Requests.Cpu()))
 			idx := slices.IndexFunc(sdsContainer.Env, func(e corev1.EnvVar) bool {
 				return e.Name == "LOG_LEVEL"
 			})
 			Expect(idx).ToNot(Equal(-1))
-			Expect(sdsContainer.Env[idx].Value).To(Equal(*expectedGwp.SdsContainer.Bootstrap.LogLevel))
+			Expect(
+				sdsContainer.Env[idx].Value,
+			).To(Equal(*expectedGwp.SdsContainer.Bootstrap.LogLevel))
 
 			// assert istio container
 			istioExpectedImage := fmt.Sprintf("%s/%s",
@@ -1283,9 +1353,16 @@ var _ = Describe("Deployer", func() {
 			} else {
 				Expect(istioContainer.Image).To(ContainSubstring(":" + version.Version))
 			}
-			Expect(istioContainer.ImagePullPolicy).To(Equal(*expectedGwp.Istio.IstioProxyContainer.Image.PullPolicy))
-			Expect(istioContainer.Resources.Limits.Cpu()).To(Equal(expectedGwp.Istio.IstioProxyContainer.Resources.Limits.Cpu()))
-			Expect(istioContainer.Resources.Requests.Cpu()).To(Equal(expectedGwp.Istio.IstioProxyContainer.Resources.Requests.Cpu()))
+			Expect(
+				istioContainer.ImagePullPolicy,
+			).To(Equal(*expectedGwp.Istio.IstioProxyContainer.Image.PullPolicy))
+			Expect(
+				istioContainer.Resources.Limits.Cpu(),
+			).To(Equal(expectedGwp.Istio.IstioProxyContainer.Resources.Limits.Cpu()))
+			Expect(
+				istioContainer.Resources.Requests.Cpu(),
+			).To(Equal(expectedGwp.Istio.IstioProxyContainer.Resources.Requests.Cpu()))
+
 			// TODO: assert on istio args (e.g. log level, istio meta fields, etc)
 
 			// assert AI extension container
@@ -1301,7 +1378,9 @@ var _ = Describe("Deployer", func() {
 			svc := objs.findService(defaultNamespace, defaultServiceName)
 			Expect(svc).ToNot(BeNil())
 			Expect(svc.GetAnnotations()).ToNot(BeNil())
-			Expect(svc.GetAnnotations()).To(containMapElements(expectedGwp.Service.ExtraAnnotations))
+			Expect(
+				svc.GetAnnotations(),
+			).To(containMapElements(expectedGwp.Service.ExtraAnnotations))
 			Expect(svc.GetLabels()).ToNot(BeNil())
 			Expect(svc.GetLabels()).To(containMapElements(expectedGwp.Service.ExtraLabels))
 			Expect(svc.Spec.Type).To(Equal(*expectedGwp.Service.Type))
@@ -1310,7 +1389,9 @@ var _ = Describe("Deployer", func() {
 			sa := objs.findServiceAccount(defaultNamespace, defaultServiceAccountName)
 			Expect(sa).ToNot(BeNil())
 			Expect(sa.GetAnnotations()).ToNot(BeNil())
-			Expect(sa.GetAnnotations()).To(containMapElements(expectedGwp.ServiceAccount.ExtraAnnotations))
+			Expect(
+				sa.GetAnnotations(),
+			).To(containMapElements(expectedGwp.ServiceAccount.ExtraAnnotations))
 			Expect(sa.GetLabels()).ToNot(BeNil())
 			Expect(sa.GetLabels()).To(containMapElements(expectedGwp.ServiceAccount.ExtraLabels))
 
@@ -1330,7 +1411,9 @@ var _ = Describe("Deployer", func() {
 				And(levels...),
 			}
 
-			Expect(objs.findDeployment(defaultNamespace, defaultDeploymentName).Spec.Template.Spec.Containers[0].Args).To(ContainElements(
+			Expect(
+				objs.findDeployment(defaultNamespace, defaultDeploymentName).Spec.Template.Spec.Containers[0].Args,
+			).To(ContainElements(
 				argsMatchers...,
 			))
 			return nil
@@ -1344,13 +1427,19 @@ var _ = Describe("Deployer", func() {
 
 			expectedGwp := inp.defaultGwp.Spec.Kube
 			dep := objs.findDeployment(defaultNamespace, defaultDeploymentName)
-			Expect(dep.Spec.Template.Spec.SecurityContext.RunAsUser).To(Equal(expectedGwp.PodTemplate.SecurityContext.RunAsUser))
+			Expect(
+				dep.Spec.Template.Spec.SecurityContext.RunAsUser,
+			).To(Equal(expectedGwp.PodTemplate.SecurityContext.RunAsUser))
 
 			sdsContainer := dep.Spec.Template.Spec.Containers[1]
-			Expect(sdsContainer.SecurityContext.RunAsUser).To(Equal(expectedGwp.SdsContainer.SecurityContext.RunAsUser))
+			Expect(
+				sdsContainer.SecurityContext.RunAsUser,
+			).To(Equal(expectedGwp.SdsContainer.SecurityContext.RunAsUser))
 
 			istioContainer := dep.Spec.Template.Spec.Containers[2]
-			Expect(istioContainer.SecurityContext.RunAsUser).To(Equal(expectedGwp.Istio.IstioProxyContainer.SecurityContext.RunAsUser))
+			Expect(
+				istioContainer.SecurityContext.RunAsUser,
+			).To(Equal(expectedGwp.Istio.IstioProxyContainer.SecurityContext.RunAsUser))
 
 			return nil
 		}
@@ -1408,7 +1497,10 @@ var _ = Describe("Deployer", func() {
 		}
 
 		generalAiAndSdsValidationFunc := func(objs clientObjects, inp *input, expectNullRunAsUser bool) error {
-			containers := objs.findDeployment(defaultNamespace, defaultDeploymentName).Spec.Template.Spec.Containers
+			containers := objs.findDeployment(
+				defaultNamespace,
+				defaultDeploymentName,
+			).Spec.Template.Spec.Containers
 			Expect(containers).To(HaveLen(4))
 			var foundGw, foundSds, foundIstioProxy, foundAIExtension bool
 			var sdsContainer, istioProxyContainer, aiContainer, gwContainer corev1.Container
@@ -1456,67 +1548,84 @@ var _ = Describe("Deployer", func() {
 			Expect(clusters).To(ContainElement(HaveField("Name", "gateway_proxy_sds")))
 
 			sdsImg := inp.overrideGwp.Spec.Kube.SdsContainer.Image
-			Expect(sdsContainer.Image).To(Equal(fmt.Sprintf("%s/%s:%s", *sdsImg.Registry, *sdsImg.Repository, *sdsImg.Tag)))
+			Expect(
+				sdsContainer.Image,
+			).To(Equal(fmt.Sprintf("%s/%s:%s", *sdsImg.Registry, *sdsImg.Repository, *sdsImg.Tag)))
 			istioProxyImg := inp.overrideGwp.Spec.Kube.Istio.IstioProxyContainer.Image
-			Expect(istioProxyContainer.Image).To(Equal(fmt.Sprintf("%s/%s:%s", *istioProxyImg.Registry, *istioProxyImg.Repository, *istioProxyImg.Tag)))
+			Expect(
+				istioProxyContainer.Image,
+			).To(Equal(fmt.Sprintf("%s/%s:%s", *istioProxyImg.Registry, *istioProxyImg.Repository, *istioProxyImg.Tag)))
 
 			return nil
 		}
 
 		aiAndSdsValidationFunc := func(objs clientObjects, inp *input) error {
-			return generalAiAndSdsValidationFunc(objs, inp, false) // false: don't expect null runAsUser
+			return generalAiAndSdsValidationFunc(
+				objs,
+				inp,
+				false,
+			) // false: don't expect null runAsUser
 		}
 
 		aiSdsAndFloatingUserIdValidationFunc := func(objs clientObjects, inp *input) error {
-			return generalAiAndSdsValidationFunc(objs, inp, true) // true: don't expect null runAsUser
+			return generalAiAndSdsValidationFunc(
+				objs,
+				inp,
+				true,
+			) // true: don't expect null runAsUser
 		}
 
-		DescribeTable("create and validate objs", func(inp *input, expected *expectedOutput) {
-			checkErr := func(err, expectedErr error) (shouldReturn bool) {
-				GinkgoHelper()
-				if expectedErr != nil {
-					Expect(err).To(MatchError(expectedErr))
-					return true
+		DescribeTable(
+			"create and validate objs",
+			func(inp *input, expected *expectedOutput) {
+				checkErr := func(err, expectedErr error) (shouldReturn bool) {
+					GinkgoHelper()
+					if expectedErr != nil {
+						Expect(err).To(MatchError(expectedErr))
+						return true
+					}
+					Expect(err).NotTo(HaveOccurred())
+					return false
 				}
-				Expect(err).NotTo(HaveOccurred())
-				return false
-			}
 
-			// run break-glass setup
-			if inp.arbitrarySetup != nil {
-				inp.arbitrarySetup()
-			}
+				// run break-glass setup
+				if inp.arbitrarySetup != nil {
+					inp.arbitrarySetup()
+				}
 
-			// Catch nil objs so the fake client doesn't choke
-			gwc := inp.gwc
-			if gwc == nil {
-				gwc = defaultGatewayClassWithParamsRef()
-			}
+				// Catch nil objs so the fake client doesn't choke
+				gwc := inp.gwc
+				if gwc == nil {
+					gwc = defaultGatewayClassWithParamsRef()
+				}
 
-			// default these to empty objects so we can test behavior when one or both
-			// resources don't exist
-			defaultGwp := inp.defaultGwp
-			if defaultGwp == nil {
-				defaultGwp = &gw2_v1alpha1.GatewayParameters{}
-			}
-			overrideGwp := inp.overrideGwp
-			if overrideGwp == nil {
-				overrideGwp = &gw2_v1alpha1.GatewayParameters{}
-			}
+				// default these to empty objects so we can test behavior when one or both
+				// resources don't exist
+				defaultGwp := inp.defaultGwp
+				if defaultGwp == nil {
+					defaultGwp = &gw2_v1alpha1.GatewayParameters{}
+				}
+				overrideGwp := inp.overrideGwp
+				if overrideGwp == nil {
+					overrideGwp = &gw2_v1alpha1.GatewayParameters{}
+				}
 
-			d, err := deployer.NewDeployer(newFakeClientWithObjs(gwc, defaultGwp, overrideGwp), inp.dInputs)
-			if checkErr(err, expected.newDeployerErr) {
-				return
-			}
+				d, err := deployer.NewDeployer(
+					newFakeClientWithObjs(gwc, defaultGwp, overrideGwp),
+					inp.dInputs,
+				)
+				if checkErr(err, expected.newDeployerErr) {
+					return
+				}
 
-			objs, err := d.GetObjsToDeploy(context.Background(), inp.gw)
-			if checkErr(err, expected.getObjsErr) {
-				return
-			}
+				objs, err := d.GetObjsToDeploy(context.Background(), inp.gw)
+				if checkErr(err, expected.getObjsErr) {
+					return
+				}
 
-			// handle custom test validation func
-			Expect(expected.validationFunc(objs, inp)).NotTo(HaveOccurred())
-		},
+				// handle custom test validation func
+				Expect(expected.validationFunc(objs, inp)).NotTo(HaveOccurred())
+			},
 			Entry("GatewayParameters overrides", &input{
 				dInputs:     defaultDeployerInputs(),
 				gw:          defaultGatewayWithGatewayParams(gwpOverrideName),
@@ -1670,12 +1779,19 @@ var _ = Describe("Deployer", func() {
 					// make sure it's valid yaml
 					var envoyConfig map[string]any
 					err := yaml.Unmarshal([]byte(envoyYaml), &envoyConfig)
-					Expect(err).NotTo(HaveOccurred(), "envoy config is not valid yaml: %s", envoyYaml)
+					Expect(
+						err,
+					).NotTo(HaveOccurred(), "envoy config is not valid yaml: %s", envoyYaml)
 
 					// make sure the envoy node metadata looks right
 					node := envoyConfig["node"].(map[string]any)
 					Expect(node).To(HaveKeyWithValue("metadata", map[string]any{
-						xds.RoleKey: fmt.Sprintf("%s~%s~%s", wellknown.GatewayApiProxyValue, gw.Namespace, gw.Name),
+						xds.RoleKey: fmt.Sprintf(
+							"%s~%s~%s",
+							wellknown.GatewayApiProxyValue,
+							gw.Namespace,
+							gw.Name,
+						),
 					}))
 
 					// make sure the stats listener is enabled
@@ -1715,12 +1831,19 @@ var _ = Describe("Deployer", func() {
 					// make sure it's valid yaml
 					var envoyConfig map[string]any
 					err := yaml.Unmarshal([]byte(envoyYaml), &envoyConfig)
-					Expect(err).NotTo(HaveOccurred(), "envoy config is not valid yaml: %s", envoyYaml)
+					Expect(
+						err,
+					).NotTo(HaveOccurred(), "envoy config is not valid yaml: %s", envoyYaml)
 
 					// make sure the envoy node metadata looks right
 					node := envoyConfig["node"].(map[string]any)
 					Expect(node).To(HaveKeyWithValue("metadata", map[string]any{
-						xds.RoleKey: fmt.Sprintf("%s~%s~%s", wellknown.GatewayApiProxyValue, gw.Namespace, gw.Name),
+						xds.RoleKey: fmt.Sprintf(
+							"%s~%s~%s",
+							wellknown.GatewayApiProxyValue,
+							gw.Namespace,
+							gw.Name,
+						),
 					}))
 
 					// make sure the stats listener is enabled
@@ -1754,16 +1877,20 @@ var _ = Describe("Deployer", func() {
 			}, &expectedOutput{
 				newDeployerErr: deployer.NilDeployerInputsErr,
 			}),
-			Entry("No GatewayParameters override but default is self-managed; should not deploy gateway", &input{
-				dInputs:    defaultDeployerInputs(),
-				gw:         defaultGateway(),
-				defaultGwp: selfManagedGatewayParam(wellknown.DefaultGatewayParametersName),
-			}, &expectedOutput{
-				validationFunc: func(objs clientObjects, inp *input) error {
-					Expect(objs).To(BeEmpty())
-					return nil
+			Entry(
+				"No GatewayParameters override but default is self-managed; should not deploy gateway",
+				&input{
+					dInputs:    defaultDeployerInputs(),
+					gw:         defaultGateway(),
+					defaultGwp: selfManagedGatewayParam(wellknown.DefaultGatewayParametersName),
 				},
-			}),
+				&expectedOutput{
+					validationFunc: func(objs clientObjects, inp *input) error {
+						Expect(objs).To(BeEmpty())
+						return nil
+					},
+				},
+			),
 			Entry("Self-managed GatewayParameters override; should not deploy gateway", &input{
 				dInputs:     defaultDeployerInputs(),
 				gw:          defaultGatewayWithGatewayParams("self-managed"),
@@ -1781,127 +1908,143 @@ var _ = Describe("Deployer", func() {
 	Context("Inference Extension endpoint picker", func() {
 		const defaultNamespace = "default"
 
-		It("should deploy endpoint picker resources for an InferencePool when autoProvision is enabled", func() {
-			// Create a fake InferencePool resource.
-			pool := &infextv1a2.InferencePool{
-				TypeMeta: metav1.TypeMeta{
-					Kind:       wellknown.InferencePoolKind,
-					APIVersion: fmt.Sprintf("%s/%s", infextv1a2.GroupVersion.Group, infextv1a2.GroupVersion.Version),
-				},
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      "pool1",
-					Namespace: defaultNamespace,
-					UID:       "pool-uid",
-				},
-			}
-
-			// Initialize a new deployer with InferenceExtension inputs.
-			d, err := deployer.NewDeployer(newFakeClientWithObjs(pool), &deployer.Inputs{
-				ControllerName:     wellknown.GatewayControllerName,
-				InferenceExtension: &deployer.InferenceExtInfo{},
-				ImageInfo: &deployer.ImageInfo{
-					Registry: "foo",
-					Tag:      "bar",
-				},
-			})
-			Expect(err).NotTo(HaveOccurred())
-
-			// Simulate reconciliation so that the pool gets its finalizer added.
-			err = d.EnsureFinalizer(context.Background(), pool)
-			Expect(err).NotTo(HaveOccurred())
-
-			// Check that the pool itself has the finalizer set.
-			Expect(pool.GetFinalizers()).To(ContainElement(wellknown.InferencePoolFinalizer))
-
-			// Get the endpoint picker objects for the InferencePool.
-			objs, err := d.GetEndpointPickerObjs(pool)
-			Expect(err).NotTo(HaveOccurred())
-			Expect(objs).NotTo(BeEmpty(), "expected non-empty objects for endpoint picker deployment")
-			Expect(objs).To(HaveLen(4))
-
-			// Find the child objects.
-			var sa *corev1.ServiceAccount
-			var crb *rbacv1.ClusterRoleBinding
-			var dep *appsv1.Deployment
-			var svc *corev1.Service
-			for _, obj := range objs {
-				switch t := obj.(type) {
-				case *corev1.ServiceAccount:
-					sa = t
-				case *rbacv1.ClusterRoleBinding:
-					crb = t
-				case *appsv1.Deployment:
-					dep = t
-				case *corev1.Service:
-					svc = t
+		It(
+			"should deploy endpoint picker resources for an InferencePool when autoProvision is enabled",
+			func() {
+				// Create a fake InferencePool resource.
+				pool := &infextv1a2.InferencePool{
+					TypeMeta: metav1.TypeMeta{
+						Kind: wellknown.InferencePoolKind,
+						APIVersion: fmt.Sprintf(
+							"%s/%s",
+							infextv1a2.GroupVersion.Group,
+							infextv1a2.GroupVersion.Version,
+						),
+					},
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "pool1",
+						Namespace: defaultNamespace,
+						UID:       "pool-uid",
+					},
 				}
-			}
-			Expect(sa).NotTo(BeNil(), "expected a ServiceAccount to be rendered")
-			Expect(crb).NotTo(BeNil(), "expected a ClusterRoleBinding to be rendered")
-			Expect(dep).NotTo(BeNil(), "expected a Deployment to be rendered")
-			Expect(svc).NotTo(BeNil(), "expected a Service to be rendered")
 
-			// Check that owner references are set on all rendered objects to the InferencePool.
-			for _, obj := range objs {
-				gvk := obj.GetObjectKind().GroupVersionKind()
-				if deployer.IsNamespaced(gvk) {
-					ownerRefs := obj.GetOwnerReferences()
-					Expect(ownerRefs).To(HaveLen(1))
-					ref := ownerRefs[0]
-					Expect(ref.Name).To(Equal(pool.Name))
-					Expect(ref.UID).To(Equal(pool.UID))
-					Expect(ref.Kind).To(Equal(pool.Kind))
-					Expect(ref.APIVersion).To(Equal(pool.APIVersion))
-					Expect(*ref.Controller).To(BeTrue())
+				// Initialize a new deployer with InferenceExtension inputs.
+				d, err := deployer.NewDeployer(newFakeClientWithObjs(pool), &deployer.Inputs{
+					ControllerName:     wellknown.GatewayControllerName,
+					InferenceExtension: &deployer.InferenceExtInfo{},
+					ImageInfo: &deployer.ImageInfo{
+						Registry: "foo",
+						Tag:      "bar",
+					},
+				})
+				Expect(err).NotTo(HaveOccurred())
+
+				// Simulate reconciliation so that the pool gets its finalizer added.
+				err = d.EnsureFinalizer(context.Background(), pool)
+				Expect(err).NotTo(HaveOccurred())
+
+				// Check that the pool itself has the finalizer set.
+				Expect(pool.GetFinalizers()).To(ContainElement(wellknown.InferencePoolFinalizer))
+
+				// Get the endpoint picker objects for the InferencePool.
+				objs, err := d.GetEndpointPickerObjs(pool)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(
+					objs,
+				).NotTo(BeEmpty(), "expected non-empty objects for endpoint picker deployment")
+				Expect(objs).To(HaveLen(4))
+
+				// Find the child objects.
+				var sa *corev1.ServiceAccount
+				var crb *rbacv1.ClusterRoleBinding
+				var dep *appsv1.Deployment
+				var svc *corev1.Service
+				for _, obj := range objs {
+					switch t := obj.(type) {
+					case *corev1.ServiceAccount:
+						sa = t
+					case *rbacv1.ClusterRoleBinding:
+						crb = t
+					case *appsv1.Deployment:
+						dep = t
+					case *corev1.Service:
+						svc = t
+					}
 				}
-			}
+				Expect(sa).NotTo(BeNil(), "expected a ServiceAccount to be rendered")
+				Expect(crb).NotTo(BeNil(), "expected a ClusterRoleBinding to be rendered")
+				Expect(dep).NotTo(BeNil(), "expected a Deployment to be rendered")
+				Expect(svc).NotTo(BeNil(), "expected a Service to be rendered")
 
-			// Validate that the rendered Deployment and Service have the expected names.
-			expectedName := fmt.Sprintf("%s-endpoint-picker", pool.Name)
-			Expect(sa.Name).To(Equal(expectedName))
-			Expect(crb.Name).To(Equal(expectedName))
-			Expect(dep.Name).To(Equal(expectedName))
-			Expect(svc.Name).To(Equal(expectedName))
+				// Check that owner references are set on all rendered objects to the InferencePool.
+				for _, obj := range objs {
+					gvk := obj.GetObjectKind().GroupVersionKind()
+					if deployer.IsNamespaced(gvk) {
+						ownerRefs := obj.GetOwnerReferences()
+						Expect(ownerRefs).To(HaveLen(1))
+						ref := ownerRefs[0]
+						Expect(ref.Name).To(Equal(pool.Name))
+						Expect(ref.UID).To(Equal(pool.UID))
+						Expect(ref.Kind).To(Equal(pool.Kind))
+						Expect(ref.APIVersion).To(Equal(pool.APIVersion))
+						Expect(*ref.Controller).To(BeTrue())
+					}
+				}
 
-			// Check the container args for the expected poolName.
-			Expect(dep.Spec.Template.Spec.Containers).To(HaveLen(1))
-			pickerContainer := dep.Spec.Template.Spec.Containers[0]
-			Expect(pickerContainer.Args).To(Equal([]string{
-				"-poolName",
-				pool.Name,
-				"-v",
-				"4",
-				"-grpcPort",
-				"9002",
-				"-grpcHealthPort",
-				"9003",
-			}))
-		})
+				// Validate that the rendered Deployment and Service have the expected names.
+				expectedName := fmt.Sprintf("%s-endpoint-picker", pool.Name)
+				Expect(sa.Name).To(Equal(expectedName))
+				Expect(crb.Name).To(Equal(expectedName))
+				Expect(dep.Name).To(Equal(expectedName))
+				Expect(svc.Name).To(Equal(expectedName))
 
-		It("should deploy endpoint picker resources for an InferencePool when autoProvision is enabled", func() {
-			// Create a fake InferencePool resource.
-			pool := &infextv1a2.InferencePool{
-				TypeMeta: metav1.TypeMeta{
-					Kind:       wellknown.InferencePoolKind,
-					APIVersion: fmt.Sprintf("%s/%s", infextv1a2.GroupVersion.Group, infextv1a2.GroupVersion.Version),
-				},
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      "pool1",
-					Namespace: defaultNamespace,
-					UID:       "pool-uid",
-				},
-			}
+				// Check the container args for the expected poolName.
+				Expect(dep.Spec.Template.Spec.Containers).To(HaveLen(1))
+				pickerContainer := dep.Spec.Template.Spec.Containers[0]
+				Expect(pickerContainer.Args).To(Equal([]string{
+					"-poolName",
+					pool.Name,
+					"-v",
+					"4",
+					"-grpcPort",
+					"9002",
+					"-grpcHealthPort",
+					"9003",
+				}))
+			},
+		)
 
-			// Initialize a new deployer without InferenceExtension inputs.
-			d, err := deployer.NewDeployer(newFakeClientWithObjs(pool), &deployer.Inputs{
-				ControllerName: wellknown.GatewayControllerName,
-			})
-			Expect(err).NotTo(HaveOccurred())
+		It(
+			"should deploy endpoint picker resources for an InferencePool when autoProvision is enabled",
+			func() {
+				// Create a fake InferencePool resource.
+				pool := &infextv1a2.InferencePool{
+					TypeMeta: metav1.TypeMeta{
+						Kind: wellknown.InferencePoolKind,
+						APIVersion: fmt.Sprintf(
+							"%s/%s",
+							infextv1a2.GroupVersion.Group,
+							infextv1a2.GroupVersion.Version,
+						),
+					},
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "pool1",
+						Namespace: defaultNamespace,
+						UID:       "pool-uid",
+					},
+				}
 
-			// Getting endpoint picker objects for the InferencePool should return an error.
-			_, err = d.GetEndpointPickerObjs(pool)
-			Expect(err).To(HaveOccurred())
-		})
+				// Initialize a new deployer without InferenceExtension inputs.
+				d, err := deployer.NewDeployer(newFakeClientWithObjs(pool), &deployer.Inputs{
+					ControllerName: wellknown.GatewayControllerName,
+				})
+				Expect(err).NotTo(HaveOccurred())
+
+				// Getting endpoint picker objects for the InferencePool should return an error.
+				_, err = d.GetEndpointPickerObjs(pool)
+				Expect(err).To(HaveOccurred())
+			},
+		)
 	})
 })
 

@@ -24,7 +24,12 @@ type version struct {
 }
 
 func String() string {
-	return fmt.Sprintf("controller version %s, commit %s, built at %s", ref.controller, ref.commit, ref.date)
+	return fmt.Sprintf(
+		"controller version %s, commit %s, built at %s",
+		ref.controller,
+		ref.commit,
+		ref.date,
+	)
 }
 
 func init() {

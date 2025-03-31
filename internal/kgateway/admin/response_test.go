@@ -29,7 +29,8 @@ var _ = Describe("SnapshotResponseData", func() {
 				Error: eris.New("one error"),
 			},
 			"{\"data\":\"\",\"error\":\"one error\"}"),
-		Entry("CR list can be formatted as json",
+		Entry(
+			"CR list can be formatted as json",
 			admin.SnapshotResponseData{
 				Data: []corev1.Namespace{
 					{
@@ -48,6 +49,7 @@ var _ = Describe("SnapshotResponseData", func() {
 				},
 				Error: nil,
 			},
-			"{\"data\":[{\"kind\":\"kind\",\"apiVersion\":\"version\",\"metadata\":{\"name\":\"name\",\"namespace\":\"namespace\",\"creationTimestamp\":null,\"managedFields\":[{\"manager\":\"manager\"}]},\"status\":{},\"spec\":{}}],\"error\":\"\"}"),
+			"{\"data\":[{\"kind\":\"kind\",\"apiVersion\":\"version\",\"metadata\":{\"name\":\"name\",\"namespace\":\"namespace\",\"creationTimestamp\":null,\"managedFields\":[{\"manager\":\"manager\"}]},\"status\":{},\"spec\":{}}],\"error\":\"\"}",
+		),
 	)
 })

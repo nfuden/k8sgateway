@@ -57,81 +57,105 @@ var _ = Describe("Reporting Infrastructure", func() {
 			status := rm.BuildGWStatus(context.Background(), *gw)
 
 			Expect(status).NotTo(BeNil())
-			Expect(status.Conditions).To(HaveLen(3)) // 2 from the report, 1 from the original status
+			Expect(
+				status.Conditions,
+			).To(HaveLen(3))
+			// 2 from the report, 1 from the original status
 			Expect(status.Listeners).To(HaveLen(1))
 			Expect(status.Listeners[0].Conditions).To(HaveLen(4))
 		})
 
-		It("should correctly set negative gateway conditions from report and not add extra conditions", func() {
-			gw := gw()
-			rm := reports.NewReportMap()
-			reporter := reports.NewReporter(&rm)
-			reporter.Gateway(gw).SetCondition(reports.GatewayCondition{
-				Type:   gwv1.GatewayConditionProgrammed,
-				Status: metav1.ConditionFalse,
-				Reason: gwv1.GatewayReasonAddressNotUsable,
-			})
-			status := rm.BuildGWStatus(context.Background(), *gw)
+		It(
+			"should correctly set negative gateway conditions from report and not add extra conditions",
+			func() {
+				gw := gw()
+				rm := reports.NewReportMap()
+				reporter := reports.NewReporter(&rm)
+				reporter.Gateway(gw).SetCondition(reports.GatewayCondition{
+					Type:   gwv1.GatewayConditionProgrammed,
+					Status: metav1.ConditionFalse,
+					Reason: gwv1.GatewayReasonAddressNotUsable,
+				})
+				status := rm.BuildGWStatus(context.Background(), *gw)
 
-			Expect(status).NotTo(BeNil())
-			Expect(status.Conditions).To(HaveLen(2))
-			Expect(status.Listeners).To(HaveLen(1))
-			Expect(status.Listeners[0].Conditions).To(HaveLen(4))
+				Expect(status).NotTo(BeNil())
+				Expect(status.Conditions).To(HaveLen(2))
+				Expect(status.Listeners).To(HaveLen(1))
+				Expect(status.Listeners[0].Conditions).To(HaveLen(4))
 
-			programmed := meta.FindStatusCondition(status.Conditions, string(gwv1.GatewayConditionProgrammed))
-			Expect(programmed.Status).To(Equal(metav1.ConditionFalse))
-		})
+				programmed := meta.FindStatusCondition(
+					status.Conditions,
+					string(gwv1.GatewayConditionProgrammed),
+				)
+				Expect(programmed.Status).To(Equal(metav1.ConditionFalse))
+			},
+		)
 
-		It("should correctly set negative listener conditions from report and not add extra conditions", func() {
-			gw := gw()
-			rm := reports.NewReportMap()
-			reporter := reports.NewReporter(&rm)
-			reporter.Gateway(gw).Listener(listener()).SetCondition(reports.ListenerCondition{
-				Type:   gwv1.ListenerConditionResolvedRefs,
-				Status: metav1.ConditionFalse,
-				Reason: gwv1.ListenerReasonInvalidRouteKinds,
-			})
-			status := rm.BuildGWStatus(context.Background(), *gw)
+		It(
+			"should correctly set negative listener conditions from report and not add extra conditions",
+			func() {
+				gw := gw()
+				rm := reports.NewReportMap()
+				reporter := reports.NewReporter(&rm)
+				reporter.Gateway(gw).Listener(listener()).SetCondition(reports.ListenerCondition{
+					Type:   gwv1.ListenerConditionResolvedRefs,
+					Status: metav1.ConditionFalse,
+					Reason: gwv1.ListenerReasonInvalidRouteKinds,
+				})
+				status := rm.BuildGWStatus(context.Background(), *gw)
 
-			Expect(status).NotTo(BeNil())
-			Expect(status.Conditions).To(HaveLen(2))
-			Expect(status.Listeners).To(HaveLen(1))
-			Expect(status.Listeners[0].Conditions).To(HaveLen(4))
+				Expect(status).NotTo(BeNil())
+				Expect(status.Conditions).To(HaveLen(2))
+				Expect(status.Listeners).To(HaveLen(1))
+				Expect(status.Listeners[0].Conditions).To(HaveLen(4))
 
-			resolvedRefs := meta.FindStatusCondition(status.Listeners[0].Conditions, string(gwv1.ListenerConditionResolvedRefs))
-			Expect(resolvedRefs.Status).To(Equal(metav1.ConditionFalse))
-		})
+				resolvedRefs := meta.FindStatusCondition(
+					status.Listeners[0].Conditions,
+					string(gwv1.ListenerConditionResolvedRefs),
+				)
+				Expect(resolvedRefs.Status).To(Equal(metav1.ConditionFalse))
+			},
+		)
 
-		It("should not modify LastTransitionTime for existing conditions that have not changed", func() {
-			gw := gw()
-			rm := reports.NewReportMap()
+		It(
+			"should not modify LastTransitionTime for existing conditions that have not changed",
+			func() {
+				gw := gw()
+				rm := reports.NewReportMap()
 
-			reporter := reports.NewReporter(&rm)
-			// initialize GatewayReporter to mimic translation loop (i.e. report gets initialized for all GWs)
-			reporter.Gateway(gw)
+				reporter := reports.NewReporter(&rm)
+				// initialize GatewayReporter to mimic translation loop (i.e. report gets initialized for all GWs)
+				reporter.Gateway(gw)
 
-			status := rm.BuildGWStatus(context.Background(), *gw)
+				status := rm.BuildGWStatus(context.Background(), *gw)
 
-			Expect(status).NotTo(BeNil())
-			Expect(status.Conditions).To(HaveLen(2))
-			Expect(status.Listeners).To(HaveLen(1))
-			Expect(status.Listeners[0].Conditions).To(HaveLen(4))
+				Expect(status).NotTo(BeNil())
+				Expect(status.Conditions).To(HaveLen(2))
+				Expect(status.Listeners).To(HaveLen(1))
+				Expect(status.Listeners[0].Conditions).To(HaveLen(4))
 
-			acceptedCond := meta.FindStatusCondition(status.Listeners[0].Conditions, string(gwv1.ListenerConditionAccepted))
-			oldTransitionTime := acceptedCond.LastTransitionTime
+				acceptedCond := meta.FindStatusCondition(
+					status.Listeners[0].Conditions,
+					string(gwv1.ListenerConditionAccepted),
+				)
+				oldTransitionTime := acceptedCond.LastTransitionTime
 
-			gw.Status = *status
-			status = rm.BuildGWStatus(context.Background(), *gw)
+				gw.Status = *status
+				status = rm.BuildGWStatus(context.Background(), *gw)
 
-			Expect(status).NotTo(BeNil())
-			Expect(status.Conditions).To(HaveLen(2))
-			Expect(status.Listeners).To(HaveLen(1))
-			Expect(status.Listeners[0].Conditions).To(HaveLen(4))
+				Expect(status).NotTo(BeNil())
+				Expect(status.Conditions).To(HaveLen(2))
+				Expect(status.Listeners).To(HaveLen(1))
+				Expect(status.Listeners[0].Conditions).To(HaveLen(4))
 
-			acceptedCond = meta.FindStatusCondition(status.Listeners[0].Conditions, string(gwv1.ListenerConditionAccepted))
-			newTransitionTime := acceptedCond.LastTransitionTime
-			Expect(newTransitionTime).To(Equal(oldTransitionTime))
-		})
+				acceptedCond = meta.FindStatusCondition(
+					status.Listeners[0].Conditions,
+					string(gwv1.ListenerConditionAccepted),
+				)
+				newTransitionTime := acceptedCond.LastTransitionTime
+				Expect(newTransitionTime).To(Equal(oldTransitionTime))
+			},
+		)
 
 		// TODO(Law): add multiple gws/listener tests
 		// TODO(Law): add test confirming transitionTime change when status change
@@ -166,7 +190,10 @@ var _ = Describe("Reporting Infrastructure", func() {
 
 				Expect(status).NotTo(BeNil())
 				Expect(status.Parents).To(HaveLen(1))
-				Expect(status.Parents[0].Conditions).To(HaveLen(3)) // 2 from the report, 1 from the original status
+				Expect(
+					status.Parents[0].Conditions,
+				).To(HaveLen(3))
+				// 2 from the report, 1 from the original status
 			},
 			Entry("regular httproute", httpRoute(
 				metav1.Condition{
@@ -273,7 +300,8 @@ var _ = Describe("Reporting Infrastructure", func() {
 			}),
 		)
 
-		DescribeTable("should correctly set negative route conditions from report and not add extra conditions",
+		DescribeTable(
+			"should correctly set negative route conditions from report and not add extra conditions",
 			func(obj client.Object, parentRef *gwv1.ParentReference) {
 				rm := reports.NewReportMap()
 				reporter := reports.NewReporter(&rm)
@@ -289,7 +317,10 @@ var _ = Describe("Reporting Infrastructure", func() {
 				Expect(status.Parents).To(HaveLen(1))
 				Expect(status.Parents[0].Conditions).To(HaveLen(2))
 
-				resolvedRefs := meta.FindStatusCondition(status.Parents[0].Conditions, string(gwv1.RouteConditionResolvedRefs))
+				resolvedRefs := meta.FindStatusCondition(
+					status.Parents[0].Conditions,
+					string(gwv1.RouteConditionResolvedRefs),
+				)
 				Expect(resolvedRefs.Status).To(Equal(metav1.ConditionFalse))
 			},
 			Entry("regular httproute", httpRoute(), parentRef()),
@@ -298,7 +329,8 @@ var _ = Describe("Reporting Infrastructure", func() {
 			Entry("delegatee route", delegateeRoute(), parentRouteRef()),
 		)
 
-		DescribeTable("should filter out multiple negative route conditions of the same type from report",
+		DescribeTable(
+			"should filter out multiple negative route conditions of the same type from report",
 			func(obj client.Object, parentRef *gwv1.ParentReference) {
 				rm := reports.NewReportMap()
 				reporter := reports.NewReporter(&rm)
@@ -319,7 +351,10 @@ var _ = Describe("Reporting Infrastructure", func() {
 				Expect(status.Parents).To(HaveLen(1))
 				Expect(status.Parents[0].Conditions).To(HaveLen(2))
 
-				resolvedRefs := meta.FindStatusCondition(status.Parents[0].Conditions, string(gwv1.RouteConditionResolvedRefs))
+				resolvedRefs := meta.FindStatusCondition(
+					status.Parents[0].Conditions,
+					string(gwv1.RouteConditionResolvedRefs),
+				)
 				Expect(resolvedRefs.Status).To(Equal(metav1.ConditionFalse))
 			},
 			Entry("regular httproute", httpRoute(), parentRef()),
@@ -328,19 +363,27 @@ var _ = Describe("Reporting Infrastructure", func() {
 			Entry("delegatee route", delegateeRoute(), parentRouteRef()),
 		)
 
-		DescribeTable("should not modify LastTransitionTime for existing conditions that have not changed",
+		DescribeTable(
+			"should not modify LastTransitionTime for existing conditions that have not changed",
 			func(obj client.Object) {
 				rm := reports.NewReportMap()
 
 				reporter := reports.NewReporter(&rm)
 				fakeTranslate(reporter, obj)
-				status := rm.BuildRouteStatus(context.Background(), obj, wellknown.GatewayControllerName)
+				status := rm.BuildRouteStatus(
+					context.Background(),
+					obj,
+					wellknown.GatewayControllerName,
+				)
 
 				Expect(status).NotTo(BeNil())
 				Expect(status.Parents).To(HaveLen(1))
 				Expect(status.Parents[0].Conditions).To(HaveLen(2))
 
-				resolvedRefs := meta.FindStatusCondition(status.Parents[0].Conditions, string(gwv1.RouteConditionResolvedRefs))
+				resolvedRefs := meta.FindStatusCondition(
+					status.Parents[0].Conditions,
+					string(gwv1.RouteConditionResolvedRefs),
+				)
 				oldTransitionTime := resolvedRefs.LastTransitionTime
 
 				// Type assert the object to update the Status field based on its type
@@ -355,13 +398,20 @@ var _ = Describe("Reporting Infrastructure", func() {
 					Fail(fmt.Sprintf("unsupported route type: %T", obj))
 				}
 
-				status = rm.BuildRouteStatus(context.Background(), obj, wellknown.GatewayControllerName)
+				status = rm.BuildRouteStatus(
+					context.Background(),
+					obj,
+					wellknown.GatewayControllerName,
+				)
 
 				Expect(status).NotTo(BeNil())
 				Expect(status.Parents).To(HaveLen(1))
 				Expect(status.Parents[0].Conditions).To(HaveLen(2))
 
-				resolvedRefs = meta.FindStatusCondition(status.Parents[0].Conditions, string(gwv1.RouteConditionResolvedRefs))
+				resolvedRefs = meta.FindStatusCondition(
+					status.Parents[0].Conditions,
+					string(gwv1.RouteConditionResolvedRefs),
+				)
 				newTransitionTime := resolvedRefs.LastTransitionTime
 				Expect(newTransitionTime).To(Equal(oldTransitionTime))
 			},
@@ -411,7 +461,8 @@ var _ = Describe("Reporting Infrastructure", func() {
 			Entry("regular tlsroute", tlsRoute()),
 		)
 
-		DescribeTable("should correctly associate multiple routes with shared and separate listeners",
+		DescribeTable(
+			"should correctly associate multiple routes with shared and separate listeners",
 			func(route1, route2 client.Object, listener1, listener2 gwv1.Listener) {
 				gw := gw()
 				gw.Spec.Listeners = []gwv1.Listener{listener1, listener2}
@@ -527,7 +578,10 @@ func httpRoute(conditions ...metav1.Condition) client.Object {
 			Namespace: "default",
 		},
 	}
-	route.Spec.CommonRouteSpec.ParentRefs = append(route.Spec.CommonRouteSpec.ParentRefs, *parentRef())
+	route.Spec.CommonRouteSpec.ParentRefs = append(
+		route.Spec.CommonRouteSpec.ParentRefs,
+		*parentRef(),
+	)
 	if len(conditions) > 0 {
 		route.Status.Parents = append(route.Status.Parents, gwv1.RouteParentStatus{
 			ParentRef:      *parentRef(),
@@ -545,7 +599,10 @@ func tcpRoute(conditions ...metav1.Condition) client.Object {
 			Namespace: "default",
 		},
 	}
-	route.Spec.CommonRouteSpec.ParentRefs = append(route.Spec.CommonRouteSpec.ParentRefs, *parentRef())
+	route.Spec.CommonRouteSpec.ParentRefs = append(
+		route.Spec.CommonRouteSpec.ParentRefs,
+		*parentRef(),
+	)
 	if len(conditions) > 0 {
 		route.Status.Parents = append(route.Status.Parents, gwv1.RouteParentStatus{
 			ParentRef:      *parentRef(),
@@ -563,7 +620,10 @@ func tlsRoute(conditions ...metav1.Condition) client.Object {
 			Namespace: "default",
 		},
 	}
-	route.Spec.CommonRouteSpec.ParentRefs = append(route.Spec.CommonRouteSpec.ParentRefs, *parentRef())
+	route.Spec.CommonRouteSpec.ParentRefs = append(
+		route.Spec.CommonRouteSpec.ParentRefs,
+		*parentRef(),
+	)
 	if len(conditions) > 0 {
 		route.Status.Parents = append(route.Status.Parents, gwv1.RouteParentStatus{
 			ParentRef:      *parentRef(),
@@ -593,7 +653,10 @@ func delegateeRoute(conditions ...metav1.Condition) client.Object {
 			Namespace: "default",
 		},
 	}
-	route.Spec.CommonRouteSpec.ParentRefs = append(route.Spec.CommonRouteSpec.ParentRefs, *parentRouteRef())
+	route.Spec.CommonRouteSpec.ParentRefs = append(
+		route.Spec.CommonRouteSpec.ParentRefs,
+		*parentRouteRef(),
+	)
 	if len(conditions) > 0 {
 		route.Status.Parents = append(route.Status.Parents, gwv1.RouteParentStatus{
 			ParentRef:      *parentRouteRef(),

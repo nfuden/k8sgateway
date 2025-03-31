@@ -93,7 +93,10 @@ func getAuthzBuilder(
 			Annotations: map[string]string{},
 			Spec:        convertedSpec,
 		}
-		policiesMap.NamespaceToPolicies[policy.Namespace] = append(policiesMap.NamespaceToPolicies[policy.Namespace], convertedPolicy)
+		policiesMap.NamespaceToPolicies[policy.Namespace] = append(
+			policiesMap.NamespaceToPolicies[policy.Namespace],
+			convertedPolicy,
+		)
 	}
 
 	matcher := model.WorkloadPolicyMatcher{
@@ -128,7 +131,11 @@ func getAuthzBuilder(
 	return builder
 }
 
-func applyHTTPRBACFilters(httpChain *ir.HttpFilterChainIR, httpRBAC []*ir.CustomEnvoyFilter, svc waypointquery.Service) {
+func applyHTTPRBACFilters(
+	httpChain *ir.HttpFilterChainIR,
+	httpRBAC []*ir.CustomEnvoyFilter,
+	svc waypointquery.Service,
+) {
 	// Apply RBAC filters regardless of the presence of proxy_protocol_authority
 	if len(httpRBAC) > 0 {
 		// Initialize CustomHTTPFilters if it's nil
@@ -143,7 +150,11 @@ func applyHTTPRBACFilters(httpChain *ir.HttpFilterChainIR, httpRBAC []*ir.Custom
 	}
 }
 
-func applyTCPRBACFilters(tcpChain *ir.TcpIR, tcpRBAC []*ir.CustomEnvoyFilter, svc waypointquery.Service) {
+func applyTCPRBACFilters(
+	tcpChain *ir.TcpIR,
+	tcpRBAC []*ir.CustomEnvoyFilter,
+	svc waypointquery.Service,
+) {
 	// Apply RBAC filters regardless of the presence of proxy_protocol_authority
 	if len(tcpRBAC) > 0 {
 		if tcpChain.NetworkFilters == nil {

@@ -30,7 +30,10 @@ func CheckRegexString(candidateRegex string) error {
 // NewRegexWithProgramSize creates a new regex matcher with the given program size.
 // This means its tightly coupled to envoy's implementation of regex.
 // NOTE: Call this after having checked regex with CheckRegexString.
-func NewRegexWithProgramSize(candidateRegex string, programsize *uint32) *envoy_type_matcher_v3.RegexMatcher {
+func NewRegexWithProgramSize(
+	candidateRegex string,
+	programsize *uint32,
+) *envoy_type_matcher_v3.RegexMatcher {
 	var maxProgramSize *wrappers.UInt32Value
 	if programsize != nil {
 		maxProgramSize = &wrappers.UInt32Value{
@@ -40,7 +43,9 @@ func NewRegexWithProgramSize(candidateRegex string, programsize *uint32) *envoy_
 
 	return &envoy_type_matcher_v3.RegexMatcher{
 		EngineType: &envoy_type_matcher_v3.RegexMatcher_GoogleRe2{
-			GoogleRe2: &envoy_type_matcher_v3.RegexMatcher_GoogleRE2{MaxProgramSize: maxProgramSize},
+			GoogleRe2: &envoy_type_matcher_v3.RegexMatcher_GoogleRE2{
+				MaxProgramSize: maxProgramSize,
+			},
 		},
 		Regex: candidateRegex,
 	}

@@ -131,7 +131,13 @@ func recordKubeState(ctx context.Context, kubectlCli *kubectl.Cli, f *os.File) {
 		"upstreams.gateway.kgateway.dev",
 	}
 
-	kubeResources, err := kubectlCli.RunCommandWithOutput(ctx, "get", strings.Join(resourcesToGet, ","), "-A", "-owide")
+	kubeResources, err := kubectlCli.RunCommandWithOutput(
+		ctx,
+		"get",
+		strings.Join(resourcesToGet, ","),
+		"-A",
+		"-owide",
+	)
 	if err != nil {
 		f.WriteString("*** Unable to get kube resources ***. Reason: " + err.Error() + " \n")
 		return
@@ -341,9 +347,13 @@ func ControllerDumpOnFail(ctx context.Context, kubectlCli *kubectl.Cli, outLog i
 				writeMetricsLog(ctx, namespaceOutDir, ns, podName, kubectlCli)
 
 				// Open a port-forward to the controller pod's admin port
-				portForwarder, err := kubectlCli.StartPortForward(ctx,
+				portForwarder, err := kubectlCli.StartPortForward(
+					ctx,
 					portforward.WithPod(podName, ns),
-					portforward.WithPorts(int(wellknown.KgatewayAdminPort), int(wellknown.KgatewayAdminPort)),
+					portforward.WithPorts(
+						int(wellknown.KgatewayAdminPort),
+						int(wellknown.KgatewayAdminPort),
+					),
 				)
 				if err != nil {
 					fmt.Printf("error starting port forward to controller admin port: %f\n", err)
@@ -361,13 +371,17 @@ func ControllerDumpOnFail(ctx context.Context, kubectlCli *kubectl.Cli, outLog i
 						curl.WithPort(int(wellknown.KgatewayAdminPort)),
 					)
 
-				krtSnapshotFile := fileAtPath(filepath.Join(namespaceOutDir, fmt.Sprintf("%s.krt_snapshot.log", podName)))
+				krtSnapshotFile := fileAtPath(
+					filepath.Join(namespaceOutDir, fmt.Sprintf("%s.krt_snapshot.log", podName)),
+				)
 				err = adminClient.KrtSnapshotCmd(ctx).WithStdout(krtSnapshotFile).Run().Cause()
 				if err != nil {
 					fmt.Printf("error running krt snapshot command: %f\n", err)
 				}
 
-				xdsSnapshotFile := fileAtPath(filepath.Join(namespaceOutDir, fmt.Sprintf("%s.xds_snapshot.log", podName)))
+				xdsSnapshotFile := fileAtPath(
+					filepath.Join(namespaceOutDir, fmt.Sprintf("%s.xds_snapshot.log", podName)),
+				)
 				err = adminClient.XdsSnapshotCmd(ctx).WithStdout(xdsSnapshotFile).Run().Cause()
 				if err != nil {
 					fmt.Printf("error running xds snapshot command: %f\n", err)
@@ -386,7 +400,13 @@ func ControllerDumpOnFail(ctx context.Context, kubectlCli *kubectl.Cli, outLog i
 // - stats
 // - clusters
 // - listeners
-func EnvoyDumpOnFail(ctx context.Context, kubectlCli *kubectl.Cli, _ io.Writer, outDir string, namespaces []string) func() {
+func EnvoyDumpOnFail(
+	ctx context.Context,
+	kubectlCli *kubectl.Cli,
+	_ io.Writer,
+	outDir string,
+	namespaces []string,
+) func() {
 	return func() {
 		for _, ns := range namespaces {
 			proxies := []string{}
@@ -419,25 +439,33 @@ func EnvoyDumpOnFail(ctx context.Context, kubectlCli *kubectl.Cli, _ io.Writer, 
 
 				defer shutdown()
 
-				configDumpFile := fileAtPath(filepath.Join(envoyOutDir, fmt.Sprintf("%s.config.log", proxy)))
+				configDumpFile := fileAtPath(
+					filepath.Join(envoyOutDir, fmt.Sprintf("%s.config.log", proxy)),
+				)
 				err = adminCli.ConfigDumpCmd(ctx, nil).WithStdout(configDumpFile).Run().Cause()
 				if err != nil {
 					fmt.Printf("error running config dump command: %f\n", err)
 				}
 
-				statsFile := fileAtPath(filepath.Join(envoyOutDir, fmt.Sprintf("%s.stats.log", proxy)))
+				statsFile := fileAtPath(
+					filepath.Join(envoyOutDir, fmt.Sprintf("%s.stats.log", proxy)),
+				)
 				err = adminCli.StatsCmd(ctx, nil).WithStdout(statsFile).Run().Cause()
 				if err != nil {
 					fmt.Printf("error running stats command: %f\n", err)
 				}
 
-				clustersFile := fileAtPath(filepath.Join(envoyOutDir, fmt.Sprintf("%s.clusters.log", proxy)))
+				clustersFile := fileAtPath(
+					filepath.Join(envoyOutDir, fmt.Sprintf("%s.clusters.log", proxy)),
+				)
 				err = adminCli.ClustersCmd(ctx).WithStdout(clustersFile).Run().Cause()
 				if err != nil {
 					fmt.Printf("error running clusters command: %f\n", err)
 				}
 
-				listenersFile := fileAtPath(filepath.Join(envoyOutDir, fmt.Sprintf("%s.listeners.log", proxy)))
+				listenersFile := fileAtPath(
+					filepath.Join(envoyOutDir, fmt.Sprintf("%s.listeners.log", proxy)),
+				)
 				err = adminCli.ListenersCmd(ctx).WithStdout(listenersFile).Run().Cause()
 				if err != nil {
 					fmt.Printf("error running listeners command: %f\n", err)
@@ -473,9 +501,17 @@ func fileAtPath(path string) *os.File {
 	return f
 }
 
-func writeControllerLog(ctx context.Context, outDir string, ns string, podName string, kubectlCli *kubectl.Cli) {
+func writeControllerLog(
+	ctx context.Context,
+	outDir string,
+	ns string,
+	podName string,
+	kubectlCli *kubectl.Cli,
+) {
 	// Get the kgateway controller logs
-	controllerLogsFile := fileAtPath(filepath.Join(outDir, fmt.Sprintf("%s.controller.log", podName)))
+	controllerLogsFile := fileAtPath(
+		filepath.Join(outDir, fmt.Sprintf("%s.controller.log", podName)),
+	)
 	controllerLogsCmd := kubectlCli.WithReceiver(controllerLogsFile).Command(ctx,
 		"-n", ns, "logs", podName, "-c", KgatewayContainerName, "--tail=1000")
 	err := controllerLogsCmd.Run().Cause()
@@ -484,7 +520,13 @@ func writeControllerLog(ctx context.Context, outDir string, ns string, podName s
 	}
 }
 
-func writeMetricsLog(ctx context.Context, outDir string, ns string, podName string, kubectlCli *kubectl.Cli) {
+func writeMetricsLog(
+	ctx context.Context,
+	outDir string,
+	ns string,
+	podName string,
+	kubectlCli *kubectl.Cli,
+) {
 	// Using an ephemeral debug pod fetch the metrics from the kgateway controller
 	metricsFile := fileAtPath(filepath.Join(outDir, fmt.Sprintf("%s.metrics.log", podName)))
 	metricsCmd := kubectlCli.Command(ctx, "debug", "-n", ns,

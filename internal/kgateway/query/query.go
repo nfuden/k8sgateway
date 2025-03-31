@@ -26,8 +26,10 @@ var (
 	ErrNoMatchingParent           = fmt.Errorf("no matching parent")
 	ErrNotAllowedByListeners      = fmt.Errorf("not allowed by listeners")
 	ErrLocalObjRefMissingKind     = fmt.Errorf("localObjRef provided with empty kind")
-	ErrCyclicReference            = fmt.Errorf("cyclic reference detected while evaluating delegated routes")
-	ErrUnresolvedReference        = fmt.Errorf("unresolved reference")
+	ErrCyclicReference            = fmt.Errorf(
+		"cyclic reference detected while evaluating delegated routes",
+	)
+	ErrUnresolvedReference = fmt.Errorf("unresolved reference")
 )
 
 type Error struct {
@@ -99,10 +101,20 @@ func (f FromObject) Namespace() string {
 }
 
 type GatewayQueries interface {
-	GetSecretForRef(kctx krt.HandlerContext, ctx context.Context, fromGk schema.GroupKind, fromns string, secretRef apiv1.SecretObjectReference) (*ir.Secret, error)
+	GetSecretForRef(
+		kctx krt.HandlerContext,
+		ctx context.Context,
+		fromGk schema.GroupKind,
+		fromns string,
+		secretRef apiv1.SecretObjectReference,
+	) (*ir.Secret, error)
 
 	// GetRoutesForGateway finds the top level xRoutes attached to the provided Gateway
-	GetRoutesForGateway(kctx krt.HandlerContext, ctx context.Context, gw *gwv1.Gateway) (*RoutesForGwResult, error)
+	GetRoutesForGateway(
+		kctx krt.HandlerContext,
+		ctx context.Context,
+		gw *gwv1.Gateway,
+	) (*RoutesForGwResult, error)
 	// GetRouteChain resolves backends and delegated routes for a the provided xRoute object
 	GetRouteChain(kctx krt.HandlerContext,
 		ctx context.Context,
@@ -247,7 +259,13 @@ func hostnameIntersect(l *apiv1.Listener, routeHostnames []string) (bool, []stri
 	return false, nil
 }
 
-func (r *gatewayQueries) GetSecretForRef(kctx krt.HandlerContext, ctx context.Context, fromGk schema.GroupKind, fromns string, secretRef apiv1.SecretObjectReference) (*ir.Secret, error) {
+func (r *gatewayQueries) GetSecretForRef(
+	kctx krt.HandlerContext,
+	ctx context.Context,
+	fromGk schema.GroupKind,
+	fromns string,
+	secretRef apiv1.SecretObjectReference,
+) (*ir.Secret, error) {
 	f := krtcollections.From{
 		GroupKind: fromGk,
 		Namespace: fromns,
@@ -267,22 +285,33 @@ func AllNamespace() func(krt.HandlerContext, string) bool {
 	}
 }
 
-func (r *gatewayQueries) NamespaceSelector(sel labels.Selector) func(krt.HandlerContext, string) bool {
+func (r *gatewayQueries) NamespaceSelector(
+	sel labels.Selector,
+) func(krt.HandlerContext, string) bool {
 	return func(kctx krt.HandlerContext, s string) bool {
 		ns := krt.FetchOne(kctx, r.collections.Namespaces, krt.FilterKey(s))
 		return sel.Matches(labels.Set(ns.Labels))
 	}
 }
 
-func ReferenceAllowed(ctx context.Context, fromgk metav1.GroupKind, fromns string, togk metav1.GroupKind, toname string, grantsInToNs []apiv1beta1.ReferenceGrant) bool {
+func ReferenceAllowed(
+	ctx context.Context,
+	fromgk metav1.GroupKind,
+	fromns string,
+	togk metav1.GroupKind,
+	toname string,
+	grantsInToNs []apiv1beta1.ReferenceGrant,
+) bool {
 	for _, refGrant := range grantsInToNs {
 		for _, from := range refGrant.Spec.From {
 			if string(from.Namespace) != fromns {
 				continue
 			}
-			if coreIfEmpty(fromgk.Group) == coreIfEmpty(string(from.Group)) && fromgk.Kind == string(from.Kind) {
+			if coreIfEmpty(fromgk.Group) == coreIfEmpty(string(from.Group)) &&
+				fromgk.Kind == string(from.Kind) {
 				for _, to := range refGrant.Spec.To {
-					if coreIfEmpty(togk.Group) == coreIfEmpty(string(to.Group)) && togk.Kind == string(to.Kind) {
+					if coreIfEmpty(togk.Group) == coreIfEmpty(string(to.Group)) &&
+						togk.Kind == string(to.Kind) {
 						if to.Name == nil || string(*to.Name) == toname {
 							return true
 						}

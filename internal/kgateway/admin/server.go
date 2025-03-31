@@ -37,7 +37,11 @@ type dynamicProfileDescription func() string
 
 // getServerHandlers returns the custom handlers for the Admin Server, which will be bound to the http.ServeMux
 // These endpoints serve as the basis for an Admin Interface for the Control Plane (https://github.com/kgateway-dev/kgateway/issues/6494)
-func getServerHandlers(_ context.Context, dbg *krt.DebugHandler, cache envoycache.SnapshotCache) func(mux *http.ServeMux, profiles map[string]dynamicProfileDescription) {
+func getServerHandlers(
+	_ context.Context,
+	dbg *krt.DebugHandler,
+	cache envoycache.SnapshotCache,
+) func(mux *http.ServeMux, profiles map[string]dynamicProfileDescription) {
 	return func(m *http.ServeMux, profiles map[string]dynamicProfileDescription) {
 		addXdsSnapshotHandler("/snapshots/xds", m, profiles, cache)
 
@@ -76,7 +80,10 @@ func writeJSON(w http.ResponseWriter, obj any, req *http.Request) {
 	}
 }
 
-func startHandlers(ctx context.Context, addHandlers ...func(mux *http.ServeMux, profiles map[string]dynamicProfileDescription)) error {
+func startHandlers(
+	ctx context.Context,
+	addHandlers ...func(mux *http.ServeMux, profiles map[string]dynamicProfileDescription),
+) error {
 	mux := new(http.ServeMux)
 	profileDescriptions := map[string]dynamicProfileDescription{}
 	for _, addHandler := range addHandlers {
@@ -110,7 +117,9 @@ func startHandlers(ctx context.Context, addHandlers ...func(mux *http.ServeMux, 
 	return nil
 }
 
-func index(profileDescriptions map[string]dynamicProfileDescription) func(w http.ResponseWriter, r *http.Request) {
+func index(
+	profileDescriptions map[string]dynamicProfileDescription,
+) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		type profile struct {
 			Name string

@@ -121,7 +121,9 @@ func downloadIstio(ctx context.Context, version string) (string, error) {
 		contextutils.LoggerFrom(ctx).Infof("ISTIO_VERSION not specified, using istioctl from PATH")
 		binaryPath, err := exec.LookPath("istioctl")
 		if err != nil {
-			return "", eris.New("ISTIO_VERSION environment variable must be specified or istioctl must be installed")
+			return "", eris.New(
+				"ISTIO_VERSION environment variable must be specified or istioctl must be installed",
+			)
 		}
 
 		contextutils.LoggerFrom(ctx).Infof("using istioctl path: %s", binaryPath)
@@ -153,7 +155,14 @@ func downloadIstio(ctx context.Context, version string) (string, error) {
 			archModifier = ""
 		}
 
-		url := fmt.Sprintf("%s/%s/istioctl-%s-%s%s.tar.gz", istioctlDownloadFrom, version, version, osName, archModifier)
+		url := fmt.Sprintf(
+			"%s/%s/istioctl-%s-%s%s.tar.gz",
+			istioctlDownloadFrom,
+			version,
+			version,
+			osName,
+			archModifier,
+		)
 
 		// Use curl and tar to download and extract the file
 		cmd := exec.Command("sh", "-c", fmt.Sprintf("curl -sSL %s | tar -xz -C %s", url, binaryDir))
@@ -196,7 +205,11 @@ func downloadIstio(ctx context.Context, version string) (string, error) {
 
 func UninstallIstio(istioctlBinary, kubeContext string) error {
 	// sh -c yes | istioctl uninstall —purge —context <kube-context>
-	cmd := exec.Command("sh", "-c", fmt.Sprintf("yes | %s uninstall --purge --context %s", istioctlBinary, kubeContext))
+	cmd := exec.Command(
+		"sh",
+		"-c",
+		fmt.Sprintf("yes | %s uninstall --purge --context %s", istioctlBinary, kubeContext),
+	)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	if err := cmd.Run(); err != nil {
@@ -206,13 +219,23 @@ func UninstallIstio(istioctlBinary, kubeContext string) error {
 }
 
 // CreateIstioBugReport generates an istioctl bug report and moves it to the _output directory
-func CreateIstioBugReport(ctx context.Context, istioctlBinary, kubeContext, artifactOutputDir string) {
+func CreateIstioBugReport(
+	ctx context.Context,
+	istioctlBinary, kubeContext, artifactOutputDir string,
+) {
 	// Generate istioctl bug report
 	if istioctlBinary == "" {
-		contextutils.LoggerFrom(ctx).Panic("istioctl binary not set. Cannot generate istioctl bug report.")
+		contextutils.LoggerFrom(ctx).
+			Panic("istioctl binary not set. Cannot generate istioctl bug report.")
 	}
 
-	bugReportCmd := exec.Command(istioctlBinary, "bug-report", "--full-secrets", "--context", kubeContext)
+	bugReportCmd := exec.Command(
+		istioctlBinary,
+		"bug-report",
+		"--full-secrets",
+		"--context",
+		kubeContext,
+	)
 	bugReportErr := bugReportCmd.Run()
 	if bugReportErr != nil {
 		fmt.Println("Error generating bug report:", bugReportErr)

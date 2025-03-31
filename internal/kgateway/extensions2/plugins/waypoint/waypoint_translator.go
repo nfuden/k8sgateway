@@ -84,7 +84,12 @@ func (w *waypointTranslator) Translate(
 		attachedRoutes.Insert(namespacedName(hr))
 	}
 
-	authzPolicies := w.waypointQueries.GetAuthorizationPolicies(kctx, ctx, gateway.Namespace, RootNamespace)
+	authzPolicies := w.waypointQueries.GetAuthorizationPolicies(
+		kctx,
+		ctx,
+		gateway.Namespace,
+		RootNamespace,
+	)
 	waypointFor := waypointquery.GetWaypointFor(gateway.Obj)
 
 	if waypointFor.ForService() {
@@ -110,12 +115,18 @@ func (w *waypointTranslator) Translate(
 	}
 
 	// ensure consistent ordering in outputs
-	proxyListener.HttpFilterChain = slices.SortBy(proxyListener.HttpFilterChain, func(fc ir.HttpFilterChainIR) string {
-		return fc.FilterChainName
-	})
-	proxyListener.TcpFilterChain = slices.SortBy(proxyListener.TcpFilterChain, func(fc ir.TcpIR) string {
-		return fc.FilterChainName
-	})
+	proxyListener.HttpFilterChain = slices.SortBy(
+		proxyListener.HttpFilterChain,
+		func(fc ir.HttpFilterChainIR) string {
+			return fc.FilterChainName
+		},
+	)
+	proxyListener.TcpFilterChain = slices.SortBy(
+		proxyListener.TcpFilterChain,
+		func(fc ir.TcpIR) string {
+			return fc.FilterChainName
+		},
+	)
 
 	return &ir.GatewayIR{
 		// single listener
@@ -137,7 +148,10 @@ var waypointSupportedKinds = []gwv1.RouteGroupKind{
 
 // TODO allow _not_ specifying any listeners and inferring the specific
 // structure we expect with reasonable defaults (15088)
-func buildInboundListener(gw *ir.Gateway, reporter reports.GatewayReporter) (*ir.ListenerIR, *ir.Listener) {
+func buildInboundListener(
+	gw *ir.Gateway,
+	reporter reports.GatewayReporter,
+) (*ir.ListenerIR, *ir.Listener) {
 	// find the single inbound listener
 	var gatewayListener *ir.Listener
 	for _, l := range gw.Listeners {
@@ -146,12 +160,20 @@ func buildInboundListener(gw *ir.Gateway, reporter reports.GatewayReporter) (*ir
 
 			// supportedKinds union with  the allowed kinds
 			// if no allowed kinds, just use all of our default supportedKinds
-			supportedKinds := slices.Filter(waypointSupportedKinds, func(s gwv1.RouteGroupKind) bool {
-				return l.AllowedRoutes == nil || nil != slices.FindFunc(l.AllowedRoutes.Kinds, func(lk gwv1.RouteGroupKind) bool {
-					groupEq := (lk.Group == nil && s.Group == nil) || (lk.Group != nil && s.Group != nil && *lk.Group == *s.Group)
-					return groupEq && lk.Kind == s.Kind
-				})
-			})
+			supportedKinds := slices.Filter(
+				waypointSupportedKinds,
+				func(s gwv1.RouteGroupKind) bool {
+					return l.AllowedRoutes == nil ||
+						nil != slices.FindFunc(
+							l.AllowedRoutes.Kinds,
+							func(lk gwv1.RouteGroupKind) bool {
+								groupEq := (lk.Group == nil && s.Group == nil) ||
+									(lk.Group != nil && s.Group != nil && *lk.Group == *s.Group)
+								return groupEq && lk.Kind == s.Kind
+							},
+						)
+				},
+			)
 			reporter.Listener(&l.Listener).SetSupportedKinds(supportedKinds)
 			continue
 		}
@@ -210,12 +232,14 @@ func (t *waypointTranslator) fetchGatewayRoutes(
 		return nil, err
 	}
 	for _, rErr := range gwRoutes.RouteErrors {
-		reporter.Route(rErr.Route.GetSourceObject()).ParentRef(&rErr.ParentRef).SetCondition(reports.RouteCondition{
-			Type:    gwv1.RouteConditionAccepted,
-			Status:  metav1.ConditionFalse,
-			Reason:  rErr.Error.Reason,
-			Message: rErr.Error.Error(),
-		})
+		reporter.Route(rErr.Route.GetSourceObject()).
+			ParentRef(&rErr.ParentRef).
+			SetCondition(reports.RouteCondition{
+				Type:    gwv1.RouteConditionAccepted,
+				Status:  metav1.ConditionFalse,
+				Reason:  rErr.Error.Reason,
+				Message: rErr.Error.Error(),
+			})
 	}
 	routes, ok := gwRoutes.ListenerResults[string(gwListener.Name)]
 	if !ok {
@@ -223,7 +247,8 @@ func (t *waypointTranslator) fetchGatewayRoutes(
 		return nil, nil
 	}
 	if err := routes.Error; err != nil {
-		contextutils.LoggerFrom(ctx).Warnf("listener error when fetching HTTPRoutes for %s: %v", namespacedName(gw), err)
+		contextutils.LoggerFrom(ctx).
+			Warnf("listener error when fetching HTTPRoutes for %s: %v", namespacedName(gw), err)
 		return nil, err
 	}
 
@@ -245,7 +270,13 @@ func (t *waypointTranslator) buildServiceChains(
 	var tcpOut []ir.TcpIR
 	// get attached services (istio.io/use-waypoint)
 	services := t.waypointQueries.GetWaypointServices(kctx, ctx, gw.Obj)
-	logger.Debugw("attaching waypoint services", "gateway", namespacedName(gw).String(), "services", len(services))
+	logger.Debugw(
+		"attaching waypoint services",
+		"gateway",
+		namespacedName(gw).String(),
+		"services",
+		len(services),
+	)
 
 	// for each service:
 	// * 1:1 Service port -> filter chain
@@ -271,7 +302,14 @@ func (t *waypointTranslator) buildServiceChains(
 		// HTTPRoutes apply at the Service level, not the port
 		// level so we don't need to generate this multiple times
 		// TODO respect `port` on parentRef
-		httpRoutesVirtualHost := t.buildHTTPVirtualHost(ctx, baseReporter, gw, gwListener, svc, httpRoutes)
+		httpRoutesVirtualHost := t.buildHTTPVirtualHost(
+			ctx,
+			baseReporter,
+			gw,
+			gwListener,
+			svc,
+			httpRoutes,
+		)
 
 		for _, svcPort := range svc.Ports {
 			filterChain, err := initServiceChain(svc, svcPort)
@@ -371,7 +409,8 @@ func (t *waypointTranslator) buildHTTPVirtualHost(
 	// TODO should we do any pre-processing to HTTPRoutes?
 	// Something like default backendRefs if empty?
 	for _, httpRoute := range httpRoutes {
-		parentRefReporter := baseReporter.Route(httpRoute.Object.GetSourceObject()).ParentRef(&httpRoute.ParentRef)
+		parentRefReporter := baseReporter.Route(httpRoute.Object.GetSourceObject()).
+			ParentRef(&httpRoute.ParentRef)
 		translatedRoutes = append(translatedRoutes, httproute.TranslateGatewayHTTPRouteRules(
 			ctx,
 			gwListener.Listener,

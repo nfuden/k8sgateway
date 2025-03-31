@@ -73,7 +73,12 @@ func (s *testingSuite) TestConfigureBackingDestinationsWithUpstream() {
 			err := s.testInstallation.Actions.Kubectl().DeleteFileSafe(s.ctx, manifest)
 			s.Require().NoError(err)
 		}
-		s.testInstallation.Assertions.EventuallyObjectsNotExist(s.ctx, proxyService, proxyDeployment, backend)
+		s.testInstallation.Assertions.EventuallyObjectsNotExist(
+			s.ctx,
+			proxyService,
+			proxyDeployment,
+			backend,
+		)
 	})
 
 	for _, manifest := range manifests {
@@ -82,18 +87,35 @@ func (s *testingSuite) TestConfigureBackingDestinationsWithUpstream() {
 	}
 
 	// assert the expected resources are created and running before attempting to send traffic
-	s.testInstallation.Assertions.EventuallyObjectsExist(s.ctx, proxyService, proxyDeployment, backend)
+	s.testInstallation.Assertions.EventuallyObjectsExist(
+		s.ctx,
+		proxyService,
+		proxyDeployment,
+		backend,
+	)
 	// TODO: make this a specific assertion to remove the need for c/p the label selector
 	// e.g. EventuallyCurlPodRunning(...) etc.
-	s.testInstallation.Assertions.EventuallyPodsRunning(s.ctx, defaults.CurlPod.GetNamespace(), metav1.ListOptions{
-		LabelSelector: "app.kubernetes.io/name=curl",
-	})
-	s.testInstallation.Assertions.EventuallyPodsRunning(s.ctx, nginxMeta.GetNamespace(), metav1.ListOptions{
-		LabelSelector: "app.kubernetes.io/name=nginx",
-	})
-	s.testInstallation.Assertions.EventuallyPodsRunning(s.ctx, proxyObjMeta.GetNamespace(), metav1.ListOptions{
-		LabelSelector: "app.kubernetes.io/name=gw",
-	})
+	s.testInstallation.Assertions.EventuallyPodsRunning(
+		s.ctx,
+		defaults.CurlPod.GetNamespace(),
+		metav1.ListOptions{
+			LabelSelector: "app.kubernetes.io/name=curl",
+		},
+	)
+	s.testInstallation.Assertions.EventuallyPodsRunning(
+		s.ctx,
+		nginxMeta.GetNamespace(),
+		metav1.ListOptions{
+			LabelSelector: "app.kubernetes.io/name=nginx",
+		},
+	)
+	s.testInstallation.Assertions.EventuallyPodsRunning(
+		s.ctx,
+		proxyObjMeta.GetNamespace(),
+		metav1.ListOptions{
+			LabelSelector: "app.kubernetes.io/name=gw",
+		},
+	)
 
 	s.testInstallation.Assertions.AssertEventualCurlResponse(
 		s.ctx,

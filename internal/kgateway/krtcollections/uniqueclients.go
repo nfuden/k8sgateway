@@ -135,7 +135,10 @@ func roleFromRequest(r *envoy_service_discovery_v3.DiscoveryRequest) string {
 	return r.GetNode().GetMetadata().GetFields()[xds.RoleKey].GetStringValue()
 }
 
-func (x *callbacksCollection) add(sid int64, r *envoy_service_discovery_v3.DiscoveryRequest) (string, bool, error) {
+func (x *callbacksCollection) add(
+	sid int64,
+	r *envoy_service_discovery_v3.DiscoveryRequest,
+) (string, bool, error) {
 	var pod *LocalityPod
 	// see if user wants to use pod locality info
 	usePod := x.augmentedPods != nil
@@ -163,7 +166,13 @@ func (x *callbacksCollection) add(sid int64, r *envoy_service_discovery_v3.Disco
 			}
 		}
 		role := roleFromRequest(r)
-		x.logger.Debug("adding xds client", zap.Any("locality", locality), zap.String("ns", ns), zap.Any("labels", labels), zap.String("role", role))
+		x.logger.Debug(
+			"adding xds client",
+			zap.Any("locality", locality),
+			zap.String("ns", ns),
+			zap.Any("labels", labels),
+			zap.String("role", role),
+		)
 		// TODO: modify request to include the label that are relevant for the client?
 		ucc := ir.NewUniqlyConnectedClient(role, ns, labels, locality)
 		c = newConnectedClient(ucc.ResourceName())
@@ -180,7 +189,10 @@ func (x *callbacksCollection) add(sid int64, r *envoy_service_discovery_v3.Disco
 
 // OnStreamRequest is called once a request is received on a stream.
 // Returning an error will end processing and close the stream. OnStreamClosed will still be called.
-func (x *callbacks) OnStreamRequest(sid int64, r *envoy_service_discovery_v3.DiscoveryRequest) error {
+func (x *callbacks) OnStreamRequest(
+	sid int64,
+	r *envoy_service_discovery_v3.DiscoveryRequest,
+) error {
 	role := roleFromRequest(r)
 	// as gloo-edge and kgateway share a control plane, check that this collection only handles kgateway clients
 	// TODO remove this check if it's no longer needed
@@ -194,7 +206,10 @@ func (x *callbacks) OnStreamRequest(sid int64, r *envoy_service_discovery_v3.Dis
 	return c.newStream(sid, r)
 }
 
-func (x *callbacksCollection) newStream(sid int64, r *envoy_service_discovery_v3.DiscoveryRequest) error {
+func (x *callbacksCollection) newStream(
+	sid int64,
+	r *envoy_service_discovery_v3.DiscoveryRequest,
+) error {
 	ucc, isNew, err := x.add(sid, r)
 	if err != nil {
 		x.logger.Debug("error processing xds client", zap.Error(err))
@@ -234,7 +249,10 @@ func (x *callbacksCollection) getClients() []ir.UniqlyConnectedClient {
 
 // OnFetchRequest is called for each Fetch request. Returning an error will end processing of the
 // request and respond with an error.
-func (x *callbacks) OnFetchRequest(ctx context.Context, r *envoy_service_discovery_v3.DiscoveryRequest) error {
+func (x *callbacks) OnFetchRequest(
+	ctx context.Context,
+	r *envoy_service_discovery_v3.DiscoveryRequest,
+) error {
 	role := r.GetNode().GetMetadata().GetFields()[xds.RoleKey].GetStringValue()
 	// as gloo-edge and kgateway share a control plane, check that this collection only handles kgateway clients
 	// TODO remove this check if it's no longer needed
@@ -248,7 +266,10 @@ func (x *callbacks) OnFetchRequest(ctx context.Context, r *envoy_service_discove
 	return c.fetchRequest(ctx, r)
 }
 
-func (x *callbacksCollection) fetchRequest(_ context.Context, r *envoy_service_discovery_v3.DiscoveryRequest) error {
+func (x *callbacksCollection) fetchRequest(
+	_ context.Context,
+	r *envoy_service_discovery_v3.DiscoveryRequest,
+) error {
 	// nothing special to do in a fetch request, as we don't need to maintain state
 	if x.augmentedPods == nil {
 		return nil
@@ -258,7 +279,12 @@ func (x *callbacksCollection) fetchRequest(_ context.Context, r *envoy_service_d
 	podRef := getRef(r.GetNode())
 	k := krt.Named{Name: podRef.Name, Namespace: podRef.Namespace}.ResourceName()
 	pod = x.augmentedPods.GetKey(k)
-	ucc := ir.NewUniqlyConnectedClient(roleFromRequest(r), pod.Namespace, pod.AugmentedLabels, pod.Locality)
+	ucc := ir.NewUniqlyConnectedClient(
+		roleFromRequest(r),
+		pod.Namespace,
+		pod.AugmentedLabels,
+		pod.Locality,
+	)
 
 	nodeMd := r.GetNode().GetMetadata()
 	if nodeMd == nil {
@@ -268,7 +294,10 @@ func (x *callbacksCollection) fetchRequest(_ context.Context, r *envoy_service_d
 		nodeMd.Fields = map[string]*structpb.Value{}
 	}
 
-	x.logger.Debug("augmenting role in node metadata", zap.String("resourceName", ucc.ResourceName()))
+	x.logger.Debug(
+		"augmenting role in node metadata",
+		zap.String("resourceName", ucc.ResourceName()),
+	)
 	// NOTE: this changes the role to include the unique client. This is coupled
 	// with how the snapshot is inserted to the cache for the proxy - it needs to be done with
 	// the unique client resource name as well.

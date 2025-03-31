@@ -53,7 +53,8 @@ func (c PolicyAtt) TargetRef() *AttachedPolicyRef {
 }
 
 func (c PolicyAtt) Equals(in PolicyAtt) bool {
-	return c.GroupKind == in.GroupKind && ptrEquals(c.PolicyRef, in.PolicyRef) && c.PolicyIr.Equals(in.PolicyIr)
+	return c.GroupKind == in.GroupKind && ptrEquals(c.PolicyRef, in.PolicyRef) &&
+		c.PolicyIr.Equals(in.PolicyIr)
 }
 
 func ptrEquals[T comparable](a, b *T) bool {

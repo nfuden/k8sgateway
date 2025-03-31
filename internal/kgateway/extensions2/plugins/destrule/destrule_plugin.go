@@ -55,8 +55,18 @@ type destrulePlugin struct {
 	destinationRulesIndex DestinationRuleIndex
 }
 
-func (d *destrulePlugin) processEndpoints(kctx krt.HandlerContext, ctx context.Context, ucc ir.UniqlyConnectedClient, in ir.EndpointsForBackend) (*envoy_config_endpoint_v3.ClusterLoadAssignment, uint64) {
-	destrule := d.destinationRulesIndex.FetchDestRulesFor(kctx, ucc.Namespace, in.Hostname, ucc.Labels)
+func (d *destrulePlugin) processEndpoints(
+	kctx krt.HandlerContext,
+	ctx context.Context,
+	ucc ir.UniqlyConnectedClient,
+	in ir.EndpointsForBackend,
+) (*envoy_config_endpoint_v3.ClusterLoadAssignment, uint64) {
+	destrule := d.destinationRulesIndex.FetchDestRulesFor(
+		kctx,
+		ucc.Namespace,
+		in.Hostname,
+		ucc.Labels,
+	)
 	if destrule == nil {
 		return nil, 0
 	}
@@ -76,8 +86,19 @@ func (d *destrulePlugin) processEndpoints(kctx krt.HandlerContext, ctx context.C
 	return endpoints.PrioritizeEndpoints(logger, priorityInfo, in, ucc), additionalHash
 }
 
-func (d *destrulePlugin) processBackend(kctx krt.HandlerContext, ctx context.Context, ucc ir.UniqlyConnectedClient, in ir.BackendObjectIR, outCluster *envoy_config_cluster_v3.Cluster) {
-	destrule := d.destinationRulesIndex.FetchDestRulesFor(kctx, ucc.Namespace, in.CanonicalHostname, ucc.Labels)
+func (d *destrulePlugin) processBackend(
+	kctx krt.HandlerContext,
+	ctx context.Context,
+	ucc ir.UniqlyConnectedClient,
+	in ir.BackendObjectIR,
+	outCluster *envoy_config_cluster_v3.Cluster,
+) {
+	destrule := d.destinationRulesIndex.FetchDestRulesFor(
+		kctx,
+		ucc.Namespace,
+		in.CanonicalHostname,
+		ucc.Labels,
+	)
 	if destrule != nil {
 		trafficPolicy := getTrafficPolicy(destrule, uint32(in.Port))
 		if outlier := trafficPolicy.GetOutlierDetection(); outlier != nil {
@@ -103,12 +124,16 @@ func (d *destrulePlugin) processBackend(kctx krt.HandlerContext, ctx context.Con
 				out.EnforcingConsecutiveGatewayFailure = &wrapperspb.UInt32Value{Value: v}
 			}
 			if outlier.GetMaxEjectionPercent() > 0 {
-				out.MaxEjectionPercent = &wrapperspb.UInt32Value{Value: uint32(outlier.GetMaxEjectionPercent())}
+				out.MaxEjectionPercent = &wrapperspb.UInt32Value{
+					Value: uint32(outlier.GetMaxEjectionPercent()),
+				}
 			}
 			if outlier.GetSplitExternalLocalOriginErrors() {
 				out.SplitExternalLocalOriginErrors = true
 				if outlier.GetConsecutiveLocalOriginFailures().GetValue() > 0 {
-					out.ConsecutiveLocalOriginFailure = &wrapperspb.UInt32Value{Value: outlier.GetConsecutiveLocalOriginFailures().Value}
+					out.ConsecutiveLocalOriginFailure = &wrapperspb.UInt32Value{
+						Value: outlier.GetConsecutiveLocalOriginFailures().Value,
+					}
 					out.EnforcingConsecutiveLocalOriginFailure = &wrapperspb.UInt32Value{Value: 100}
 				}
 				// SuccessRate based outlier detection should be disabled.
@@ -119,7 +144,9 @@ func (d *destrulePlugin) processBackend(kctx krt.HandlerContext, ctx context.Con
 				if outCluster.GetCommonLbConfig() == nil {
 					outCluster.CommonLbConfig = &envoy_config_cluster_v3.Cluster_CommonLbConfig{}
 				}
-				outCluster.GetCommonLbConfig().HealthyPanicThreshold = &envoy_type_v3.Percent{Value: float64(minHealthPercent)}
+				outCluster.GetCommonLbConfig().HealthyPanicThreshold = &envoy_type_v3.Percent{
+					Value: float64(minHealthPercent),
+				}
 			}
 
 			outCluster.OutlierDetection = out
@@ -127,7 +154,9 @@ func (d *destrulePlugin) processBackend(kctx krt.HandlerContext, ctx context.Con
 	}
 }
 
-func getPriorityInfoFromDestrule(localityLb *v1alpha3.LocalityLoadBalancerSetting) *endpoints.PriorityInfo {
+func getPriorityInfoFromDestrule(
+	localityLb *v1alpha3.LocalityLoadBalancerSetting,
+) *endpoints.PriorityInfo {
 	return &endpoints.PriorityInfo{
 		FailoverPriority: endpoints.NewPriorities(localityLb.GetFailoverPriority()),
 		Failover:         localityLb.GetFailover(),

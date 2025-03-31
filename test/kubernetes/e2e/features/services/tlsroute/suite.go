@@ -179,7 +179,10 @@ func (s *testingSuite) TestConfigureTLSRouteBackingDestinations() {
 					s.deleteManifests(crossNsNoRefGrantBackendNsManifest)
 				}
 
-				s.testInstallation.Assertions.EventuallyObjectsNotExist(s.ctx, &corev1.Namespace{ObjectMeta: metav1.ObjectMeta{Name: tc.gtwNs}})
+				s.testInstallation.Assertions.EventuallyObjectsNotExist(
+					s.ctx,
+					&corev1.Namespace{ObjectMeta: metav1.ObjectMeta{Name: tc.gtwNs}},
+				)
 			})
 
 			// Setup environment for ReferenceGrant test cases
@@ -192,7 +195,10 @@ func (s *testingSuite) TestConfigureTLSRouteBackingDestinations() {
 
 			if tc.name == crossNsNoRefGrantTestName {
 				s.applyManifests(crossNsNoRefGrantBackendNsName, crossNsNoRefGrantBackendNsManifest)
-				s.applyManifests(crossNsNoRefGrantBackendNsName, crossNsNoRefGrantBackendSvcManifest)
+				s.applyManifests(
+					crossNsNoRefGrantBackendNsName,
+					crossNsNoRefGrantBackendSvcManifest,
+				)
 				s.applyManifests(crossNsNoRefGrantBackendNsName, singleSecretManifest)
 				// ReferenceGrant not applied
 			}
@@ -223,17 +229,45 @@ func (s *testingSuite) TestConfigureTLSRouteBackingDestinations() {
 
 			// Assert TLSRoute conditions
 			for _, tlsRouteName := range tc.tlsRouteNames {
-				s.testInstallation.Assertions.EventuallyTLSRouteCondition(s.ctx, tlsRouteName, tc.gtwNs, v1.RouteConditionAccepted, metav1.ConditionTrue, timeout)
-				s.testInstallation.Assertions.EventuallyTLSRouteCondition(s.ctx, tlsRouteName, tc.gtwNs, v1.RouteConditionResolvedRefs, expected, timeout)
+				s.testInstallation.Assertions.EventuallyTLSRouteCondition(
+					s.ctx,
+					tlsRouteName,
+					tc.gtwNs,
+					v1.RouteConditionAccepted,
+					metav1.ConditionTrue,
+					timeout,
+				)
+				s.testInstallation.Assertions.EventuallyTLSRouteCondition(
+					s.ctx,
+					tlsRouteName,
+					tc.gtwNs,
+					v1.RouteConditionResolvedRefs,
+					expected,
+					timeout,
+				)
 			}
 
 			// Assert gateway programmed condition
-			s.testInstallation.Assertions.EventuallyGatewayCondition(s.ctx, tc.gtwName, tc.gtwNs, v1.GatewayConditionProgrammed, metav1.ConditionTrue, timeout)
+			s.testInstallation.Assertions.EventuallyGatewayCondition(
+				s.ctx,
+				tc.gtwName,
+				tc.gtwNs,
+				v1.GatewayConditionProgrammed,
+				metav1.ConditionTrue,
+				timeout,
+			)
 
 			// Assert listener attached routes
 			for i, listenerName := range tc.listenerNames {
 				expectedRouteCount := tc.expectedRouteCounts[i]
-				s.testInstallation.Assertions.EventuallyGatewayListenerAttachedRoutes(s.ctx, tc.gtwName, tc.gtwNs, listenerName, expectedRouteCount, timeout)
+				s.testInstallation.Assertions.EventuallyGatewayListenerAttachedRoutes(
+					s.ctx,
+					tc.gtwName,
+					tc.gtwNs,
+					listenerName,
+					expectedRouteCount,
+					timeout,
+				)
 			}
 
 			// Assert expected responses
@@ -274,11 +308,22 @@ func validateManifestFile(path string) error {
 	return nil
 }
 
-func (s *testingSuite) setupTestEnvironment(nsManifest, gtwName, gtwNs, gtwManifest, svcManifest string, proxySvc *corev1.Service, proxyDeploy *appsv1.Deployment) {
+func (s *testingSuite) setupTestEnvironment(
+	nsManifest, gtwName, gtwNs, gtwManifest, svcManifest string,
+	proxySvc *corev1.Service,
+	proxyDeploy *appsv1.Deployment,
+) {
 	s.applyManifests(gtwNs, nsManifest)
 
 	s.applyManifests(gtwNs, gtwManifest)
-	s.testInstallation.Assertions.EventuallyGatewayCondition(s.ctx, gtwName, gtwNs, v1.GatewayConditionAccepted, metav1.ConditionTrue, timeout)
+	s.testInstallation.Assertions.EventuallyGatewayCondition(
+		s.ctx,
+		gtwName,
+		gtwNs,
+		v1.GatewayConditionAccepted,
+		metav1.ConditionTrue,
+		timeout,
+	)
 
 	s.applyManifests(gtwNs, svcManifest)
 	s.testInstallation.Assertions.EventuallyObjectsExist(s.ctx, proxySvc, proxyDeploy)

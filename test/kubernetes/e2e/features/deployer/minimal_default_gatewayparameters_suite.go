@@ -32,7 +32,10 @@ type minimalDefaultGatewayParametersDeployerSuite struct {
 	manifestObjects map[string][]client.Object
 }
 
-func NewMinimalDefaultGatewayParametersTestingSuite(ctx context.Context, testInst *e2e.TestInstallation) suite.TestingSuite {
+func NewMinimalDefaultGatewayParametersTestingSuite(
+	ctx context.Context,
+	testInst *e2e.TestInstallation,
+) suite.TestingSuite {
 	return &minimalDefaultGatewayParametersDeployerSuite{
 		ctx:              ctx,
 		testInstallation: testInst,
@@ -41,11 +44,19 @@ func NewMinimalDefaultGatewayParametersTestingSuite(ctx context.Context, testIns
 
 func (s *minimalDefaultGatewayParametersDeployerSuite) SetupSuite() {
 	s.manifests = map[string][]string{
-		"TestConfigureProxiesFromGatewayParameters": {testdefaults.NginxPodManifest, gatewayWithParameters},
+		"TestConfigureProxiesFromGatewayParameters": {
+			testdefaults.NginxPodManifest,
+			gatewayWithParameters,
+		},
 	}
 	s.manifestObjects = map[string][]client.Object{
 		testdefaults.NginxPodManifest: {testdefaults.NginxPod, testdefaults.NginxSvc},
-		gatewayWithParameters:         {proxyService, proxyServiceAccount, proxyDeployment, gwParamsDefault},
+		gatewayWithParameters: {
+			proxyService,
+			proxyServiceAccount,
+			proxyDeployment,
+			gwParamsDefault,
+		},
 	}
 }
 
@@ -67,12 +78,16 @@ func (s *minimalDefaultGatewayParametersDeployerSuite) AfterTest(suiteName, test
 	for _, manifest := range manifests {
 		err := s.testInstallation.Actions.Kubectl().DeleteFileSafe(s.ctx, manifest)
 		s.Require().NoError(err)
-		s.testInstallation.Assertions.EventuallyObjectsNotExist(s.ctx, s.manifestObjects[manifest]...)
+		s.testInstallation.Assertions.EventuallyObjectsNotExist(
+			s.ctx,
+			s.manifestObjects[manifest]...)
 	}
 }
 
 func (s *minimalDefaultGatewayParametersDeployerSuite) TestConfigureProxiesFromGatewayParameters() {
-	deployment, err := s.testInstallation.ClusterContext.Clientset.AppsV1().Deployments(proxyDeployment.GetNamespace()).Get(s.ctx, proxyDeployment.GetName(), metav1.GetOptions{})
+	deployment, err := s.testInstallation.ClusterContext.Clientset.AppsV1().
+		Deployments(proxyDeployment.GetNamespace()).
+		Get(s.ctx, proxyDeployment.GetName(), metav1.GetOptions{})
 	s.Require().NoError(err, "can get deployment")
 	s.Require().Len(deployment.Spec.Template.Spec.Containers, 1)
 	secCtx := deployment.Spec.Template.Spec.Containers[0].SecurityContext

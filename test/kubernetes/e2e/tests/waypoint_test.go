@@ -20,7 +20,10 @@ func TestKgatewayWaypoint(t *testing.T) {
 		os.Setenv("ISTIO_VERSION", "1.23.0") // Using minimum required version for ambient mode
 	}
 
-	installNs, nsEnvPredefined := envutils.LookupOrDefault(testutils.InstallNamespace, "kgateway-waypoint-test")
+	installNs, nsEnvPredefined := envutils.LookupOrDefault(
+		testutils.InstallNamespace,
+		"kgateway-waypoint-test",
+	)
 	testInstallation := e2e.CreateTestInstallation(
 		t,
 		&install.Context{

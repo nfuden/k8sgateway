@@ -119,16 +119,24 @@ func (p *Provider) EventuallyHTTPRouteStatusContainsMessage(
 	p.Gomega.Eventually(func(g gomega.Gomega) {
 		matcher := matchers.HaveKubeGatewayRouteStatus(&matchers.KubeGatewayRouteStatus{
 			Custom: gstruct.MatchFields(gstruct.IgnoreExtras, gstruct.Fields{
-				"Parents": gomega.ContainElement(gstruct.MatchFields(gstruct.IgnoreExtras, gstruct.Fields{
-					"Conditions": gomega.ContainElement(gstruct.MatchFields(gstruct.IgnoreExtras, gstruct.Fields{
-						"Message": matchers.ContainSubstrings([]string{message}),
-					})),
-				})),
+				"Parents": gomega.ContainElement(
+					gstruct.MatchFields(gstruct.IgnoreExtras, gstruct.Fields{
+						"Conditions": gomega.ContainElement(
+							gstruct.MatchFields(gstruct.IgnoreExtras, gstruct.Fields{
+								"Message": matchers.ContainSubstrings([]string{message}),
+							}),
+						),
+					}),
+				),
 			}),
 		})
 
 		route := &gwv1.HTTPRoute{}
-		err := p.clusterContext.Client.Get(ctx, types.NamespacedName{Name: routeName, Namespace: routeNamespace}, route)
+		err := p.clusterContext.Client.Get(
+			ctx,
+			types.NamespacedName{Name: routeName, Namespace: routeNamespace},
+			route,
+		)
 		g.Expect(err).NotTo(gomega.HaveOccurred(), "can get httproute")
 		g.Expect(route.Status.RouteStatus).To(gomega.HaveValue(matcher))
 	}, currentTimeout, pollingInterval).Should(gomega.Succeed())
@@ -147,11 +155,15 @@ func (p *Provider) EventuallyHTTPRouteStatusContainsReason(
 	p.Gomega.Eventually(func(g gomega.Gomega) {
 		matcher := matchers.HaveKubeGatewayRouteStatus(&matchers.KubeGatewayRouteStatus{
 			Custom: gstruct.MatchFields(gstruct.IgnoreExtras, gstruct.Fields{
-				"Parents": gomega.ContainElement(gstruct.MatchFields(gstruct.IgnoreExtras, gstruct.Fields{
-					"Conditions": gomega.ContainElement(gstruct.MatchFields(gstruct.IgnoreExtras, gstruct.Fields{
-						"Reason": matchers.ContainSubstrings([]string{reason}),
-					})),
-				})),
+				"Parents": gomega.ContainElement(
+					gstruct.MatchFields(gstruct.IgnoreExtras, gstruct.Fields{
+						"Conditions": gomega.ContainElement(
+							gstruct.MatchFields(gstruct.IgnoreExtras, gstruct.Fields{
+								"Reason": matchers.ContainSubstrings([]string{reason}),
+							}),
+						),
+					}),
+				),
 			}),
 		})
 
@@ -161,7 +173,11 @@ func (p *Provider) EventuallyHTTPRouteStatusContainsReason(
 				Namespace: routeNamespace,
 			},
 		}
-		err := p.clusterContext.Client.Get(ctx, types.NamespacedName{Name: routeName, Namespace: routeNamespace}, route)
+		err := p.clusterContext.Client.Get(
+			ctx,
+			types.NamespacedName{Name: routeName, Namespace: routeNamespace},
+			route,
+		)
 		g.Expect(err).NotTo(gomega.HaveOccurred(), "can get httproute")
 		g.Expect(route.Status.RouteStatus).To(gomega.HaveValue(matcher))
 	}, currentTimeout, pollingInterval).Should(gomega.Succeed())
@@ -180,13 +196,20 @@ func (p *Provider) EventuallyGatewayCondition(
 	currentTimeout, pollingInterval := helpers.GetTimeouts(timeout...)
 	p.Gomega.Eventually(func(g gomega.Gomega) {
 		gateway := &gwv1.Gateway{}
-		err := p.clusterContext.Client.Get(ctx, types.NamespacedName{Name: gatewayName, Namespace: gatewayNamespace}, gateway)
-		g.Expect(err).NotTo(gomega.HaveOccurred(), fmt.Sprintf("failed to get Gateway %s/%s", gatewayNamespace, gatewayName))
+		err := p.clusterContext.Client.Get(
+			ctx,
+			types.NamespacedName{Name: gatewayName, Namespace: gatewayNamespace},
+			gateway,
+		)
+		g.Expect(err).
+			NotTo(gomega.HaveOccurred(), fmt.Sprintf("failed to get Gateway %s/%s", gatewayNamespace, gatewayName))
 
 		condition := getConditionByType(gateway.Status.Conditions, string(cond))
-		g.Expect(condition).NotTo(gomega.BeNil(), fmt.Sprintf("%v condition not found for Gateway %s/%s", cond, gatewayNamespace, gatewayName))
-		g.Expect(condition.Status).To(gomega.Equal(expect), fmt.Sprintf("%v condition is not %v for Gateway %s/%s",
-			cond, expect, gatewayNamespace, gatewayName))
+		g.Expect(condition).
+			NotTo(gomega.BeNil(), fmt.Sprintf("%v condition not found for Gateway %s/%s", cond, gatewayNamespace, gatewayName))
+		g.Expect(condition.Status).
+			To(gomega.Equal(expect), fmt.Sprintf("%v condition is not %v for Gateway %s/%s",
+				cond, expect, gatewayNamespace, gatewayName))
 	}, currentTimeout, pollingInterval).Should(gomega.Succeed())
 }
 
@@ -203,18 +226,25 @@ func (p *Provider) EventuallyGatewayListenerAttachedRoutes(
 	currentTimeout, pollingInterval := helpers.GetTimeouts(timeout...)
 	p.Gomega.Eventually(func(g gomega.Gomega) {
 		gateway := &gwv1.Gateway{}
-		err := p.clusterContext.Client.Get(ctx, types.NamespacedName{Name: gatewayName, Namespace: gatewayNamespace}, gateway)
-		g.Expect(err).NotTo(gomega.HaveOccurred(), fmt.Sprintf("failed to get Gateway %s/%s", gatewayNamespace, gatewayName))
+		err := p.clusterContext.Client.Get(
+			ctx,
+			types.NamespacedName{Name: gatewayName, Namespace: gatewayNamespace},
+			gateway,
+		)
+		g.Expect(err).
+			NotTo(gomega.HaveOccurred(), fmt.Sprintf("failed to get Gateway %s/%s", gatewayNamespace, gatewayName))
 
 		found := false
 		for _, l := range gateway.Status.Listeners {
 			if l.Name == listener {
 				found = true
-				g.Expect(l.AttachedRoutes).To(gomega.Equal(routes), fmt.Sprintf("%v listener does not contain %d attached routes for Gateway %s/%s",
-					l, routes, gatewayNamespace, gatewayName))
+				g.Expect(l.AttachedRoutes).
+					To(gomega.Equal(routes), fmt.Sprintf("%v listener does not contain %d attached routes for Gateway %s/%s",
+						l, routes, gatewayNamespace, gatewayName))
 			}
 		}
-		g.Expect(found).To(gomega.BeTrue(), fmt.Sprintf("%v listener not found for Gateway %s/%s", listener, gatewayNamespace, gatewayName))
+		g.Expect(found).
+			To(gomega.BeTrue(), fmt.Sprintf("%v listener not found for Gateway %s/%s", listener, gatewayNamespace, gatewayName))
 	}, currentTimeout, pollingInterval).Should(gomega.Succeed())
 }
 
@@ -231,8 +261,13 @@ func (p *Provider) EventuallyTCPRouteCondition(
 	currentTimeout, pollingInterval := helpers.GetTimeouts(timeout...)
 	p.Gomega.Eventually(func(g gomega.Gomega) {
 		route := &gwv1a2.TCPRoute{}
-		err := p.clusterContext.Client.Get(ctx, types.NamespacedName{Name: routeName, Namespace: routeNamespace}, route)
-		g.Expect(err).NotTo(gomega.HaveOccurred(), "failed to get TCPRoute %s/%s", routeNamespace, routeName)
+		err := p.clusterContext.Client.Get(
+			ctx,
+			types.NamespacedName{Name: routeName, Namespace: routeNamespace},
+			route,
+		)
+		g.Expect(err).
+			NotTo(gomega.HaveOccurred(), "failed to get TCPRoute %s/%s", routeNamespace, routeName)
 
 		var conditionFound bool
 		for _, parentStatus := range route.Status.Parents {
@@ -242,8 +277,9 @@ func (p *Provider) EventuallyTCPRouteCondition(
 				break
 			}
 		}
-		g.Expect(conditionFound).To(gomega.BeTrue(), fmt.Sprintf("%v condition is not %v for any parent of TCPRoute %s/%s",
-			cond, expect, routeNamespace, routeName))
+		g.Expect(conditionFound).
+			To(gomega.BeTrue(), fmt.Sprintf("%v condition is not %v for any parent of TCPRoute %s/%s",
+				cond, expect, routeNamespace, routeName))
 	}, currentTimeout, pollingInterval).Should(gomega.Succeed())
 }
 
@@ -260,8 +296,13 @@ func (p *Provider) EventuallyTLSRouteCondition(
 	currentTimeout, pollingInterval := helpers.GetTimeouts(timeout...)
 	p.Gomega.Eventually(func(g gomega.Gomega) {
 		route := &gwv1a2.TLSRoute{}
-		err := p.clusterContext.Client.Get(ctx, types.NamespacedName{Name: routeName, Namespace: routeNamespace}, route)
-		g.Expect(err).NotTo(gomega.HaveOccurred(), "failed to get TLSRoute %s/%s", routeNamespace, routeName)
+		err := p.clusterContext.Client.Get(
+			ctx,
+			types.NamespacedName{Name: routeName, Namespace: routeNamespace},
+			route,
+		)
+		g.Expect(err).
+			NotTo(gomega.HaveOccurred(), "failed to get TLSRoute %s/%s", routeNamespace, routeName)
 
 		var conditionFound bool
 		for _, parentStatus := range route.Status.Parents {
@@ -271,8 +312,9 @@ func (p *Provider) EventuallyTLSRouteCondition(
 				break
 			}
 		}
-		g.Expect(conditionFound).To(gomega.BeTrue(), fmt.Sprintf("%v condition is not %v for any parent of TLSRoute %s/%s",
-			cond, expect, routeNamespace, routeName))
+		g.Expect(conditionFound).
+			To(gomega.BeTrue(), fmt.Sprintf("%v condition is not %v for any parent of TLSRoute %s/%s",
+				cond, expect, routeNamespace, routeName))
 	}, currentTimeout, pollingInterval).Should(gomega.Succeed())
 }
 

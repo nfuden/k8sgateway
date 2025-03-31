@@ -25,7 +25,11 @@ func MakeLastValueCounter(name, description string, tagKeys ...tag.Key) *stats.I
 }
 
 // MakeCounter returns a new counter with the given name, description, aggregation, and tag keys
-func MakeCounter(name, description string, aggregation *view.Aggregation, tagKeys ...tag.Key) *stats.Int64Measure {
+func MakeCounter(
+	name, description string,
+	aggregation *view.Aggregation,
+	tagKeys ...tag.Key,
+) *stats.Int64Measure {
 	counter := Int64Measure(name, description)
 	counterView := ViewForCounter(counter, aggregation, tagKeys...)
 
@@ -61,7 +65,11 @@ func Int64Measure(name, description string) *stats.Int64Measure {
 }
 
 // ViewForCounter returns a view for the given measure with the given aggregation and tag keys
-func ViewForCounter(counter *stats.Int64Measure, aggregation *view.Aggregation, tagKeys ...tag.Key) *view.View {
+func ViewForCounter(
+	counter *stats.Int64Measure,
+	aggregation *view.Aggregation,
+	tagKeys ...tag.Key,
+) *view.View {
 	return &view.View{
 		Name:        counter.Name(),
 		Measure:     counter,

@@ -18,7 +18,9 @@ import (
 )
 
 // addExtProcHTTPFilter adds an extproc filter to the http filter chain
-func addExtProcHTTPFilter(extProcConfig *envoy_ext_proc_v3.ExternalProcessor) ([]plugins.StagedHttpFilter, error) {
+func addExtProcHTTPFilter(
+	extProcConfig *envoy_ext_proc_v3.ExternalProcessor,
+) ([]plugins.StagedHttpFilter, error) {
 	extprocFilter, err := plugins.NewStagedFilter(
 		wellknown.ExtprocFilterName,
 		extProcConfig,
@@ -55,20 +57,41 @@ func toEnvoyExtProc(
 	commoncol *common.CommonCollections,
 ) (*envoy_ext_proc_v3.ExternalProcessor, error) {
 	extprocConfig := trafficPolicy.Spec.ExtProc
-	gExt, err := pluginutils.GetGatewayExtension(commoncol.GatewayExtensions, krtctx, extprocConfig.ExtensionRef.Name, trafficPolicy.GetNamespace())
+	gExt, err := pluginutils.GetGatewayExtension(
+		commoncol.GatewayExtensions,
+		krtctx,
+		extprocConfig.ExtensionRef.Name,
+		trafficPolicy.GetNamespace(),
+	)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get GatewayExtension %s: %v", extprocConfig.ExtensionRef.Name, err)
+		return nil, fmt.Errorf(
+			"failed to get GatewayExtension %s: %v",
+			extprocConfig.ExtensionRef.Name,
+			err,
+		)
 	}
-	backend, err := commoncol.BackendIndex.GetBackendFromRef(krtctx, gExt.ObjectSource, gExt.ExtProc.GrpcService.BackendRef.BackendObjectReference)
+	backend, err := commoncol.BackendIndex.GetBackendFromRef(
+		krtctx,
+		gExt.ObjectSource,
+		gExt.ExtProc.GrpcService.BackendRef.BackendObjectReference,
+	)
 	// TODO: what is the correct behavior? maybe route to static blackhole?
 	if err != nil {
-		return nil, fmt.Errorf("failed to get backend from GatewayExtension %s: %v", gExt.ObjectSource.GetName(), err)
+		return nil, fmt.Errorf(
+			"failed to get backend from GatewayExtension %s: %v",
+			gExt.ObjectSource.GetName(),
+			err,
+		)
 	}
 
 	return buildEnvoyExtProc(backend.ClusterName(), gExt, extprocConfig)
 }
 
-func buildEnvoyExtProc(clusterName string, gExt *ir.GatewayExtension, extprocConfig *v1alpha1.ExtProcPolicy) (*envoy_ext_proc_v3.ExternalProcessor, error) {
+func buildEnvoyExtProc(
+	clusterName string,
+	gExt *ir.GatewayExtension,
+	extprocConfig *v1alpha1.ExtProcPolicy,
+) (*envoy_ext_proc_v3.ExternalProcessor, error) {
 	envoyGrpcService := &envoy_config_core_v3.GrpcService{
 		TargetSpecifier: &envoy_config_core_v3.GrpcService_EnvoyGrpc_{
 			EnvoyGrpc: &envoy_config_core_v3.GrpcService_EnvoyGrpc{

@@ -12,7 +12,10 @@ import (
 
 var (
 	jsonpbMarshaler               = &protojson.MarshalOptions{UseProtoNames: false}
-	jsonpbMarshalerEmitZeroValues = &protojson.MarshalOptions{UseProtoNames: false, EmitUnpopulated: true}
+	jsonpbMarshalerEmitZeroValues = &protojson.MarshalOptions{
+		UseProtoNames:   false,
+		EmitUnpopulated: true,
+	}
 	jsonpbMarshalerIndented       = &protojson.MarshalOptions{UseProtoNames: false, Indent: "  "}
 	jsonpbUnmarshalerAllowUnknown = &protojson.UnmarshalOptions{DiscardUnknown: true}
 

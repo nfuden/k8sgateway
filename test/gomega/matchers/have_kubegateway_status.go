@@ -77,7 +77,9 @@ func (m *HaveKubeGatewayRouteStatusMatcher) FailureMessage(actual interface{}) (
 		informativeComparison(m.Expected, actual))
 }
 
-func (m *HaveKubeGatewayRouteStatusMatcher) NegatedFailureMessage(actual interface{}) (message string) {
+func (m *HaveKubeGatewayRouteStatusMatcher) NegatedFailureMessage(
+	actual interface{},
+) (message string) {
 	return fmt.Sprintf("%s \n%s",
 		m.statusMatcher.NegatedFailureMessage(actual),
 		informativeComparison(m.Expected, actual))

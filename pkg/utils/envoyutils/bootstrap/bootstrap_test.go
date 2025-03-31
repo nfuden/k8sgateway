@@ -100,18 +100,22 @@ var _ = Describe("Static bootstrap generation", func() {
 					}},
 				}
 				listeners = append(listeners, l)
-				Expect(extractRoutedClustersFromListeners(routedCluster, listeners, routes)).NotTo(HaveOccurred())
+				Expect(
+					extractRoutedClustersFromListeners(routedCluster, listeners, routes),
+				).NotTo(HaveOccurred())
 				Expect(routedCluster).To(BeEmpty())
 			})
 			It("extracts a single happy cluster", func() {
-				hcmAny, err := utils.MessageToAny(&envoy_extensions_filters_network_http_connection_manager_v3.HttpConnectionManager{
-					StatPrefix: "placeholder",
-					RouteSpecifier: &envoy_extensions_filters_network_http_connection_manager_v3.HttpConnectionManager_Rds{
-						Rds: &envoy_extensions_filters_network_http_connection_manager_v3.Rds{
-							RouteConfigName: "foo-routes",
+				hcmAny, err := utils.MessageToAny(
+					&envoy_extensions_filters_network_http_connection_manager_v3.HttpConnectionManager{
+						StatPrefix: "placeholder",
+						RouteSpecifier: &envoy_extensions_filters_network_http_connection_manager_v3.HttpConnectionManager_Rds{
+							Rds: &envoy_extensions_filters_network_http_connection_manager_v3.Rds{
+								RouteConfigName: "foo-routes",
+							},
 						},
 					},
-				})
+				)
 				Expect(err).NotTo(HaveOccurred())
 				l := &envoy_config_listener_v3.Listener{
 					Name:    "fake-listener",
@@ -127,7 +131,9 @@ var _ = Describe("Static bootstrap generation", func() {
 					}},
 				}
 				listeners = append(listeners, l)
-				Expect(extractRoutedClustersFromListeners(routedCluster, listeners, routes)).NotTo(HaveOccurred())
+				Expect(
+					extractRoutedClustersFromListeners(routedCluster, listeners, routes),
+				).NotTo(HaveOccurred())
 				Expect(routedCluster).To(HaveKey("foo"))
 			})
 		})
@@ -176,14 +182,16 @@ var _ = Describe("Static bootstrap generation", func() {
 		})
 		Context("getHcmForFilterChain", func() {
 			It("gets the HCM", func() {
-				hcmAny, err := utils.MessageToAny(&envoy_extensions_filters_network_http_connection_manager_v3.HttpConnectionManager{
-					StatPrefix: "placeholder",
-					RouteSpecifier: &envoy_extensions_filters_network_http_connection_manager_v3.HttpConnectionManager_Rds{
-						Rds: &envoy_extensions_filters_network_http_connection_manager_v3.Rds{
-							RouteConfigName: "foo-routes",
+				hcmAny, err := utils.MessageToAny(
+					&envoy_extensions_filters_network_http_connection_manager_v3.HttpConnectionManager{
+						StatPrefix: "placeholder",
+						RouteSpecifier: &envoy_extensions_filters_network_http_connection_manager_v3.HttpConnectionManager_Rds{
+							Rds: &envoy_extensions_filters_network_http_connection_manager_v3.Rds{
+								RouteConfigName: "foo-routes",
+							},
 						},
 					},
-				})
+				)
 				Expect(err).NotTo(HaveOccurred())
 				fc := &envoy_config_listener_v3.FilterChain{
 					FilterChainMatch: &envoy_config_listener_v3.FilterChainMatch{},
@@ -225,7 +233,9 @@ var _ = Describe("Static bootstrap generation", func() {
 				Transformations: []*envoytransformation.RouteTransformations_RouteTransformation{
 					{
 						Match: &envoytransformation.RouteTransformations_RouteTransformation_RequestMatch_{
-							RequestMatch: &envoytransformation.RouteTransformations_RouteTransformation_RequestMatch{ClearRouteCache: true},
+							RequestMatch: &envoytransformation.RouteTransformations_RouteTransformation_RequestMatch{
+								ClearRouteCache: true,
+							},
 						},
 					},
 				},
@@ -244,10 +254,14 @@ var _ = Describe("Static bootstrap generation", func() {
 					Listeners: []*envoy_config_listener_v3.Listener{{
 						Name: "placeholder_listener",
 						Address: &envoy_config_core_v3.Address{
-							Address: &envoy_config_core_v3.Address_SocketAddress{SocketAddress: &envoy_config_core_v3.SocketAddress{
-								Address:       "0.0.0.0",
-								PortSpecifier: &envoy_config_core_v3.SocketAddress_PortValue{PortValue: 8081},
-							}},
+							Address: &envoy_config_core_v3.Address_SocketAddress{
+								SocketAddress: &envoy_config_core_v3.SocketAddress{
+									Address: "0.0.0.0",
+									PortSpecifier: &envoy_config_core_v3.SocketAddress_PortValue{
+										PortValue: 8081,
+									},
+								},
+							},
 						},
 						FilterChains: []*envoy_config_listener_v3.FilterChain{
 							{
@@ -257,29 +271,35 @@ var _ = Describe("Static bootstrap generation", func() {
 										Name: wellknown.HTTPConnectionManager,
 										ConfigType: &envoy_config_listener_v3.Filter_TypedConfig{
 											TypedConfig: func() *anypb.Any {
-												hcmAny, err := utils.MessageToAny(&envoy_extensions_filters_network_http_connection_manager_v3.HttpConnectionManager{
-													StatPrefix: "placeholder",
-													RouteSpecifier: &envoy_extensions_filters_network_http_connection_manager_v3.HttpConnectionManager_RouteConfig{
-														RouteConfig: &envoy_config_route_v3.RouteConfiguration{
-															VirtualHosts: []*envoy_config_route_v3.VirtualHost{
-																{
-																	Name:    "placeholder_host",
-																	Domains: []string{"*"},
-																	TypedPerFilterConfig: map[string]*anypb.Any{
-																		filterName: {
-																			TypeUrl: "type.googleapis.com/envoy.api.v2.filter.http.RouteTransformations",
-																			Value: func() []byte {
-																				tformany, err := utils.MessageToAny(inTransformation)
-																				Expect(err).NotTo(HaveOccurred())
-																				return tformany.GetValue()
-																			}(),
+												hcmAny, err := utils.MessageToAny(
+													&envoy_extensions_filters_network_http_connection_manager_v3.HttpConnectionManager{
+														StatPrefix: "placeholder",
+														RouteSpecifier: &envoy_extensions_filters_network_http_connection_manager_v3.HttpConnectionManager_RouteConfig{
+															RouteConfig: &envoy_config_route_v3.RouteConfiguration{
+																VirtualHosts: []*envoy_config_route_v3.VirtualHost{
+																	{
+																		Name:    "placeholder_host",
+																		Domains: []string{"*"},
+																		TypedPerFilterConfig: map[string]*anypb.Any{
+																			filterName: {
+																				TypeUrl: "type.googleapis.com/envoy.api.v2.filter.http.RouteTransformations",
+																				Value: func() []byte {
+																					tformany, err := utils.MessageToAny(
+																						inTransformation,
+																					)
+																					Expect(
+																						err,
+																					).NotTo(HaveOccurred())
+																					return tformany.GetValue()
+																				}(),
+																			},
 																		},
 																	},
 																},
 															},
 														},
 													},
-												})
+												)
 												Expect(err).NotTo(HaveOccurred())
 												return hcmAny
 											}(),
@@ -313,22 +333,28 @@ var _ = Describe("Static bootstrap generation", func() {
 					envoyresource.EndpointType: envoycache.NewResources("", []types.Resource{}),
 				},
 			}
-			hcmAny, err := utils.MessageToAny(&envoy_extensions_filters_network_http_connection_manager_v3.HttpConnectionManager{
-				StatPrefix: "placeholder",
-				RouteSpecifier: &envoy_extensions_filters_network_http_connection_manager_v3.HttpConnectionManager_Rds{
-					Rds: &envoy_extensions_filters_network_http_connection_manager_v3.Rds{
-						RouteConfigName: "foo-routes",
+			hcmAny, err := utils.MessageToAny(
+				&envoy_extensions_filters_network_http_connection_manager_v3.HttpConnectionManager{
+					StatPrefix: "placeholder",
+					RouteSpecifier: &envoy_extensions_filters_network_http_connection_manager_v3.HttpConnectionManager_Rds{
+						Rds: &envoy_extensions_filters_network_http_connection_manager_v3.Rds{
+							RouteConfigName: "foo-routes",
+						},
 					},
 				},
-			})
+			)
 			Expect(err).NotTo(HaveOccurred())
 			listeners = append(listeners, &envoy_config_listener_v3.Listener{
 				Name: "placeholder_listener",
 				Address: &envoy_config_core_v3.Address{
-					Address: &envoy_config_core_v3.Address_SocketAddress{SocketAddress: &envoy_config_core_v3.SocketAddress{
-						Address:       "0.0.0.0",
-						PortSpecifier: &envoy_config_core_v3.SocketAddress_PortValue{PortValue: 8081},
-					}},
+					Address: &envoy_config_core_v3.Address_SocketAddress{
+						SocketAddress: &envoy_config_core_v3.SocketAddress{
+							Address: "0.0.0.0",
+							PortSpecifier: &envoy_config_core_v3.SocketAddress_PortValue{
+								PortValue: 8081,
+							},
+						},
+					},
 				},
 				FilterChains: []*envoy_config_listener_v3.FilterChain{{
 					Name: "placeholder_filter_chain",
@@ -345,16 +371,24 @@ var _ = Describe("Static bootstrap generation", func() {
 		// types.SecretTypeV3 are omitted due to not being converted from snapshot into bootstrap.
 		JustBeforeEach(func() {
 			for _, l := range listeners {
-				snap.m[envoyresource.ListenerType].Items[l.GetName()] = types.ResourceWithTTL{Resource: l}
+				snap.m[envoyresource.ListenerType].Items[l.GetName()] = types.ResourceWithTTL{
+					Resource: l,
+				}
 			}
 			for _, c := range clusters {
-				snap.m[envoyresource.ClusterType].Items[c.GetName()] = types.ResourceWithTTL{Resource: c}
+				snap.m[envoyresource.ClusterType].Items[c.GetName()] = types.ResourceWithTTL{
+					Resource: c,
+				}
 			}
 			for _, r := range routes {
-				snap.m[envoyresource.RouteType].Items[r.GetName()] = types.ResourceWithTTL{Resource: r}
+				snap.m[envoyresource.RouteType].Items[r.GetName()] = types.ResourceWithTTL{
+					Resource: r,
+				}
 			}
 			for _, e := range endpoints {
-				snap.m[envoyresource.EndpointType].Items[e.GetClusterName()] = types.ResourceWithTTL{Resource: e}
+				snap.m[envoyresource.EndpointType].Items[e.GetClusterName()] = types.ResourceWithTTL{
+					Resource: e,
+				}
 			}
 		})
 		It("produces correct bootstrap", func() {
@@ -391,10 +425,14 @@ var _ = Describe("Static bootstrap generation", func() {
 					Listeners: []*envoy_config_listener_v3.Listener{{
 						Name: "placeholder_listener",
 						Address: &envoy_config_core_v3.Address{
-							Address: &envoy_config_core_v3.Address_SocketAddress{SocketAddress: &envoy_config_core_v3.SocketAddress{
-								Address:       "0.0.0.0",
-								PortSpecifier: &envoy_config_core_v3.SocketAddress_PortValue{PortValue: 8081},
-							}},
+							Address: &envoy_config_core_v3.Address_SocketAddress{
+								SocketAddress: &envoy_config_core_v3.SocketAddress{
+									Address: "0.0.0.0",
+									PortSpecifier: &envoy_config_core_v3.SocketAddress_PortValue{
+										PortValue: 8081,
+									},
+								},
+							},
 						},
 						FilterChains: []*envoy_config_listener_v3.FilterChain{
 							{
@@ -404,32 +442,34 @@ var _ = Describe("Static bootstrap generation", func() {
 										Name: wellknown.HTTPConnectionManager,
 										ConfigType: &envoy_config_listener_v3.Filter_TypedConfig{
 											TypedConfig: func() *anypb.Any {
-												hcmAny, err := utils.MessageToAny(&envoy_extensions_filters_network_http_connection_manager_v3.HttpConnectionManager{
-													StatPrefix: "placeholder",
-													RouteSpecifier: &envoy_extensions_filters_network_http_connection_manager_v3.HttpConnectionManager_RouteConfig{
-														RouteConfig: &envoy_config_route_v3.RouteConfiguration{
-															Name: "foo-routes",
-															VirtualHosts: []*envoy_config_route_v3.VirtualHost{
-																{
-																	Name:    "placeholder_host",
-																	Domains: []string{"*"},
-																	Routes: []*envoy_config_route_v3.Route{
-																		{
-																			Name: "foo-route",
-																			Action: &envoy_config_route_v3.Route_Route{
-																				Route: &envoy_config_route_v3.RouteAction{
-																					ClusterSpecifier: &envoy_config_route_v3.RouteAction_Cluster{
-																						Cluster: "foo",
+												hcmAny, err := utils.MessageToAny(
+													&envoy_extensions_filters_network_http_connection_manager_v3.HttpConnectionManager{
+														StatPrefix: "placeholder",
+														RouteSpecifier: &envoy_extensions_filters_network_http_connection_manager_v3.HttpConnectionManager_RouteConfig{
+															RouteConfig: &envoy_config_route_v3.RouteConfiguration{
+																Name: "foo-routes",
+																VirtualHosts: []*envoy_config_route_v3.VirtualHost{
+																	{
+																		Name:    "placeholder_host",
+																		Domains: []string{"*"},
+																		Routes: []*envoy_config_route_v3.Route{
+																			{
+																				Name: "foo-route",
+																				Action: &envoy_config_route_v3.Route_Route{
+																					Route: &envoy_config_route_v3.RouteAction{
+																						ClusterSpecifier: &envoy_config_route_v3.RouteAction_Cluster{
+																							Cluster: "foo",
+																						},
 																					},
 																				},
 																			},
-																		},
-																		{
-																			Name: "bar-route",
-																			Action: &envoy_config_route_v3.Route_Route{
-																				Route: &envoy_config_route_v3.RouteAction{
-																					ClusterSpecifier: &envoy_config_route_v3.RouteAction_Cluster{
-																						Cluster: "bar",
+																			{
+																				Name: "bar-route",
+																				Action: &envoy_config_route_v3.Route_Route{
+																					Route: &envoy_config_route_v3.RouteAction{
+																						ClusterSpecifier: &envoy_config_route_v3.RouteAction_Cluster{
+																							Cluster: "bar",
+																						},
 																					},
 																				},
 																			},
@@ -439,7 +479,7 @@ var _ = Describe("Static bootstrap generation", func() {
 															},
 														},
 													},
-												})
+												)
 												Expect(err).NotTo(HaveOccurred())
 												return hcmAny
 											}(),

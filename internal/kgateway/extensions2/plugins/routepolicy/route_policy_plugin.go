@@ -109,7 +109,8 @@ func (d *trafficPolicy) Equals(in any) bool {
 
 	// AI equality checks
 	if d.spec.AI != nil && d2.spec.AI != nil {
-		if d.spec.AI.AISecret != nil && d2.spec.AI.AISecret != nil && !d.spec.AI.AISecret.Equals(*d2.spec.AI.AISecret) {
+		if d.spec.AI.AISecret != nil && d2.spec.AI.AISecret != nil &&
+			!d.spec.AI.AISecret.Equals(*d2.spec.AI.AISecret) {
 			return false
 		}
 		if (d.spec.AI.AISecret != nil) != (d2.spec.AI.AISecret != nil) {
@@ -170,7 +171,11 @@ type trafficPolicyPluginGwPass struct {
 	extAuthPerProvider    map[string]*extAuthIR
 }
 
-func (p *trafficPolicyPluginGwPass) ApplyHCM(ctx context.Context, pCtx *ir.HcmContext, out *envoyhttp.HttpConnectionManager) error {
+func (p *trafficPolicyPluginGwPass) ApplyHCM(
+	ctx context.Context,
+	pCtx *ir.HcmContext,
+	out *envoyhttp.HttpConnectionManager,
+) error {
 	return nil
 }
 
@@ -184,7 +189,9 @@ func registerTypes(ourCli versioned.Interface) {
 			return ourCli.GatewayV1alpha1().TrafficPolicies(namespace).List(context.Background(), o)
 		},
 		func(c skubeclient.ClientGetter, namespace string, o metav1.ListOptions) (watch.Interface, error) {
-			return ourCli.GatewayV1alpha1().TrafficPolicies(namespace).Watch(context.Background(), o)
+			return ourCli.GatewayV1alpha1().
+				TrafficPolicies(namespace).
+				Watch(context.Background(), o)
 		},
 	)
 }
@@ -194,26 +201,31 @@ func NewPlugin(ctx context.Context, commoncol *common.CommonCollections) extensi
 
 	useRustformations = commoncol.Settings.UseRustFormations // stash the state of the env setup for rustformation usage
 
-	col := krt.WrapClient(kclient.New[*v1alpha1.TrafficPolicy](commoncol.Client), commoncol.KrtOpts.ToOptions("TrafficPolicy")...)
+	col := krt.WrapClient(
+		kclient.New[*v1alpha1.TrafficPolicy](commoncol.Client),
+		commoncol.KrtOpts.ToOptions("TrafficPolicy")...)
 	gk := wellknown.TrafficPolicyGVK.GroupKind()
 	translate := buildTranslateFunc(ctx, commoncol)
 	// TrafficPolicy IR will have TypedConfig -> implement backendroute method to add prompt guard, etc.
-	policyCol := krt.NewCollection(col, func(krtctx krt.HandlerContext, policyCR *v1alpha1.TrafficPolicy) *ir.PolicyWrapper {
-		objSrc := ir.ObjectSource{
-			Group:     gk.Group,
-			Kind:      gk.Kind,
-			Namespace: policyCR.Namespace,
-			Name:      policyCR.Name,
-		}
+	policyCol := krt.NewCollection(
+		col,
+		func(krtctx krt.HandlerContext, policyCR *v1alpha1.TrafficPolicy) *ir.PolicyWrapper {
+			objSrc := ir.ObjectSource{
+				Group:     gk.Group,
+				Kind:      gk.Kind,
+				Namespace: policyCR.Namespace,
+				Name:      policyCR.Name,
+			}
 
-		pol := &ir.PolicyWrapper{
-			ObjectSource: objSrc,
-			Policy:       policyCR,
-			PolicyIR:     translate(krtctx, policyCR),
-			TargetRefs:   convert(policyCR.Spec.TargetRefs),
-		}
-		return pol
-	})
+			pol := &ir.PolicyWrapper{
+				ObjectSource: objSrc,
+				Policy:       policyCR,
+				PolicyIR:     translate(krtctx, policyCR),
+				TargetRefs:   convert(policyCR.Spec.TargetRefs),
+			}
+			return pol
+		},
+	)
 
 	return extensionsplug.Plugin{
 		ContributesPolicies: map[schema.GroupKind]extensionsplug.PolicyPlugin{
@@ -224,7 +236,11 @@ func NewPlugin(ctx context.Context, commoncol *common.CommonCollections) extensi
 			},
 		},
 		ContributesRegistration: map[schema.GroupKind]func(){
-			wellknown.TrafficPolicyGVK.GroupKind(): buildRegisterCallback(ctx, commoncol.CrudClient, policyCol),
+			wellknown.TrafficPolicyGVK.GroupKind(): buildRegisterCallback(
+				ctx,
+				commoncol.CrudClient,
+				policyCol,
+			),
 		},
 	}
 }
@@ -241,7 +257,10 @@ func convert(targetRefs []v1alpha1.LocalPolicyTargetReference) []ir.PolicyRef {
 	return refs
 }
 
-func NewGatewayTranslationPass(ctx context.Context, tctx ir.GwTranslationCtx) ir.ProxyTranslationPass {
+func NewGatewayTranslationPass(
+	ctx context.Context,
+	tctx ir.GwTranslationCtx,
+) ir.ProxyTranslationPass {
 	return &trafficPolicyPluginGwPass{}
 }
 
@@ -250,7 +269,11 @@ func (p *trafficPolicy) Name() string {
 }
 
 // called 1 time for each listener
-func (p *trafficPolicyPluginGwPass) ApplyListenerPlugin(ctx context.Context, pCtx *ir.ListenerContext, out *envoy_config_listener_v3.Listener) {
+func (p *trafficPolicyPluginGwPass) ApplyListenerPlugin(
+	ctx context.Context,
+	pCtx *ir.ListenerContext,
+	out *envoy_config_listener_v3.Listener,
+) {
 	policy, ok := pCtx.Policy.(*trafficPolicy)
 	if !ok {
 		return
@@ -265,11 +288,19 @@ func (p *trafficPolicyPluginGwPass) ApplyListenerPlugin(ctx context.Context, pCt
 	p.localRateLimitInChain = policy.spec.localRateLimit
 }
 
-func (p *trafficPolicyPluginGwPass) ApplyVhostPlugin(ctx context.Context, pCtx *ir.VirtualHostContext, out *envoy_config_route_v3.VirtualHost) {
+func (p *trafficPolicyPluginGwPass) ApplyVhostPlugin(
+	ctx context.Context,
+	pCtx *ir.VirtualHostContext,
+	out *envoy_config_route_v3.VirtualHost,
+) {
 }
 
 // called 0 or more times
-func (p *trafficPolicyPluginGwPass) ApplyForRoute(ctx context.Context, pCtx *ir.RouteContext, outputRoute *envoy_config_route_v3.Route) error {
+func (p *trafficPolicyPluginGwPass) ApplyForRoute(
+	ctx context.Context,
+	pCtx *ir.RouteContext,
+	outputRoute *envoy_config_route_v3.Route,
+) error {
 	policy, ok := pCtx.Policy.(*trafficPolicy)
 	if !ok {
 		return nil
@@ -279,7 +310,10 @@ func (p *trafficPolicyPluginGwPass) ApplyForRoute(ctx context.Context, pCtx *ir.
 
 	if policy.spec.transform != nil {
 		if policy.spec.transform != nil {
-			pCtx.TypedFilterConfig.AddTypedConfig(transformationFilterNamePrefix, policy.spec.transform)
+			pCtx.TypedFilterConfig.AddTypedConfig(
+				transformationFilterNamePrefix,
+				policy.spec.transform,
+			)
 		}
 		p.setTransformationInChain = true
 	}
@@ -335,7 +369,10 @@ func (p *trafficPolicyPluginGwPass) ApplyForRoute(ctx context.Context, pCtx *ir.
 	}
 
 	if policy.spec.localRateLimit != nil {
-		pCtx.TypedFilterConfig.AddTypedConfig(localRateLimitFilterNamePrefix, policy.spec.localRateLimit)
+		pCtx.TypedFilterConfig.AddTypedConfig(
+			localRateLimitFilterNamePrefix,
+			policy.spec.localRateLimit,
+		)
 
 		// Add a filter to the chain. When having a rate limit for a route we need to also have a
 		// globally disabled rate limit filter in the chain otherwise it will be ignored.
@@ -359,13 +396,15 @@ func (p *trafficPolicyPluginGwPass) ApplyForRoute(ctx context.Context, pCtx *ir.
 			if !ok {
 				// AI policy cannot apply to kubernetes services
 				// TODO(npolshak): Report this as a warning on status
-				contextutils.LoggerFrom(ctx).Warnf("targetRef cannot apply to %s backend. AI TrafficPolicy must apply only to AI backend", backend.Backend.BackendObject.GetName())
+				contextutils.LoggerFrom(ctx).
+					Warnf("targetRef cannot apply to %s backend. AI TrafficPolicy must apply only to AI backend", backend.Backend.BackendObject.GetName())
 				continue
 			}
 			if b.Spec.Type != v1alpha1.BackendTypeAI {
 				// AI policy cannot apply to non-AI backends
 				// TODO(npolshak): Report this as a warning on status
-				contextutils.LoggerFrom(ctx).Warnf("backend %s is of type %s. AI TrafficPolicy must apply only to AI backend", backend.Backend.BackendObject.GetName(), b.Spec.Type)
+				contextutils.LoggerFrom(ctx).
+					Warnf("backend %s is of type %s. AI TrafficPolicy must apply only to AI backend", backend.Backend.BackendObject.GetName(), b.Spec.Type)
 				continue
 			}
 			aiBackends = append(aiBackends, b)
@@ -386,7 +425,10 @@ func (p *trafficPolicyPluginGwPass) ApplyForRoute(ctx context.Context, pCtx *ir.
 		if policy.spec.extAuth.enablement == v1alpha1.ExtAuthDisableAll {
 			// Disable the filter under all providers via the metadata match
 			// we have to use the metadata as we dont know what other configurations may have extauth
-			pCtx.TypedFilterConfig.AddTypedConfig(extAuthGlobalDisableFilterName, extAuthEnablementPerRoute())
+			pCtx.TypedFilterConfig.AddTypedConfig(
+				extAuthGlobalDisableFilterName,
+				extAuthEnablementPerRoute(),
+			)
 		} else {
 			// if you are on a route and not trying to disable it then we need to override the top level disable on the filter chain
 			pCtx.TypedFilterConfig.AddTypedConfig(extAuthFilterName(policy.spec.extAuth.providerName),
@@ -431,7 +473,8 @@ func (p *trafficPolicyPluginGwPass) ApplyForRouteBackend(
 		enableExtprocFilter(pCtx)
 	}
 
-	if rtPolicy.spec.AI != nil && (rtPolicy.spec.AI.Transformation != nil || rtPolicy.spec.AI.Extproc != nil) {
+	if rtPolicy.spec.AI != nil &&
+		(rtPolicy.spec.AI.Transformation != nil || rtPolicy.spec.AI.Extproc != nil) {
 		err := p.processAITrafficPolicy(pCtx.TypedFilterConfig, rtPolicy.spec.AI)
 		if err != nil {
 			// TODO: report error on status
@@ -446,7 +489,10 @@ func (p *trafficPolicyPluginGwPass) ApplyForRouteBackend(
 // called 1 time per listener
 // if a plugin emits new filters, they must be with a plugin unique name.
 // any filter returned from route config must be disabled, so it doesnt impact other routes.
-func (p *trafficPolicyPluginGwPass) HttpFilters(ctx context.Context, fcc ir.FilterChainCommon) ([]plugins.StagedHttpFilter, error) {
+func (p *trafficPolicyPluginGwPass) HttpFilters(
+	ctx context.Context,
+	fcc ir.FilterChainCommon,
+) ([]plugins.StagedHttpFilter, error) {
 	filters := []plugins.StagedHttpFilter{}
 	if p.extprocFilter != nil {
 		extProcFilter := proto.Clone(p.extprocFilter).(*envoy_ext_proc_v3.ExternalProcessor)
@@ -556,7 +602,9 @@ func (p *trafficPolicyPluginGwPass) HttpFilters(ctx context.Context, fcc ir.Filt
 	return filters, nil
 }
 
-func (p *trafficPolicyPluginGwPass) NetworkFilters(ctx context.Context) ([]plugins.StagedNetworkFilter, error) {
+func (p *trafficPolicyPluginGwPass) NetworkFilters(
+	ctx context.Context,
+) ([]plugins.StagedNetworkFilter, error) {
 	return nil, nil
 }
 

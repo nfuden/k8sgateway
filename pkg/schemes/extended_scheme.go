@@ -18,7 +18,12 @@ import (
 
 // AddGatewayV1A2Scheme adds the Gateway v1alpha2 scheme to the provided scheme if the TCPRoute CRD exists.
 func AddGatewayV1A2Scheme(restConfig *rest.Config, scheme *runtime.Scheme) error {
-	exists, err := CRDExists(restConfig, gwv1a2.GroupVersion.Group, gwv1a2.GroupVersion.Version, wellknown.TCPRouteKind)
+	exists, err := CRDExists(
+		restConfig,
+		gwv1a2.GroupVersion.Group,
+		gwv1a2.GroupVersion.Version,
+		wellknown.TCPRouteKind,
+	)
 	if err != nil {
 		return fmt.Errorf("error checking if %s CRD exists: %w", wellknown.TCPRouteKind, err)
 	}
@@ -35,9 +40,18 @@ func AddGatewayV1A2Scheme(restConfig *rest.Config, scheme *runtime.Scheme) error
 // AddInferExtV1A2Scheme adds the Inference Extension v1alpha2 and k8s RBAC v1 schemes to the
 // provided scheme if the InferencePool CRD exists.
 func AddInferExtV1A2Scheme(restConfig *rest.Config, scheme *runtime.Scheme) (bool, error) {
-	exists, err := CRDExists(restConfig, infextv1a2.GroupVersion.Group, infextv1a2.GroupVersion.Version, wellknown.InferencePoolKind)
+	exists, err := CRDExists(
+		restConfig,
+		infextv1a2.GroupVersion.Group,
+		infextv1a2.GroupVersion.Version,
+		wellknown.InferencePoolKind,
+	)
 	if err != nil {
-		return false, fmt.Errorf("error checking if %s CRD exists: %w", wellknown.InferencePoolKind, err)
+		return false, fmt.Errorf(
+			"error checking if %s CRD exists: %w",
+			wellknown.InferencePoolKind,
+			err,
+		)
 	}
 
 	if exists {
@@ -46,7 +60,10 @@ func AddInferExtV1A2Scheme(restConfig *rest.Config, scheme *runtime.Scheme) (boo
 			return false, fmt.Errorf("error adding RBAC v1 to scheme: %w", err)
 		}
 		if err := infextv1a2.AddToScheme(scheme); err != nil {
-			return false, fmt.Errorf("error adding Gateway API Inference Extension v1alpha1 to scheme: %w", err)
+			return false, fmt.Errorf(
+				"error adding Gateway API Inference Extension v1alpha1 to scheme: %w",
+				err,
+			)
 		}
 	}
 
@@ -63,7 +80,8 @@ func CRDExists(restConfig *rest.Config, group, version, kind string) (bool, erro
 	groupVersion := fmt.Sprintf("%s/%s", group, version)
 	apiResourceList, err := discoveryClient.ServerResourcesForGroupVersion(groupVersion)
 	if err != nil {
-		if errors.IsNotFound(err) || discovery.IsGroupDiscoveryFailedError(err) || meta.IsNoMatchError(err) {
+		if errors.IsNotFound(err) || discovery.IsGroupDiscoveryFailedError(err) ||
+			meta.IsNoMatchError(err) {
 			return false, nil
 		}
 		return false, err

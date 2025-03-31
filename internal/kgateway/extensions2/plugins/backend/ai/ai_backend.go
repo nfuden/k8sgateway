@@ -64,14 +64,21 @@ func data(s *ir.Secret) map[string][]byte {
 }
 
 func ApplyAIBackend(ir *IR, pCtx *ir.RouteBackendContext, out *envoy_config_route_v3.Route) error {
-	pCtx.TypedFilterConfig.AddTypedConfig(wellknown.AIBackendTransformationFilterName, ir.Transformation)
+	pCtx.TypedFilterConfig.AddTypedConfig(
+		wellknown.AIBackendTransformationFilterName,
+		ir.Transformation,
+	)
 
 	copyBackendExtproc := proto.Clone(ir.Extproc).(*envoy_ext_proc_v3.ExtProcPerRoute)
-	trafficpolicyExtprocSettingsProto := pCtx.TypedFilterConfig.GetTypedConfig(wellknown.AIExtProcFilterName)
+	trafficpolicyExtprocSettingsProto := pCtx.TypedFilterConfig.GetTypedConfig(
+		wellknown.AIExtProcFilterName,
+	)
 	if trafficpolicyExtprocSettingsProto != nil {
 		// merge the Backend extproc config with any config added by the TrafficPolicy
 		routeExtprocSettings := trafficpolicyExtprocSettingsProto.(*envoy_ext_proc_v3.ExtProcPerRoute)
-		copyBackendExtproc.GetOverrides().GrpcInitialMetadata = append(copyBackendExtproc.GetOverrides().GetGrpcInitialMetadata(), routeExtprocSettings.GetOverrides().GetGrpcInitialMetadata()...)
+		copyBackendExtproc.GetOverrides().GrpcInitialMetadata = append(
+			copyBackendExtproc.GetOverrides().GetGrpcInitialMetadata(),
+			routeExtprocSettings.GetOverrides().GetGrpcInitialMetadata()...)
 	}
 	pCtx.TypedFilterConfig.AddTypedConfig(wellknown.AIExtProcFilterName, copyBackendExtproc)
 
@@ -135,7 +142,9 @@ func PreprocessAIBackend(ctx context.Context, aiBackend *v1alpha1.AIBackend, ir 
 			RequestMatch: &envoytransformation.RouteTransformations_RouteTransformation_RequestMatch{
 				RequestTransformation: &envoytransformation.Transformation{
 					// Set this env var to true to log the request/response info for each transformation
-					LogRequestResponseInfo: wrapperspb.Bool(os.Getenv("AI_PLUGIN_DEBUG_TRANSFORMATIONS") == "true"),
+					LogRequestResponseInfo: wrapperspb.Bool(
+						os.Getenv("AI_PLUGIN_DEBUG_TRANSFORMATIONS") == "true",
+					),
 					TransformationType: &envoytransformation.Transformation_TransformationTemplate{
 						TransformationTemplate: transformation,
 					},
@@ -145,12 +154,15 @@ func PreprocessAIBackend(ctx context.Context, aiBackend *v1alpha1.AIBackend, ir 
 	}
 	// Sets the transformation for the backend. Can be updated in a route policy is attached.
 	transformations := &envoytransformation.RouteTransformations{
-		Transformations: []*envoytransformation.RouteTransformations_RouteTransformation{routeTransformation},
+		Transformations: []*envoytransformation.RouteTransformations_RouteTransformation{
+			routeTransformation,
+		},
 	}
 	// Store transformations in IR
 	ir.Transformation = transformations
 
-	extProcRouteSettings.GetOverrides().GrpcInitialMetadata = append(extProcRouteSettings.GetOverrides().GetGrpcInitialMetadata(),
+	extProcRouteSettings.GetOverrides().GrpcInitialMetadata = append(
+		extProcRouteSettings.GetOverrides().GetGrpcInitialMetadata(),
 		&envoy_config_core_v3.HeaderValue{
 			Key:   "x-llm-provider",
 			Value: llmProvider,
@@ -159,17 +171,20 @@ func PreprocessAIBackend(ctx context.Context, aiBackend *v1alpha1.AIBackend, ir 
 	// If the backend specifies a model, add a header to the ext-proc request
 	// TODO: add support for multi pool setting different models for different pools
 	if llmModel != "" {
-		extProcRouteSettings.GetOverrides().GrpcInitialMetadata = append(extProcRouteSettings.GetOverrides().GetGrpcInitialMetadata(),
+		extProcRouteSettings.GetOverrides().GrpcInitialMetadata = append(
+			extProcRouteSettings.GetOverrides().GetGrpcInitialMetadata(),
 			&envoy_config_core_v3.HeaderValue{
 				Key:   "x-llm-model",
 				Value: llmModel,
-			})
+			},
+		)
 	}
 
 	// Add the x-request-id header to the ext-proc request.
 	// This is an optimization to allow us to not have to wait for the headers request to
 	// Initialize our logger/handler classes.
-	extProcRouteSettings.GetOverrides().GrpcInitialMetadata = append(extProcRouteSettings.GetOverrides().GetGrpcInitialMetadata(),
+	extProcRouteSettings.GetOverrides().GrpcInitialMetadata = append(
+		extProcRouteSettings.GetOverrides().GetGrpcInitialMetadata(),
 		&envoy_config_core_v3.HeaderValue{
 			Key:   "x-request-id",
 			Value: "%REQ(X-REQUEST-ID)%",

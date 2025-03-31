@@ -19,8 +19,13 @@ var (
 
 	validPathRegex = regexp.MustCompile(validPathRegexCharacters)
 
-	NoDestinationSpecifiedError       = errors.New("must specify at least one weighted destination for multi destination routes")
-	ValidRoutePatternError            = fmt.Errorf("must only contain valid characters matching pattern %s", validPathRegexCharacters)
+	NoDestinationSpecifiedError = errors.New(
+		"must specify at least one weighted destination for multi destination routes",
+	)
+	ValidRoutePatternError = fmt.Errorf(
+		"must only contain valid characters matching pattern %s",
+		validPathRegexCharacters,
+	)
 	PathContainsInvalidCharacterError = func(s, invalid string) error {
 		return fmt.Errorf("path [%s] cannot contain [%s]", s, invalid)
 	}

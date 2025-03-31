@@ -56,32 +56,112 @@ const (
 
 var (
 	// Variables used by TestConfigureTCPRouteBackingDestinationsWithSingleService
-	multiSvcNsManifest               = filepath.Join(fsutils.MustGetThisDir(), "testdata", "multi-ns.yaml")
-	multiSvcGatewayAndClientManifest = filepath.Join(fsutils.MustGetThisDir(), "testdata", "multi-listener-gateway-and-client.yaml")
-	multiSvcBackendManifest          = filepath.Join(fsutils.MustGetThisDir(), "testdata", "multi-backend-service.yaml")
-	multiSvcTlsRouteManifest         = filepath.Join(fsutils.MustGetThisDir(), "testdata", "multi-tlsroute.yaml")
+	multiSvcNsManifest = filepath.Join(
+		fsutils.MustGetThisDir(),
+		"testdata",
+		"multi-ns.yaml",
+	)
+	multiSvcGatewayAndClientManifest = filepath.Join(
+		fsutils.MustGetThisDir(),
+		"testdata",
+		"multi-listener-gateway-and-client.yaml",
+	)
+	multiSvcBackendManifest = filepath.Join(
+		fsutils.MustGetThisDir(),
+		"testdata",
+		"multi-backend-service.yaml",
+	)
+	multiSvcTlsRouteManifest = filepath.Join(
+		fsutils.MustGetThisDir(),
+		"testdata",
+		"multi-tlsroute.yaml",
+	)
 
 	// Variables used by TestConfigureTCPRouteBackingDestinationsWithMultiServices
-	singleSvcNsManifest               = filepath.Join(fsutils.MustGetThisDir(), "testdata", "single-ns.yaml")
-	singleSvcGatewayAndClientManifest = filepath.Join(fsutils.MustGetThisDir(), "testdata", "single-listener-gateway-and-client.yaml")
-	singleSvcBackendManifest          = filepath.Join(fsutils.MustGetThisDir(), "testdata", "single-backend-service.yaml")
-	singleSvcTLSRouteManifest         = filepath.Join(fsutils.MustGetThisDir(), "testdata", "single-tlsroute.yaml")
-	singleSecretManifest              = filepath.Join(fsutils.MustGetThisDir(), "testdata", "tls-secret.yaml")
+	singleSvcNsManifest = filepath.Join(
+		fsutils.MustGetThisDir(),
+		"testdata",
+		"single-ns.yaml",
+	)
+	singleSvcGatewayAndClientManifest = filepath.Join(
+		fsutils.MustGetThisDir(),
+		"testdata",
+		"single-listener-gateway-and-client.yaml",
+	)
+	singleSvcBackendManifest = filepath.Join(
+		fsutils.MustGetThisDir(),
+		"testdata",
+		"single-backend-service.yaml",
+	)
+	singleSvcTLSRouteManifest = filepath.Join(
+		fsutils.MustGetThisDir(),
+		"testdata",
+		"single-tlsroute.yaml",
+	)
+	singleSecretManifest = filepath.Join(
+		fsutils.MustGetThisDir(),
+		"testdata",
+		"tls-secret.yaml",
+	)
 
 	// Manifests for CrossNamespaceTLSRouteWithReferenceGrant
-	crossNsClientNsManifest   = filepath.Join(fsutils.MustGetThisDir(), "testdata", "cross-ns-client-ns.yaml")
-	crossNsBackendNsManifest  = filepath.Join(fsutils.MustGetThisDir(), "testdata", "cross-ns-backend-ns.yaml")
-	crossNsGatewayManifest    = filepath.Join(fsutils.MustGetThisDir(), "testdata", "cross-ns-gateway-and-client.yaml")
-	crossNsBackendSvcManifest = filepath.Join(fsutils.MustGetThisDir(), "testdata", "cross-ns-backend-service.yaml")
-	crossNsTLSRouteManifest   = filepath.Join(fsutils.MustGetThisDir(), "testdata", "cross-ns-tlsroute.yaml")
-	crossNsRefGrantManifest   = filepath.Join(fsutils.MustGetThisDir(), "testdata", "cross-ns-referencegrant.yaml")
+	crossNsClientNsManifest = filepath.Join(
+		fsutils.MustGetThisDir(),
+		"testdata",
+		"cross-ns-client-ns.yaml",
+	)
+	crossNsBackendNsManifest = filepath.Join(
+		fsutils.MustGetThisDir(),
+		"testdata",
+		"cross-ns-backend-ns.yaml",
+	)
+	crossNsGatewayManifest = filepath.Join(
+		fsutils.MustGetThisDir(),
+		"testdata",
+		"cross-ns-gateway-and-client.yaml",
+	)
+	crossNsBackendSvcManifest = filepath.Join(
+		fsutils.MustGetThisDir(),
+		"testdata",
+		"cross-ns-backend-service.yaml",
+	)
+	crossNsTLSRouteManifest = filepath.Join(
+		fsutils.MustGetThisDir(),
+		"testdata",
+		"cross-ns-tlsroute.yaml",
+	)
+	crossNsRefGrantManifest = filepath.Join(
+		fsutils.MustGetThisDir(),
+		"testdata",
+		"cross-ns-referencegrant.yaml",
+	)
 
 	// Manifests for CrossNamespaceTCPRouteWithoutReferenceGrant
-	crossNsNoRefGrantClientNsManifest   = filepath.Join(fsutils.MustGetThisDir(), "testdata", "cross-ns-no-refgrant-client-ns.yaml")
-	crossNsNoRefGrantBackendNsManifest  = filepath.Join(fsutils.MustGetThisDir(), "testdata", "cross-ns-no-refgrant-backend-ns.yaml")
-	crossNsNoRefGrantGatewayManifest    = filepath.Join(fsutils.MustGetThisDir(), "testdata", "cross-ns-no-refgrant-gateway-and-client.yaml")
-	crossNsNoRefGrantBackendSvcManifest = filepath.Join(fsutils.MustGetThisDir(), "testdata", "cross-ns-no-refgrant-backend-service.yaml")
-	crossNsNoRefGrantTLSRouteManifest   = filepath.Join(fsutils.MustGetThisDir(), "testdata", "cross-ns-no-refgrant-tlsroute.yaml")
+	crossNsNoRefGrantClientNsManifest = filepath.Join(
+		fsutils.MustGetThisDir(),
+		"testdata",
+		"cross-ns-no-refgrant-client-ns.yaml",
+	)
+	crossNsNoRefGrantBackendNsManifest = filepath.Join(
+		fsutils.MustGetThisDir(),
+		"testdata",
+		"cross-ns-no-refgrant-backend-ns.yaml",
+	)
+	crossNsNoRefGrantGatewayManifest = filepath.Join(
+		fsutils.MustGetThisDir(),
+		"testdata",
+		"cross-ns-no-refgrant-gateway-and-client.yaml",
+	)
+	crossNsNoRefGrantBackendSvcManifest = filepath.Join(
+		fsutils.MustGetThisDir(),
+		"testdata",
+		"cross-ns-no-refgrant-backend-service.yaml",
+	)
+	crossNsNoRefGrantTLSRouteManifest = filepath.Join(
+		fsutils.MustGetThisDir(),
+		"testdata",
+		"cross-ns-no-refgrant-tlsroute.yaml",
+	)
 
 	// Assertion test timers
 	ctxTimeout = 5 * time.Minute

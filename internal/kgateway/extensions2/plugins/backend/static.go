@@ -13,7 +13,11 @@ import (
 	"github.com/kgateway-dev/kgateway/v2/internal/kgateway/ir"
 )
 
-func processStatic(ctx context.Context, in *v1alpha1.StaticBackend, out *envoy_config_cluster_v3.Cluster) error {
+func processStatic(
+	ctx context.Context,
+	in *v1alpha1.StaticBackend,
+	out *envoy_config_cluster_v3.Cluster,
+) error {
 	var hostname string
 	out.ClusterDiscoveryType = &envoy_config_cluster_v3.Cluster_Type{
 		Type: envoy_config_cluster_v3.Cluster_STATIC,
@@ -46,7 +50,8 @@ func processStatic(ctx context.Context, in *v1alpha1.StaticBackend, out *envoy_c
 			Hostname: host.Host,
 		}
 
-		out.GetLoadAssignment().GetEndpoints()[0].LbEndpoints = append(out.GetLoadAssignment().GetEndpoints()[0].GetLbEndpoints(),
+		out.GetLoadAssignment().GetEndpoints()[0].LbEndpoints = append(
+			out.GetLoadAssignment().GetEndpoints()[0].GetLbEndpoints(),
 			&envoy_config_endpoint_v3.LbEndpoint{
 				//	Metadata: getMetadata(params.Ctx, spec, host),
 				HostIdentifier: &envoy_config_endpoint_v3.LbEndpoint_Endpoint{
@@ -67,7 +72,8 @@ func processStatic(ctx context.Context, in *v1alpha1.StaticBackend, out *envoy_c
 					},
 				},
 				//				LoadBalancingWeight: host.GetLoadBalancingWeight(),
-			})
+			},
+		)
 	}
 	// the upstream has a DNS name. We need Envoy to resolve the DNS name
 	if hostname != "" {

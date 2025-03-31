@@ -46,7 +46,8 @@ func (c ObjectSource) String() string {
 }
 
 func (c ObjectSource) Equals(in ObjectSource) bool {
-	return c.Namespace == in.Namespace && c.Name == in.Name && c.Group == in.Group && c.Kind == in.Kind
+	return c.Namespace == in.Namespace && c.Name == in.Name && c.Group == in.Group &&
+		c.Kind == in.Kind
 }
 
 type Namespaced interface {
@@ -73,7 +74,7 @@ func ParseAppProtocol(appProtocol *string) AppProtocol {
 type BackendObjectIR struct {
 	// Ref to source object. sometimes the group and kind are not populated from api-server, so
 	// set them explicitly here, and pass this around as the reference.
-	ObjectSource `json:",inline"`
+	ObjectSource `            json:",inline"`
 	// optional port for if ObjectSource is a service that can have multiple ports.
 	Port int32
 	// optional application protocol for the backend. Can be used to enable http2.
@@ -213,5 +214,7 @@ func (c Gateway) ResourceName() string {
 }
 
 func (c Gateway) Equals(in Gateway) bool {
-	return c.ObjectSource.Equals(in.ObjectSource) && versionEquals(c.Obj, in.Obj) && c.AttachedListenerPolicies.Equals(in.AttachedListenerPolicies) && c.AttachedHttpPolicies.Equals(in.AttachedHttpPolicies)
+	return c.ObjectSource.Equals(in.ObjectSource) && versionEquals(c.Obj, in.Obj) &&
+		c.AttachedListenerPolicies.Equals(in.AttachedListenerPolicies) &&
+		c.AttachedHttpPolicies.Equals(in.AttachedHttpPolicies)
 }

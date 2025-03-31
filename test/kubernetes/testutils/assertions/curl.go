@@ -43,7 +43,12 @@ func (p *Provider) AssertEventualCurlReturnResponse(
 	var curlHttpResponse *http.Response
 	p.Gomega.Eventually(func(g Gomega) {
 		curlResponse, err := p.clusterContext.Cli.CurlFromPod(ctx, podOpts, curlOptions...)
-		fmt.Printf("want:\n%+v\nstdout:\n%s\nstderr:%s\n\n", expectedResponse, curlResponse.StdOut, curlResponse.StdErr)
+		fmt.Printf(
+			"want:\n%+v\nstdout:\n%s\nstderr:%s\n\n",
+			expectedResponse,
+			curlResponse.StdOut,
+			curlResponse.StdErr,
+		)
 		g.Expect(err).NotTo(HaveOccurred())
 
 		// Do the transform in a separate step instead of a WithTransform to avoid having to do it twice
@@ -68,7 +73,12 @@ func (p *Provider) AssertEventualCurlResponse(
 	expectedResponse *matchers.HttpResponse,
 	timeout ...time.Duration,
 ) {
-	resp := p.AssertEventualCurlReturnResponse(ctx, podOpts, curlOptions, expectedResponse, timeout...)
+	resp := p.AssertEventualCurlReturnResponse(
+		ctx,
+		podOpts,
+		curlOptions,
+		expectedResponse,
+		timeout...)
 	resp.Body.Close()
 }
 
@@ -87,7 +97,12 @@ func (p *Provider) AssertCurlReturnResponse(
 
 	// Rely on default timeouts set in CurlFromPod
 	curlResponse, err := p.clusterContext.Cli.CurlFromPod(ctx, podOpts, curlOptions...)
-	fmt.Printf("want:\n%+v\nstdout:\n%s\nstderr:%s\n\n", expectedResponse, curlResponse.StdOut, curlResponse.StdErr)
+	fmt.Printf(
+		"want:\n%+v\nstdout:\n%s\nstderr:%s\n\n",
+		expectedResponse,
+		curlResponse.StdOut,
+		curlResponse.StdErr,
+	)
 	Expect(err).NotTo(HaveOccurred())
 
 	// Do the transform in a separate step instead of a WithTransform to avoid having to do it twice
@@ -127,10 +142,18 @@ func (p *Provider) AssertEventuallyConsistentCurlResponse(
 
 	p.Gomega.Consistently(func(g Gomega) {
 		res, err := p.clusterContext.Cli.CurlFromPod(ctx, podOpts, curlOptions...)
-		fmt.Printf("want:\n%+v\nstdout:\n%s\nstderr:%s\n\n", expectedResponse, res.StdOut, res.StdErr)
+		fmt.Printf(
+			"want:\n%+v\nstdout:\n%s\nstderr:%s\n\n",
+			expectedResponse,
+			res.StdOut,
+			res.StdErr,
+		)
 		g.Expect(err).NotTo(HaveOccurred())
 
-		expectedResponseMatcher := WithTransform(transforms.WithCurlResponse, matchers.HaveHttpResponse(expectedResponse))
+		expectedResponseMatcher := WithTransform(
+			transforms.WithCurlResponse,
+			matchers.HaveHttpResponse(expectedResponse),
+		)
 		g.Expect(res).To(expectedResponseMatcher)
 		fmt.Printf("success: %+v", res)
 	}).
@@ -171,7 +194,10 @@ func (p *Provider) AssertEventualCurlError(
 		if err == nil {
 			if curlResponse == nil { // This is not expected to happen, but adding for safety/future-proofing
 				fmt.Printf("wanted curl error, got no error and no response\n")
-				testMessage = fmt.Sprintf("Expected curl error %d, got no error and no response\n", expectedErrorCode)
+				testMessage = fmt.Sprintf(
+					"Expected curl error %d, got no error and no response\n",
+					expectedErrorCode,
+				)
 			} else {
 				fmt.Printf("wanted curl error, got response:\nstdout:\n%s\nstderr:%s\n", curlResponse.StdOut, curlResponse.StdErr)
 				curlHttpResponse := transforms.WithCurlResponse(curlResponse)
@@ -184,7 +210,11 @@ func (p *Provider) AssertEventualCurlError(
 		if expectedErrorCode > 0 {
 			expectedCurlError := fmt.Sprintf("exit status %d", expectedErrorCode)
 			fmt.Printf("wanted curl error: %s, got error: %s\n", expectedCurlError, err.Error())
-			testMessage = fmt.Sprintf("Expected curl error: %s, got: %s", expectedCurlError, err.Error())
+			testMessage = fmt.Sprintf(
+				"Expected curl error: %s, got: %s",
+				expectedCurlError,
+				err.Error(),
+			)
 			g.Expect(err.Error()).To(Equal(expectedCurlError))
 		} else {
 			fmt.Printf("wanted any curl error, got error: %s\n", err.Error())
@@ -198,7 +228,14 @@ func (p *Provider) AssertEventualCurlError(
 
 func (p *Provider) generateCurlOpts(host string) []curl.Option {
 	var curlOpts = []curl.Option{
-		curl.WithHost(kubeutils.ServiceFQDN(metav1.ObjectMeta{Name: GatewayProxyName, Namespace: p.installContext.InstallNamespace})),
+		curl.WithHost(
+			kubeutils.ServiceFQDN(
+				metav1.ObjectMeta{
+					Name:      GatewayProxyName,
+					Namespace: p.installContext.InstallNamespace,
+				},
+			),
+		),
 		curl.WithPort(80),
 		curl.Silent(),
 	}
@@ -232,7 +269,10 @@ func (p *Provider) generateCurlOpts(host string) []curl.Option {
 	return curlOpts
 }
 
-func (p *Provider) generateCurlOptsWithHeaders(host string, headers map[string]string) []curl.Option {
+func (p *Provider) generateCurlOptsWithHeaders(
+	host string,
+	headers map[string]string,
+) []curl.Option {
 	curlOpts := p.generateCurlOpts(host)
 	for k, v := range headers {
 		curlOpts = append(curlOpts, curl.WithHeader(k, v))
@@ -240,7 +280,11 @@ func (p *Provider) generateCurlOptsWithHeaders(host string, headers map[string]s
 	return curlOpts
 }
 
-func (p *Provider) CurlConsistentlyRespondsWithStatus(ctx context.Context, host string, status int) {
+func (p *Provider) CurlConsistentlyRespondsWithStatus(
+	ctx context.Context,
+	host string,
+	status int,
+) {
 	curlOptsHeader := p.generateCurlOpts(host)
 
 	p.AssertEventuallyConsistentCurlResponse(
@@ -275,7 +319,12 @@ func (p *Provider) CurlRespondsWithStatus(ctx context.Context, host string, stat
 	)
 }
 
-func (p *Provider) CurlWithHeadersConsistentlyRespondsWithStatus(ctx context.Context, host string, headers map[string]string, status int) {
+func (p *Provider) CurlWithHeadersConsistentlyRespondsWithStatus(
+	ctx context.Context,
+	host string,
+	headers map[string]string,
+	status int,
+) {
 	curlOptsHeader := p.generateCurlOptsWithHeaders(host, headers)
 
 	p.AssertEventuallyConsistentCurlResponse(
@@ -288,7 +337,12 @@ func (p *Provider) CurlWithHeadersConsistentlyRespondsWithStatus(ctx context.Con
 	)
 }
 
-func (p *Provider) CurlWithHeadersEventuallyRespondsWithStatus(ctx context.Context, host string, headers map[string]string, status int) {
+func (p *Provider) CurlWithHeadersEventuallyRespondsWithStatus(
+	ctx context.Context,
+	host string,
+	headers map[string]string,
+	status int,
+) {
 	curlOptsHeader := p.generateCurlOptsWithHeaders(host, headers)
 
 	p.AssertEventualCurlResponse(
@@ -299,7 +353,12 @@ func (p *Provider) CurlWithHeadersEventuallyRespondsWithStatus(ctx context.Conte
 	)
 }
 
-func (p *Provider) CurlWithHeadersRespondsWithStatus(ctx context.Context, host string, headers map[string]string, status int) {
+func (p *Provider) CurlWithHeadersRespondsWithStatus(
+	ctx context.Context,
+	host string,
+	headers map[string]string,
+	status int,
+) {
 	curlOptsHeader := p.generateCurlOptsWithHeaders(host, headers)
 
 	p.AssertCurlResponse(

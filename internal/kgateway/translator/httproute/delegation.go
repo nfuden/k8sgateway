@@ -73,7 +73,11 @@ func flattenDelegatedRoutes(
 	for _, child := range children {
 		childRoute, ok := child.Object.(*ir.HttpRouteIR)
 		if !ok {
-			msg := fmt.Sprintf("ignoring unsupported child route type %T for parent httproute %v", child.Object, parentRef)
+			msg := fmt.Sprintf(
+				"ignoring unsupported child route type %T for parent httproute %v",
+				child.Object,
+				parentRef,
+			)
 			contextutils.LoggerFrom(ctx).Warn(msg)
 			continue
 		}
@@ -81,8 +85,11 @@ func flattenDelegatedRoutes(
 		if routesVisited.Has(childRef) {
 			// Loop detected, ignore child route
 			// This is an _extra_ safety check, but the given HTTPRouteInfo shouldn't ever contain cycles.
-			msg := fmt.Sprintf("cyclic reference detected while evaluating delegated routes for parent: %s; child route %s will be ignored",
-				parentRef, childRef)
+			msg := fmt.Sprintf(
+				"cyclic reference detected while evaluating delegated routes for parent: %s; child route %s will be ignored",
+				parentRef,
+				childRef,
+			)
 			contextutils.LoggerFrom(ctx).Warn(msg)
 			parentReporter.SetCondition(reports.RouteCondition{
 				Type:    gwv1.RouteConditionResolvedRefs,
@@ -94,12 +101,13 @@ func flattenDelegatedRoutes(
 		}
 
 		// Create a new reporter for the child route
-		reporter := baseReporter.Route(childRoute.GetSourceObject()).ParentRef(&gwv1.ParentReference{
-			Group:     ptr.To(gwv1.Group(wellknown.GatewayGroup)),
-			Kind:      ptr.To(gwv1.Kind(wellknown.HTTPRouteKind)),
-			Name:      gwv1.ObjectName(parentRef.Name),
-			Namespace: ptr.To(gwv1.Namespace(parentRef.Namespace)),
-		})
+		reporter := baseReporter.Route(childRoute.GetSourceObject()).
+			ParentRef(&gwv1.ParentReference{
+				Group:     ptr.To(gwv1.Group(wellknown.GatewayGroup)),
+				Kind:      ptr.To(gwv1.Kind(wellknown.HTTPRouteKind)),
+				Name:      gwv1.ObjectName(parentRef.Name),
+				Namespace: ptr.To(gwv1.Namespace(parentRef.Namespace)),
+			})
 
 		if err := validateChildRoute(*childRoute); err != nil {
 			reporter.SetCondition(reports.RouteCondition{
@@ -112,7 +120,16 @@ func flattenDelegatedRoutes(
 		}
 
 		translateGatewayHTTPRouteRulesUtil(
-			ctx, gwListener, child, reporter, baseReporter, outputs, routesVisited, hostnames, delegationChain)
+			ctx,
+			gwListener,
+			child,
+			reporter,
+			baseReporter,
+			outputs,
+			routesVisited,
+			hostnames,
+			delegationChain,
+		)
 	}
 
 	return nil
@@ -122,7 +139,9 @@ func validateChildRoute(
 	route ir.HttpRouteIR,
 ) error {
 	if len(route.Hostnames) > 0 {
-		return errors.New("spec.hostnames must be unset on a delegatee route as they are inherited from the parent route")
+		return errors.New(
+			"spec.hostnames must be unset on a delegatee route as they are inherited from the parent route",
+		)
 	}
 	return nil
 }

@@ -93,11 +93,20 @@ func deepMergeGatewayParameters(dst, src *v1alpha1.GatewayParameters) *v1alpha1.
 	srcKube := src.Spec.Kube
 
 	dstKube.Deployment = deepMergeDeployment(dstKube.GetDeployment(), srcKube.GetDeployment())
-	dstKube.EnvoyContainer = deepMergeEnvoyContainer(dstKube.GetEnvoyContainer(), srcKube.GetEnvoyContainer())
-	dstKube.SdsContainer = deepMergeSdsContainer(dstKube.GetSdsContainer(), srcKube.GetSdsContainer())
+	dstKube.EnvoyContainer = deepMergeEnvoyContainer(
+		dstKube.GetEnvoyContainer(),
+		srcKube.GetEnvoyContainer(),
+	)
+	dstKube.SdsContainer = deepMergeSdsContainer(
+		dstKube.GetSdsContainer(),
+		srcKube.GetSdsContainer(),
+	)
 	dstKube.PodTemplate = deepMergePodTemplate(dstKube.GetPodTemplate(), srcKube.GetPodTemplate())
 	dstKube.Service = deepMergeService(dstKube.GetService(), srcKube.GetService())
-	dstKube.ServiceAccount = deepMergeServiceAccount(dstKube.GetServiceAccount(), srcKube.GetServiceAccount())
+	dstKube.ServiceAccount = deepMergeServiceAccount(
+		dstKube.GetServiceAccount(),
+		srcKube.GetServiceAccount(),
+	)
 	dstKube.Istio = deepMergeIstioIntegration(dstKube.GetIstio(), srcKube.GetIstio())
 	dstKube.Stats = deepMergeStatsConfig(dstKube.GetStats(), srcKube.GetStats())
 	dstKube.AiExtension = deepMergeAIExtension(dstKube.GetAiExtension(), srcKube.GetAiExtension())
@@ -106,7 +115,10 @@ func deepMergeGatewayParameters(dst, src *v1alpha1.GatewayParameters) *v1alpha1.
 	return dst
 }
 
-func deepMergeStatsConfig(dst *v1alpha1.StatsConfig, src *v1alpha1.StatsConfig) *v1alpha1.StatsConfig {
+func deepMergeStatsConfig(
+	dst *v1alpha1.StatsConfig,
+	src *v1alpha1.StatsConfig,
+) *v1alpha1.StatsConfig {
 	// nil src override means just use dst
 	if src == nil {
 		return dst
@@ -117,9 +129,15 @@ func deepMergeStatsConfig(dst *v1alpha1.StatsConfig, src *v1alpha1.StatsConfig) 
 	}
 
 	dst.Enabled = mergePointers(dst.GetEnabled(), src.GetEnabled())
-	dst.RoutePrefixRewrite = mergeComparable(dst.GetRoutePrefixRewrite(), src.GetRoutePrefixRewrite())
+	dst.RoutePrefixRewrite = mergeComparable(
+		dst.GetRoutePrefixRewrite(),
+		src.GetRoutePrefixRewrite(),
+	)
 	dst.EnableStatsRoute = mergeComparable(dst.GetEnableStatsRoute(), src.GetEnableStatsRoute())
-	dst.StatsRoutePrefixRewrite = mergeComparable(dst.GetStatsRoutePrefixRewrite(), src.GetStatsRoutePrefixRewrite())
+	dst.StatsRoutePrefixRewrite = mergeComparable(
+		dst.GetStatsRoutePrefixRewrite(),
+		src.GetStatsRoutePrefixRewrite(),
+	)
 
 	return dst
 }
@@ -136,13 +154,22 @@ func deepMergePodTemplate(dst, src *v1alpha1.Pod) *v1alpha1.Pod {
 
 	dst.ExtraLabels = deepMergeMaps(dst.GetExtraLabels(), src.GetExtraLabels())
 	dst.ExtraAnnotations = deepMergeMaps(dst.GetExtraAnnotations(), src.GetExtraAnnotations())
-	dst.SecurityContext = deepMergePodSecurityContext(dst.GetSecurityContext(), src.GetSecurityContext())
+	dst.SecurityContext = deepMergePodSecurityContext(
+		dst.GetSecurityContext(),
+		src.GetSecurityContext(),
+	)
 	dst.ImagePullSecrets = deepMergeSlices(dst.GetImagePullSecrets(), src.GetImagePullSecrets())
 	dst.NodeSelector = deepMergeMaps(dst.GetNodeSelector(), src.GetNodeSelector())
 	dst.Affinity = deepMergeAffinity(dst.GetAffinity(), src.GetAffinity())
 	dst.Tolerations = deepMergeSlices(dst.GetTolerations(), src.GetTolerations())
-	dst.GracefulShutdown = deepMergeGracefulShutdown(dst.GetGracefulShutdown(), src.GetGracefulShutdown())
-	dst.TerminationGracePeriodSeconds = mergePointers(dst.TerminationGracePeriodSeconds, src.TerminationGracePeriodSeconds)
+	dst.GracefulShutdown = deepMergeGracefulShutdown(
+		dst.GetGracefulShutdown(),
+		src.GetGracefulShutdown(),
+	)
+	dst.TerminationGracePeriodSeconds = mergePointers(
+		dst.TerminationGracePeriodSeconds,
+		src.TerminationGracePeriodSeconds,
+	)
 	dst.ReadinessProbe = deepMergeProbe(dst.GetReadinessProbe(), src.GetReadinessProbe())
 	dst.LivenessProbe = deepMergeProbe(dst.GetLivenessProbe(), src.GetLivenessProbe())
 
@@ -160,7 +187,10 @@ func deepMergePodSecurityContext(dst, src *corev1.PodSecurityContext) *corev1.Po
 	}
 
 	dst.SELinuxOptions = deepMergeSELinuxOptions(dst.SELinuxOptions, src.SELinuxOptions)
-	dst.WindowsOptions = deepMergeWindowsSecurityContextOptions(dst.WindowsOptions, src.WindowsOptions)
+	dst.WindowsOptions = deepMergeWindowsSecurityContextOptions(
+		dst.WindowsOptions,
+		src.WindowsOptions,
+	)
 	dst.RunAsUser = mergePointers(dst.RunAsUser, src.RunAsUser)
 	dst.RunAsGroup = mergePointers(dst.RunAsGroup, src.RunAsGroup)
 	dst.RunAsNonRoot = mergePointers(dst.RunAsNonRoot, src.RunAsNonRoot)
@@ -191,7 +221,9 @@ func deepMergeSELinuxOptions(dst, src *corev1.SELinuxOptions) *corev1.SELinuxOpt
 	return dst
 }
 
-func deepMergeWindowsSecurityContextOptions(dst, src *corev1.WindowsSecurityContextOptions) *corev1.WindowsSecurityContextOptions {
+func deepMergeWindowsSecurityContextOptions(
+	dst, src *corev1.WindowsSecurityContextOptions,
+) *corev1.WindowsSecurityContextOptions {
 	// nil src override means just use dst
 	if src == nil {
 		return dst
@@ -252,8 +284,14 @@ func deepMergeNodeAffinity(dst, src *corev1.NodeAffinity) *corev1.NodeAffinity {
 		return src
 	}
 
-	dst.RequiredDuringSchedulingIgnoredDuringExecution = deepMergeNodeSelector(dst.RequiredDuringSchedulingIgnoredDuringExecution, src.RequiredDuringSchedulingIgnoredDuringExecution)
-	dst.PreferredDuringSchedulingIgnoredDuringExecution = deepMergeSlices(dst.PreferredDuringSchedulingIgnoredDuringExecution, src.PreferredDuringSchedulingIgnoredDuringExecution)
+	dst.RequiredDuringSchedulingIgnoredDuringExecution = deepMergeNodeSelector(
+		dst.RequiredDuringSchedulingIgnoredDuringExecution,
+		src.RequiredDuringSchedulingIgnoredDuringExecution,
+	)
+	dst.PreferredDuringSchedulingIgnoredDuringExecution = deepMergeSlices(
+		dst.PreferredDuringSchedulingIgnoredDuringExecution,
+		src.PreferredDuringSchedulingIgnoredDuringExecution,
+	)
 
 	return dst
 }
@@ -283,8 +321,14 @@ func deepMergePodAffinity(dst, src *corev1.PodAffinity) *corev1.PodAffinity {
 		return src
 	}
 
-	dst.RequiredDuringSchedulingIgnoredDuringExecution = deepMergeSlices(dst.RequiredDuringSchedulingIgnoredDuringExecution, src.RequiredDuringSchedulingIgnoredDuringExecution)
-	dst.PreferredDuringSchedulingIgnoredDuringExecution = deepMergeSlices(dst.PreferredDuringSchedulingIgnoredDuringExecution, src.PreferredDuringSchedulingIgnoredDuringExecution)
+	dst.RequiredDuringSchedulingIgnoredDuringExecution = deepMergeSlices(
+		dst.RequiredDuringSchedulingIgnoredDuringExecution,
+		src.RequiredDuringSchedulingIgnoredDuringExecution,
+	)
+	dst.PreferredDuringSchedulingIgnoredDuringExecution = deepMergeSlices(
+		dst.PreferredDuringSchedulingIgnoredDuringExecution,
+		src.PreferredDuringSchedulingIgnoredDuringExecution,
+	)
 
 	return dst
 }
@@ -299,8 +343,14 @@ func deepMergePodAntiAffinity(dst, src *corev1.PodAntiAffinity) *corev1.PodAntiA
 		return src
 	}
 
-	dst.RequiredDuringSchedulingIgnoredDuringExecution = deepMergeSlices(dst.RequiredDuringSchedulingIgnoredDuringExecution, src.RequiredDuringSchedulingIgnoredDuringExecution)
-	dst.PreferredDuringSchedulingIgnoredDuringExecution = deepMergeSlices(dst.PreferredDuringSchedulingIgnoredDuringExecution, src.PreferredDuringSchedulingIgnoredDuringExecution)
+	dst.RequiredDuringSchedulingIgnoredDuringExecution = deepMergeSlices(
+		dst.RequiredDuringSchedulingIgnoredDuringExecution,
+		src.RequiredDuringSchedulingIgnoredDuringExecution,
+	)
+	dst.PreferredDuringSchedulingIgnoredDuringExecution = deepMergeSlices(
+		dst.PreferredDuringSchedulingIgnoredDuringExecution,
+		src.PreferredDuringSchedulingIgnoredDuringExecution,
+	)
 
 	return dst
 }
@@ -321,7 +371,10 @@ func deepMergeProbe(dst, src *corev1.Probe) *corev1.Probe {
 	dst.PeriodSeconds = mergeComparable(dst.PeriodSeconds, src.PeriodSeconds)
 	dst.SuccessThreshold = mergeComparable(dst.SuccessThreshold, src.SuccessThreshold)
 	dst.FailureThreshold = mergeComparable(dst.FailureThreshold, src.FailureThreshold)
-	dst.TerminationGracePeriodSeconds = mergePointers(dst.TerminationGracePeriodSeconds, src.TerminationGracePeriodSeconds)
+	dst.TerminationGracePeriodSeconds = mergePointers(
+		dst.TerminationGracePeriodSeconds,
+		src.TerminationGracePeriodSeconds,
+	)
 
 	return dst
 }
@@ -407,7 +460,9 @@ func deepMergeGRPCAction(dst, src *corev1.GRPCAction) *corev1.GRPCAction {
 	return dst
 }
 
-func deepMergeGracefulShutdown(dst, src *v1alpha1.GracefulShutdownSpec) *v1alpha1.GracefulShutdownSpec {
+func deepMergeGracefulShutdown(
+	dst, src *v1alpha1.GracefulShutdownSpec,
+) *v1alpha1.GracefulShutdownSpec {
 	// nil src override means just use dst
 	if src == nil {
 		return dst
@@ -474,7 +529,10 @@ func deepMergeSdsContainer(dst, src *v1alpha1.SdsContainer) *v1alpha1.SdsContain
 	}
 
 	dst.Image = deepMergeImage(dst.GetImage(), src.GetImage())
-	dst.SecurityContext = deepMergeSecurityContext(dst.GetSecurityContext(), src.GetSecurityContext())
+	dst.SecurityContext = deepMergeSecurityContext(
+		dst.GetSecurityContext(),
+		src.GetSecurityContext(),
+	)
 	dst.Resources = deepMergeResourceRequirements(dst.GetResources(), src.GetResources())
 	dst.Bootstrap = deepMergeSdsBootstrap(dst.GetBootstrap(), src.GetBootstrap())
 
@@ -508,7 +566,10 @@ func deepMergeIstioIntegration(dst, src *v1alpha1.IstioIntegration) *v1alpha1.Is
 		return src
 	}
 
-	dst.IstioProxyContainer = deepMergeIstioContainer(dst.GetIstioProxyContainer(), src.GetIstioProxyContainer())
+	dst.IstioProxyContainer = deepMergeIstioContainer(
+		dst.GetIstioProxyContainer(),
+		src.GetIstioProxyContainer(),
+	)
 	dst.CustomSidecars = mergeCustomSidecars(dst.GetCustomSidecars(), src.GetCustomSidecars())
 
 	return dst
@@ -536,7 +597,10 @@ func deepMergeIstioContainer(dst, src *v1alpha1.IstioContainer) *v1alpha1.IstioC
 	}
 
 	dst.Image = deepMergeImage(dst.GetImage(), src.GetImage())
-	dst.SecurityContext = deepMergeSecurityContext(dst.GetSecurityContext(), src.GetSecurityContext())
+	dst.SecurityContext = deepMergeSecurityContext(
+		dst.GetSecurityContext(),
+		src.GetSecurityContext(),
+	)
 	dst.Resources = deepMergeResourceRequirements(dst.GetResources(), src.GetResources())
 
 	if src.GetLogLevel() != nil {
@@ -575,7 +639,10 @@ func deepMergeEnvoyContainer(dst, src *v1alpha1.EnvoyContainer) *v1alpha1.EnvoyC
 
 	dst.Bootstrap = deepMergeEnvoyBootstrap(dst.GetBootstrap(), src.GetBootstrap())
 	dst.Image = deepMergeImage(dst.GetImage(), src.GetImage())
-	dst.SecurityContext = deepMergeSecurityContext(dst.GetSecurityContext(), src.GetSecurityContext())
+	dst.SecurityContext = deepMergeSecurityContext(
+		dst.GetSecurityContext(),
+		src.GetSecurityContext(),
+	)
 	dst.Resources = deepMergeResourceRequirements(dst.GetResources(), src.GetResources())
 
 	return dst
@@ -632,7 +699,9 @@ func deepMergeEnvoyBootstrap(dst, src *v1alpha1.EnvoyBootstrap) *v1alpha1.EnvoyB
 	return dst
 }
 
-func deepMergeResourceRequirements(dst, src *corev1.ResourceRequirements) *corev1.ResourceRequirements {
+func deepMergeResourceRequirements(
+	dst, src *corev1.ResourceRequirements,
+) *corev1.ResourceRequirements {
 	// nil src override means just use dst
 	if src == nil {
 		return dst
@@ -660,13 +729,22 @@ func deepMergeSecurityContext(dst, src *corev1.SecurityContext) *corev1.Security
 
 	dst.Capabilities = deepMergeCapabilities(dst.Capabilities, src.Capabilities)
 	dst.SELinuxOptions = deepMergeSELinuxOptions(dst.SELinuxOptions, src.SELinuxOptions)
-	dst.WindowsOptions = deepMergeWindowsSecurityContextOptions(dst.WindowsOptions, src.WindowsOptions)
+	dst.WindowsOptions = deepMergeWindowsSecurityContextOptions(
+		dst.WindowsOptions,
+		src.WindowsOptions,
+	)
 	dst.RunAsUser = mergePointers(dst.RunAsUser, src.RunAsUser)
 	dst.RunAsGroup = mergePointers(dst.RunAsGroup, src.RunAsGroup)
 	dst.RunAsNonRoot = mergePointers(dst.RunAsNonRoot, src.RunAsNonRoot)
 	dst.Privileged = mergePointers(dst.Privileged, src.Privileged)
-	dst.ReadOnlyRootFilesystem = mergePointers(dst.ReadOnlyRootFilesystem, src.ReadOnlyRootFilesystem)
-	dst.AllowPrivilegeEscalation = mergePointers(dst.AllowPrivilegeEscalation, src.AllowPrivilegeEscalation)
+	dst.ReadOnlyRootFilesystem = mergePointers(
+		dst.ReadOnlyRootFilesystem,
+		src.ReadOnlyRootFilesystem,
+	)
+	dst.AllowPrivilegeEscalation = mergePointers(
+		dst.AllowPrivilegeEscalation,
+		src.AllowPrivilegeEscalation,
+	)
 	dst.ProcMount = mergePointers(dst.ProcMount, src.ProcMount)
 	dst.SeccompProfile = deepMergeSeccompProfile(dst.SeccompProfile, src.SeccompProfile)
 
@@ -716,7 +794,10 @@ func deepMergeAIExtension(dst, src *v1alpha1.AiExtension) *v1alpha1.AiExtension 
 
 	dst.Enabled = mergePointers(dst.GetEnabled(), src.GetEnabled())
 	dst.Image = deepMergeImage(dst.GetImage(), src.GetImage())
-	dst.SecurityContext = deepMergeSecurityContext(dst.GetSecurityContext(), src.GetSecurityContext())
+	dst.SecurityContext = deepMergeSecurityContext(
+		dst.GetSecurityContext(),
+		src.GetSecurityContext(),
+	)
 	dst.Resources = deepMergeResourceRequirements(dst.GetResources(), src.GetResources())
 	dst.Env = deepMergeSlices(dst.GetEnv(), src.GetEnv())
 	dst.Ports = deepMergeSlices(dst.GetPorts(), src.GetPorts())

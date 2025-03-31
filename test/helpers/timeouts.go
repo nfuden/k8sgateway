@@ -39,8 +39,13 @@ func GetTimeouts(timeout ...time.Duration) (currentTimeout, pollingInterval time
 // timeout, pollingInterval := getTimeouts(10*time.Second) // returns 10*time.Second, 100*time.Millisecond
 // timeout, pollingInterval := getTimeouts(10*time.Second, 200*time.Millisecond) // returns 10*time.Second, 200*time.Millisecond
 // See tests for more examples
-func GetEventuallyTimingsTransform(defaults ...interface{}) func(intervals ...interface{}) (interface{}, interface{}) {
-	return GetDefaultTimingsTransform(gomega.DefaultEventuallyTimeout, gomega.DefaultEventuallyPollingInterval, defaults...)
+func GetEventuallyTimingsTransform(
+	defaults ...interface{},
+) func(intervals ...interface{}) (interface{}, interface{}) {
+	return GetDefaultTimingsTransform(
+		gomega.DefaultEventuallyTimeout,
+		gomega.DefaultEventuallyPollingInterval,
+		defaults...)
 }
 
 // GetConsistentlyTimingsTransform returns timeout and polling interval values to use with a gomega consistently call
@@ -53,13 +58,21 @@ func GetEventuallyTimingsTransform(defaults ...interface{}) func(intervals ...in
 // timeout, pollingInterval := getTimeouts(10*time.Second) // returns 10*time.Second, 100*time.Millisecond
 // timeout, pollingInterval := getTimeouts(10*time.Second, 200*time.Millisecond) // returns 10*time.Second, 200*time.Millisecond
 // See tests for more examples
-func GetConsistentlyTimingsTransform(defaults ...interface{}) func(intervals ...interface{}) (interface{}, interface{}) {
-	return GetDefaultTimingsTransform(gomega.DefaultConsistentlyDuration, gomega.DefaultConsistentlyPollingInterval, defaults...)
+func GetConsistentlyTimingsTransform(
+	defaults ...interface{},
+) func(intervals ...interface{}) (interface{}, interface{}) {
+	return GetDefaultTimingsTransform(
+		gomega.DefaultConsistentlyDuration,
+		gomega.DefaultConsistentlyPollingInterval,
+		defaults...)
 }
 
 // GetDefaultTimingsTransform is used to return the timeout and polling interval values to use with a gomega eventually or consistently call
 // It can also be called directly with just 2 arguments if both timeout and polling interval are known and there is no need to default to Gomega values
-func GetDefaultTimingsTransform(timeout, polling interface{}, defaults ...interface{}) func(intervals ...interface{}) (interface{}, interface{}) {
+func GetDefaultTimingsTransform(
+	timeout, polling interface{},
+	defaults ...interface{},
+) func(intervals ...interface{}) (interface{}, interface{}) {
 	var defaultTimeoutInterval, defaultPollingInterval interface{}
 	defaultTimeoutInterval = timeout
 	defaultPollingInterval = polling

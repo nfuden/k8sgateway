@@ -41,19 +41,26 @@ func (t *translator) Translate(
 	logger := contextutils.LoggerFrom(ctx)
 	routesForGw, err := t.queries.GetRoutesForGateway(kctx, ctx, gateway.Obj)
 	if err != nil {
-		logger.Errorf("failed to get routes for gateway %.%ss: %v", gateway.Namespace, gateway.Name, err)
+		logger.Errorf(
+			"failed to get routes for gateway %.%ss: %v",
+			gateway.Namespace,
+			gateway.Name,
+			err,
+		)
 		// TODO: decide how/if to report this error on Gateway
 		// reporter.Gateway(gateway).Err(err.Error())
 		return nil
 	}
 
 	for _, rErr := range routesForGw.RouteErrors {
-		reporter.Route(rErr.Route.GetSourceObject()).ParentRef(&rErr.ParentRef).SetCondition(reports.RouteCondition{
-			Type:   gwv1.RouteConditionAccepted,
-			Status: metav1.ConditionFalse,
-			Reason: rErr.Error.Reason,
-			// TODO message
-		})
+		reporter.Route(rErr.Route.GetSourceObject()).
+			ParentRef(&rErr.ParentRef).
+			SetCondition(reports.RouteCondition{
+				Type:   gwv1.RouteConditionAccepted,
+				Status: metav1.ConditionFalse,
+				Reason: rErr.Error.Reason,
+				// TODO message
+			})
 	}
 
 	for _, listener := range gateway.Listeners {
@@ -62,7 +69,9 @@ func (t *translator) Translate(
 			// TODO we've never checked if the ListenerResult has an error.. is it already on RouteErrors?
 			availRoutes = len(res.Routes)
 		}
-		reporter.Gateway(gateway.Obj).ListenerName(string(listener.Name)).SetAttachedRoutes(uint(availRoutes))
+		reporter.Gateway(gateway.Obj).
+			ListenerName(string(listener.Name)).
+			SetAttachedRoutes(uint(availRoutes))
 	}
 
 	listeners := listener.TranslateListeners(

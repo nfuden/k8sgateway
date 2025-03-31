@@ -5,7 +5,11 @@ import (
 	"net/http/pprof"
 )
 
-func addPprofHandler(path string, mux *http.ServeMux, profiles map[string]dynamicProfileDescription) {
+func addPprofHandler(
+	path string,
+	mux *http.ServeMux,
+	profiles map[string]dynamicProfileDescription,
+) {
 	mux.HandleFunc(path, pprof.Index)
 	mux.HandleFunc(path+"cmdline", pprof.Cmdline)
 	mux.HandleFunc(path+"profile", pprof.Profile)

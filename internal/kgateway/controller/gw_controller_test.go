@@ -75,7 +75,8 @@ var _ = Describe("GwController", func() {
 					return false
 				}
 				for _, svc = range createdServices.Items {
-					if len(svc.ObjectMeta.OwnerReferences) == 1 && svc.ObjectMeta.OwnerReferences[0].UID == gw.UID {
+					if len(svc.ObjectMeta.OwnerReferences) == 1 &&
+						svc.ObjectMeta.OwnerReferences[0].UID == gw.UID {
 						return true
 					}
 				}

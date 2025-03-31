@@ -49,7 +49,10 @@ func (tr *TranslationResult) MarshalJSON() ([]byte, error) {
 	return json.Marshal(result)
 }
 
-func marshalProtoMessages[T proto.Message](messages []T, m protojson.MarshalOptions) ([]interface{}, error) {
+func marshalProtoMessages[T proto.Message](
+	messages []T,
+	m protojson.MarshalOptions,
+) ([]interface{}, error) {
 	var result []interface{}
 	for _, msg := range messages {
 		data, err := m.Marshal(msg)

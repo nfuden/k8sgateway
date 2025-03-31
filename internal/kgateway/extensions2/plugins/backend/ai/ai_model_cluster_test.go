@@ -442,7 +442,10 @@ func TestProcessAIBackend_MultiPool(t *testing.T) {
 }
 
 // findTransportSocketMatchByPrefix finds a transport socket match with a name starting with prefix
-func findTransportSocketMatchByPrefix(matches []*envoy_config_cluster_v3.Cluster_TransportSocketMatch, prefix string) *envoy_config_cluster_v3.Cluster_TransportSocketMatch {
+func findTransportSocketMatchByPrefix(
+	matches []*envoy_config_cluster_v3.Cluster_TransportSocketMatch,
+	prefix string,
+) *envoy_config_cluster_v3.Cluster_TransportSocketMatch {
 	for _, match := range matches {
 		if strings.HasPrefix(match.Name, prefix) {
 			return match
@@ -452,7 +455,10 @@ func findTransportSocketMatchByPrefix(matches []*envoy_config_cluster_v3.Cluster
 }
 
 // findTransportSocketMatchByName finds a transport socket match with exact name
-func findTransportSocketMatchByName(matches []*envoy_config_cluster_v3.Cluster_TransportSocketMatch, name string) *envoy_config_cluster_v3.Cluster_TransportSocketMatch {
+func findTransportSocketMatchByName(
+	matches []*envoy_config_cluster_v3.Cluster_TransportSocketMatch,
+	name string,
+) *envoy_config_cluster_v3.Cluster_TransportSocketMatch {
 	for _, match := range matches {
 		if match.Name == name {
 			return match

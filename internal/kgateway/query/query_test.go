@@ -43,7 +43,13 @@ var _ = Describe("Query", func() {
 				Group: apiv1.GroupName,
 				Kind:  "Gateway",
 			}
-			backend, err := gq.GetSecretForRef(krt.TestingDummyContext{}, context.Background(), fromGk, "default", ref)
+			backend, err := gq.GetSecretForRef(
+				krt.TestingDummyContext{},
+				context.Background(),
+				fromGk,
+				"default",
+				ref,
+			)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(backend).NotTo(BeNil())
 			Expect(backend.GetName()).To(Equal("foo"))
@@ -68,7 +74,11 @@ var _ = Describe("Query", func() {
 			}
 
 			gq := newQueries(hr)
-			routes, err := gq.GetRoutesForGateway(krt.TestingDummyContext{}, context.Background(), gwWithListener)
+			routes, err := gq.GetRoutesForGateway(
+				krt.TestingDummyContext{},
+				context.Background(),
+				gwWithListener,
+			)
 
 			Expect(err).NotTo(HaveOccurred())
 			Expect(routes.RouteErrors).To(BeEmpty())
@@ -101,7 +111,11 @@ var _ = Describe("Query", func() {
 
 			gq := newQueries(hr)
 
-			routes, err := gq.GetRoutesForGateway(krt.TestingDummyContext{}, context.Background(), gwWithListener)
+			routes, err := gq.GetRoutesForGateway(
+				krt.TestingDummyContext{},
+				context.Background(),
+				gwWithListener,
+			)
 
 			Expect(err).NotTo(HaveOccurred())
 			Expect(routes.RouteErrors).To(BeEmpty())
@@ -127,7 +141,11 @@ var _ = Describe("Query", func() {
 			}
 
 			gq := newQueries(hr)
-			routes, err := gq.GetRoutesForGateway(krt.TestingDummyContext{}, context.Background(), gwWithListener)
+			routes, err := gq.GetRoutesForGateway(
+				krt.TestingDummyContext{},
+				context.Background(),
+				gwWithListener,
+			)
 
 			Expect(err).NotTo(HaveOccurred())
 			Expect(routes.RouteErrors).To(BeEmpty())
@@ -154,7 +172,11 @@ var _ = Describe("Query", func() {
 			})
 
 			gq := newQueries(hr)
-			routes, err := gq.GetRoutesForGateway(krt.TestingDummyContext{}, context.Background(), gwWithListener)
+			routes, err := gq.GetRoutesForGateway(
+				krt.TestingDummyContext{},
+				context.Background(),
+				gwWithListener,
+			)
 
 			Expect(err).NotTo(HaveOccurred())
 			Expect(routes.ListenerResults["foo"].Error).To(MatchError("selector must be set"))
@@ -184,11 +206,17 @@ var _ = Describe("Query", func() {
 			})
 
 			gq := newQueries(hr)
-			routes, err := gq.GetRoutesForGateway(krt.TestingDummyContext{}, context.Background(), gwWithListener)
+			routes, err := gq.GetRoutesForGateway(
+				krt.TestingDummyContext{},
+				context.Background(),
+				gwWithListener,
+			)
 
 			Expect(err).NotTo(HaveOccurred())
 			Expect(routes.RouteErrors[0].Error.E).To(MatchError(query.ErrNotAllowedByListeners))
-			Expect(routes.RouteErrors[0].Error.Reason).To(Equal(apiv1.RouteReasonNotAllowedByListeners))
+			Expect(
+				routes.RouteErrors[0].Error.Reason,
+			).To(Equal(apiv1.RouteReasonNotAllowedByListeners))
 			Expect(routes.RouteErrors[0].ParentRef).To(Equal(hr.Spec.ParentRefs[0]))
 		})
 
@@ -213,7 +241,11 @@ var _ = Describe("Query", func() {
 			})
 
 			gq := newQueries(hr)
-			routes, err := gq.GetRoutesForGateway(krt.TestingDummyContext{}, context.Background(), gwWithListener)
+			routes, err := gq.GetRoutesForGateway(
+				krt.TestingDummyContext{},
+				context.Background(),
+				gwWithListener,
+			)
 
 			Expect(err).NotTo(HaveOccurred())
 			Expect(routes.RouteErrors).To(BeEmpty())
@@ -245,7 +277,11 @@ var _ = Describe("Query", func() {
 			})
 
 			gq := newQueries(hr)
-			routes, err := gq.GetRoutesForGateway(krt.TestingDummyContext{}, context.Background(), gwWithListener)
+			routes, err := gq.GetRoutesForGateway(
+				krt.TestingDummyContext{},
+				context.Background(),
+				gwWithListener,
+			)
 
 			Expect(err).NotTo(HaveOccurred())
 			Expect(routes.RouteErrors[0].Error.E).To(MatchError(query.ErrNoMatchingParent))
@@ -275,7 +311,11 @@ var _ = Describe("Query", func() {
 			})
 
 			gq := newQueries(hr)
-			routes, err := gq.GetRoutesForGateway(krt.TestingDummyContext{}, context.Background(), gwWithListener)
+			routes, err := gq.GetRoutesForGateway(
+				krt.TestingDummyContext{},
+				context.Background(),
+				gwWithListener,
+			)
 
 			Expect(err).NotTo(HaveOccurred())
 			Expect(routes.RouteErrors).To(BeEmpty())
@@ -308,11 +348,19 @@ var _ = Describe("Query", func() {
 			})
 
 			gq := newQueries(hr)
-			routes, err := gq.GetRoutesForGateway(krt.TestingDummyContext{}, context.Background(), gwWithListener)
+			routes, err := gq.GetRoutesForGateway(
+				krt.TestingDummyContext{},
+				context.Background(),
+				gwWithListener,
+			)
 
 			Expect(err).NotTo(HaveOccurred())
-			Expect(routes.RouteErrors[0].Error.E).To(MatchError(query.ErrNoMatchingListenerHostname))
-			Expect(routes.RouteErrors[0].Error.Reason).To(Equal(apiv1.RouteReasonNoMatchingListenerHostname))
+			Expect(
+				routes.RouteErrors[0].Error.E,
+			).To(MatchError(query.ErrNoMatchingListenerHostname))
+			Expect(
+				routes.RouteErrors[0].Error.Reason,
+			).To(Equal(apiv1.RouteReasonNoMatchingListenerHostname))
 			Expect(routes.RouteErrors[0].ParentRef).To(Equal(hr.Spec.ParentRefs[0]))
 		})
 
@@ -341,7 +389,11 @@ var _ = Describe("Query", func() {
 			})
 
 			gq := newQueries(hr)
-			routes, err := gq.GetRoutesForGateway(krt.TestingDummyContext{}, context.Background(), gwWithListener)
+			routes, err := gq.GetRoutesForGateway(
+				krt.TestingDummyContext{},
+				context.Background(),
+				gwWithListener,
+			)
 
 			Expect(err).NotTo(HaveOccurred())
 			Expect(routes.RouteErrors).To(BeEmpty())
@@ -370,12 +422,18 @@ var _ = Describe("Query", func() {
 			})
 
 			gq := newQueries(hr)
-			routes, err := gq.GetRoutesForGateway(krt.TestingDummyContext{}, context.Background(), gwWithListener)
+			routes, err := gq.GetRoutesForGateway(
+				krt.TestingDummyContext{},
+				context.Background(),
+				gwWithListener,
+			)
 
 			Expect(err).NotTo(HaveOccurred())
 			Expect(routes.RouteErrors).To(HaveLen(1))
 			Expect(routes.ListenerResults["foo"].Routes).To(HaveLen(1))
-			Expect(routes.ListenerResults["foo"].Routes[0].ParentRef).To(Equal(apiv1.ParentReference{
+			Expect(
+				routes.ListenerResults["foo"].Routes[0].ParentRef,
+			).To(Equal(apiv1.ParentReference{
 				Name: hr.Spec.ParentRefs[1].Name,
 			}))
 			Expect(routes.RouteErrors[0].Error.E).To(MatchError(query.ErrNoMatchingParent))
@@ -407,23 +465,38 @@ var _ = Describe("Query", func() {
 				})
 
 				gq := newQueries(hr)
-				routes, err := gq.GetRoutesForGateway(krt.TestingDummyContext{}, context.Background(), gwWithListener)
+				routes, err := gq.GetRoutesForGateway(
+					krt.TestingDummyContext{},
+					context.Background(),
+					gwWithListener,
+				)
 
 				Expect(err).NotTo(HaveOccurred())
 				if expectedHostnames == nil {
 					expectedHostnames = []string{}
 				}
-				Expect(routes.ListenerResults["foo"].Routes[0].Hostnames()).To(Equal(expectedHostnames))
+				Expect(
+					routes.ListenerResults["foo"].Routes[0].Hostnames(),
+				).To(Equal(expectedHostnames))
 			}
 
 			It("should work with identical names", func() {
 				expectHostnamesToMatch("foo.com", []string{"foo.com"}, "foo.com")
 			})
 			It("should work with specific listeners and prefix http", func() {
-				expectHostnamesToMatch("bar.foo.com", []string{"*.foo.com", "foo.com", "example.com"}, "bar.foo.com")
+				expectHostnamesToMatch(
+					"bar.foo.com",
+					[]string{"*.foo.com", "foo.com", "example.com"},
+					"bar.foo.com",
+				)
 			})
 			It("should work with prefix listeners and specific http", func() {
-				expectHostnamesToMatch("*.foo.com", []string{"bar.foo.com", "foo.com", "far.foo.com", "blah.com"}, "bar.foo.com", "far.foo.com")
+				expectHostnamesToMatch(
+					"*.foo.com",
+					[]string{"bar.foo.com", "foo.com", "far.foo.com", "blah.com"},
+					"bar.foo.com",
+					"far.foo.com",
+				)
 			})
 			It("should work with catch all listener hostname", func() {
 				expectHostnamesToMatch("", []string{"foo.com", "blah.com"}, "foo.com", "blah.com")
@@ -460,11 +533,17 @@ var _ = Describe("Query", func() {
 			}
 
 			gq := newQueries(tcpRoute)
-			routes, err := gq.GetRoutesForGateway(krt.TestingDummyContext{}, context.Background(), gw)
+			routes, err := gq.GetRoutesForGateway(
+				krt.TestingDummyContext{},
+				context.Background(),
+				gw,
+			)
 
 			Expect(err).NotTo(HaveOccurred())
 			Expect(routes.ListenerResults[string(gw.Spec.Listeners[0].Name)].Routes).To(HaveLen(1))
-			Expect(routes.ListenerResults[string(gw.Spec.Listeners[0].Name)].Error).NotTo(HaveOccurred())
+			Expect(
+				routes.ListenerResults[string(gw.Spec.Listeners[0].Name)].Error,
+			).NotTo(HaveOccurred())
 		})
 
 		It("should get TCPRoutes in other namespace for listener", func() {
@@ -495,7 +574,11 @@ var _ = Describe("Query", func() {
 
 			gq := newQueries(tcpRoute)
 
-			routes, err := gq.GetRoutesForGateway(krt.TestingDummyContext{}, context.Background(), gw)
+			routes, err := gq.GetRoutesForGateway(
+				krt.TestingDummyContext{},
+				context.Background(),
+				gw,
+			)
 
 			Expect(err).NotTo(HaveOccurred())
 			Expect(routes.ListenerResults["foo-tcp"].Error).NotTo(HaveOccurred())
@@ -531,7 +614,11 @@ var _ = Describe("Query", func() {
 			}
 
 			gq := newQueries(tcpRoute)
-			routes, err := gq.GetRoutesForGateway(krt.TestingDummyContext{}, context.Background(), gw)
+			routes, err := gq.GetRoutesForGateway(
+				krt.TestingDummyContext{},
+				context.Background(),
+				gw,
+			)
 
 			Expect(err).NotTo(HaveOccurred())
 			Expect(routes.RouteErrors).To(HaveLen(1))
@@ -565,7 +652,11 @@ var _ = Describe("Query", func() {
 
 			gq := newQueries(tcpRoute)
 
-			routes, err := gq.GetRoutesForGateway(krt.TestingDummyContext{}, context.Background(), gw)
+			routes, err := gq.GetRoutesForGateway(
+				krt.TestingDummyContext{},
+				context.Background(),
+				gw,
+			)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(routes.RouteErrors).To(HaveLen(1))
 			Expect(routes.RouteErrors[0].Error.E).To(MatchError(query.ErrNotAllowedByListeners))
@@ -603,7 +694,11 @@ var _ = Describe("Query", func() {
 
 			gq := newQueries(tcpRoute)
 
-			routes, err := gq.GetRoutesForGateway(krt.TestingDummyContext{}, context.Background(), gw)
+			routes, err := gq.GetRoutesForGateway(
+				krt.TestingDummyContext{},
+				context.Background(),
+				gw,
+			)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(routes.RouteErrors).To(BeEmpty())
 			Expect(routes.ListenerResults["foo-tcp"].Routes).To(HaveLen(1))
@@ -645,7 +740,9 @@ var _ = Describe("Query", func() {
 
 		Expect(err).NotTo(HaveOccurred())
 		Expect(routes.ListenerResults[string(gw.Spec.Listeners[0].Name)].Routes).To(HaveLen(1))
-		Expect(routes.ListenerResults[string(gw.Spec.Listeners[0].Name)].Error).NotTo(HaveOccurred())
+		Expect(
+			routes.ListenerResults[string(gw.Spec.Listeners[0].Name)].Error,
+		).NotTo(HaveOccurred())
 	})
 
 	It("should get TLSRoutes in other namespace for listener", func() {
@@ -889,35 +986,55 @@ func newQueries(initObjs ...client.Object) query.GatewayQueries {
 	}
 	mock := krttest.NewMock(GinkgoT(), anys)
 	services := krttest.GetMockCollection[*corev1.Service](mock)
-	refgrants := krtcollections.NewRefGrantIndex(krttest.GetMockCollection[*apiv1beta1.ReferenceGrant](mock))
+	refgrants := krtcollections.NewRefGrantIndex(
+		krttest.GetMockCollection[*apiv1beta1.ReferenceGrant](mock),
+	)
 
-	policies := krtcollections.NewPolicyIndex(krtutil.KrtOptions{}, extensionsplug.ContributesPolicies{})
+	policies := krtcollections.NewPolicyIndex(
+		krtutil.KrtOptions{},
+		extensionsplug.ContributesPolicies{},
+	)
 	upstreams := krtcollections.NewBackendIndex(krtutil.KrtOptions{}, nil, policies, refgrants)
 	upstreams.AddBackends(SvcGk, k8sUpstreams(services))
 
 	httproutes := krttest.GetMockCollection[*gwv1.HTTPRoute](mock)
 	tcpproutes := krttest.GetMockCollection[*gwv1a2.TCPRoute](mock)
 	tlsroutes := krttest.GetMockCollection[*gwv1a2.TLSRoute](mock)
-	rtidx := krtcollections.NewRoutesIndex(krtutil.KrtOptions{}, httproutes, tcpproutes, tlsroutes, policies, upstreams, refgrants)
+	rtidx := krtcollections.NewRoutesIndex(
+		krtutil.KrtOptions{},
+		httproutes,
+		tcpproutes,
+		tlsroutes,
+		policies,
+		upstreams,
+		refgrants,
+	)
 	services.WaitUntilSynced(nil)
 
 	secretsCol := map[schema.GroupKind]krt.Collection[ir.Secret]{
-		corev1.SchemeGroupVersion.WithKind("Secret").GroupKind(): krt.NewCollection(krttest.GetMockCollection[*corev1.Secret](mock), func(kctx krt.HandlerContext, i *corev1.Secret) *ir.Secret {
-			res := ir.Secret{
-				ObjectSource: ir.ObjectSource{
-					Group:     "",
-					Kind:      "Secret",
-					Namespace: i.Namespace,
-					Name:      i.Name,
-				},
-				Obj:  i,
-				Data: i.Data,
-			}
-			return &res
-		}),
+		corev1.SchemeGroupVersion.WithKind("Secret").GroupKind(): krt.NewCollection(
+			krttest.GetMockCollection[*corev1.Secret](mock),
+			func(kctx krt.HandlerContext, i *corev1.Secret) *ir.Secret {
+				res := ir.Secret{
+					ObjectSource: ir.ObjectSource{
+						Group:     "",
+						Kind:      "Secret",
+						Namespace: i.Namespace,
+						Name:      i.Name,
+					},
+					Obj:  i,
+					Data: i.Data,
+				}
+				return &res
+			},
+		),
 	}
 	secrets := krtcollections.NewSecretIndex(secretsCol, refgrants)
-	nsCol := krtcollections.NewNamespaceCollectionFromCol(context.Background(), krttest.GetMockCollection[*corev1.Namespace](mock), krtutil.KrtOptions{})
+	nsCol := krtcollections.NewNamespaceCollectionFromCol(
+		context.Background(),
+		krttest.GetMockCollection[*corev1.Namespace](mock),
+		krtutil.KrtOptions{},
+	)
 
 	commonCols := &common.CommonCollections{
 		Routes: rtidx, Secrets: secrets, Namespaces: nsCol,
@@ -930,21 +1047,24 @@ func newQueries(initObjs ...client.Object) query.GatewayQueries {
 }
 
 func k8sUpstreams(services krt.Collection[*corev1.Service]) krt.Collection[ir.BackendObjectIR] {
-	return krt.NewManyCollection(services, func(kctx krt.HandlerContext, svc *corev1.Service) []ir.BackendObjectIR {
-		uss := []ir.BackendObjectIR{}
+	return krt.NewManyCollection(
+		services,
+		func(kctx krt.HandlerContext, svc *corev1.Service) []ir.BackendObjectIR {
+			uss := []ir.BackendObjectIR{}
 
-		for _, port := range svc.Spec.Ports {
-			uss = append(uss, ir.BackendObjectIR{
-				ObjectSource: ir.ObjectSource{
-					Kind:      SvcGk.Kind,
-					Group:     SvcGk.Group,
-					Namespace: svc.Namespace,
-					Name:      svc.Name,
-				},
-				Obj:  svc,
-				Port: port.Port,
-			})
-		}
-		return uss
-	})
+			for _, port := range svc.Spec.Ports {
+				uss = append(uss, ir.BackendObjectIR{
+					ObjectSource: ir.ObjectSource{
+						Kind:      SvcGk.Kind,
+						Group:     SvcGk.Group,
+						Namespace: svc.Namespace,
+						Name:      svc.Name,
+					},
+					Obj:  svc,
+					Port: port.Port,
+				})
+			}
+			return uss
+		},
+	)
 }

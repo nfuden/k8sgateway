@@ -44,11 +44,17 @@ func (c UniqlyConnectedClient) ResourceName() string {
 var _ krt.Equaler[UniqlyConnectedClient] = new(UniqlyConnectedClient)
 
 func (c UniqlyConnectedClient) Equals(k UniqlyConnectedClient) bool {
-	return c.Role == k.Role && c.Namespace == k.Namespace && c.Locality == k.Locality && maps.Equal(c.Labels, k.Labels)
+	return c.Role == k.Role && c.Namespace == k.Namespace && c.Locality == k.Locality &&
+		maps.Equal(c.Labels, k.Labels)
 }
 
 // note: if "ns" is empty, we assume the user doesn't want to use pod locality info, so we won't modify the role.
-func NewUniqlyConnectedClient(roleFromEnvoy string, ns string, labels map[string]string, locality PodLocality) UniqlyConnectedClient {
+func NewUniqlyConnectedClient(
+	roleFromEnvoy string,
+	ns string,
+	labels map[string]string,
+	locality PodLocality,
+) UniqlyConnectedClient {
 	resourceName := roleFromEnvoy
 	if ns != "" {
 		snapshotKey := labeledRole(resourceName, labels)
@@ -164,5 +170,8 @@ func (c EndpointsForBackend) ResourceName() string {
 }
 
 func (c EndpointsForBackend) Equals(in EndpointsForBackend) bool {
-	return c.UpstreamResourceName == in.UpstreamResourceName && c.ClusterName == in.ClusterName && c.Port == in.Port && c.LbEpsEqualityHash == in.LbEpsEqualityHash && c.Hostname == in.Hostname
+	return c.UpstreamResourceName == in.UpstreamResourceName && c.ClusterName == in.ClusterName &&
+		c.Port == in.Port &&
+		c.LbEpsEqualityHash == in.LbEpsEqualityHash &&
+		c.Hostname == in.Hostname
 }

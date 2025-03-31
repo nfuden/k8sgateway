@@ -547,7 +547,13 @@ func TestIsDelegatedRouteMatch(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			a := assert.New(t)
-			actual := isDelegatedRouteMatch(tc.parent, tc.parentRef, tc.child, tc.childNs, tc.parentRefs)
+			actual := isDelegatedRouteMatch(
+				tc.parent,
+				tc.parentRef,
+				tc.child,
+				tc.childNs,
+				tc.parentRefs,
+			)
 
 			a.Equal(tc.expected, actual)
 		})

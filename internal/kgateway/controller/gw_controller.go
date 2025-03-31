@@ -98,7 +98,12 @@ func (r *gatewayReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 	return result, nil
 }
 
-func updateStatus(ctx context.Context, cli client.Client, gw *api.Gateway, svcmd *metav1.ObjectMeta) error {
+func updateStatus(
+	ctx context.Context,
+	cli client.Client,
+	gw *api.Gateway,
+	svcmd *metav1.ObjectMeta,
+) error {
 	svcnns := client.ObjectKey{
 		Namespace: svcmd.Namespace,
 		Name:      svcmd.Name,

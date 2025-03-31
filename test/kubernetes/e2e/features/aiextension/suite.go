@@ -55,12 +55,36 @@ func NewSuite(
 
 func (s *tsuite) SetupSuite() {
 	s.manifests = map[string][]string{
-		"TestRouting":                 {commonManifest, backendManifest, routesBasicManifest},
-		"TestRoutingPassthrough":      {commonManifest, backendPassthroughManifest, routesBasicManifest},
-		"TestStreaming":               {commonManifest, backendManifest, routeOptionStreamingManifest, routesWithExtensionManifest},
-		"TestPromptGuardRejectExtRef": {commonManifest, backendManifest, trafficPolicyPGRegexPatternRejectManifest, routesWitPGRegexPatternRejectManifest},
-		"TestPromptGuard":             {commonManifest, backendManifest, routesBasicManifest, promptGuardManifest},
-		"TestPromptGuardStreaming":    {commonManifest, backendManifest, routesBasicManifest, promptGuardStreamingManifest},
+		"TestRouting": {commonManifest, backendManifest, routesBasicManifest},
+		"TestRoutingPassthrough": {
+			commonManifest,
+			backendPassthroughManifest,
+			routesBasicManifest,
+		},
+		"TestStreaming": {
+			commonManifest,
+			backendManifest,
+			routeOptionStreamingManifest,
+			routesWithExtensionManifest,
+		},
+		"TestPromptGuardRejectExtRef": {
+			commonManifest,
+			backendManifest,
+			trafficPolicyPGRegexPatternRejectManifest,
+			routesWitPGRegexPatternRejectManifest,
+		},
+		"TestPromptGuard": {
+			commonManifest,
+			backendManifest,
+			routesBasicManifest,
+			promptGuardManifest,
+		},
+		"TestPromptGuardStreaming": {
+			commonManifest,
+			backendManifest,
+			routesBasicManifest,
+			promptGuardStreamingManifest,
+		},
 	}
 }
 
@@ -152,7 +176,10 @@ func (s *tsuite) invokePytest(test string, extraEnv ...string) {
 	cmd.Env = []string{
 		fmt.Sprintf("TEST_OPENAI_BASE_URL=%s/openai", gwURL),
 		fmt.Sprintf("TEST_AZURE_OPENAI_BASE_URL=%s/azure", gwURL),
-		fmt.Sprintf("TEST_GEMINI_BASE_URL=%s/gemini", gwURL), // need to specify HTTP as part of the endpoint
+		fmt.Sprintf(
+			"TEST_GEMINI_BASE_URL=%s/gemini",
+			gwURL,
+		), // need to specify HTTP as part of the endpoint
 		fmt.Sprintf("TEST_VERTEX_AI_BASE_URL=%s/vertex-ai", gwURL),
 		fmt.Sprintf("TEST_GATEWAY_ADDRESS=%s", gwURL),
 	}
@@ -194,8 +221,19 @@ func (s *tsuite) getGatewayURL() string {
 			svc,
 		)
 		assert.NoErrorf(c, err, "failed to get service %s/%s", svc.Namespace, svc.Name)
-		assert.Greaterf(c, len(svc.Status.LoadBalancer.Ingress), 0, "LB IP not found on service %s/%s", svc.Namespace, svc.Name)
+		assert.Greaterf(
+			c,
+			len(svc.Status.LoadBalancer.Ingress),
+			0,
+			"LB IP not found on service %s/%s",
+			svc.Namespace,
+			svc.Name,
+		)
 	}, 10*time.Second, 1*time.Second)
 
-	return fmt.Sprintf("http://%s:%d", svc.Status.LoadBalancer.Ingress[0].IP, svc.Spec.Ports[0].Port)
+	return fmt.Sprintf(
+		"http://%s:%d",
+		svc.Status.LoadBalancer.Ingress[0].IP,
+		svc.Spec.Ports[0].Port,
+	)
 }

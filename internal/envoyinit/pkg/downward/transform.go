@@ -14,7 +14,10 @@ func Transform(in io.Reader, out io.Writer) error {
 	return NewInterpolator().InterpolateIO(in, out, RetrieveDownwardAPI())
 }
 
-func TransformConfigTemplatesWithApi(bootstrap *envoy_config_bootstrap.Bootstrap, api DownwardAPI) error {
+func TransformConfigTemplatesWithApi(
+	bootstrap *envoy_config_bootstrap.Bootstrap,
+	api DownwardAPI,
+) error {
 	interpolator := NewInterpolator()
 
 	var err error

@@ -101,8 +101,14 @@ func (r *HttpResponse) String() string {
 		bodyString = fmt.Sprintf("%#v", bodyMatcher)
 	}
 
-	return fmt.Sprintf("HttpResponse{StatusCode: %d, Body: %s, Headers: %v, NotHeaders: %v, Custom: %v}",
-		r.StatusCode, bodyString, r.Headers, r.NotHeaders, r.Custom)
+	return fmt.Sprintf(
+		"HttpResponse{StatusCode: %d, Body: %s, Headers: %v, NotHeaders: %v, Custom: %v}",
+		r.StatusCode,
+		bodyString,
+		r.Headers,
+		r.NotHeaders,
+		r.Custom,
+	)
 }
 
 // HaveHttpResponse returns a GomegaMatcher which validates that an http.Response contains
@@ -127,10 +133,13 @@ func HaveHttpResponse(expected *HttpResponse) types.GomegaMatcher {
 		})
 	}
 	for headerName, headerMatch := range expected.Headers {
-		partialResponseMatchers = append(partialResponseMatchers, &matchers.HaveHTTPHeaderWithValueMatcher{
-			Header: headerName,
-			Value:  headerMatch,
-		})
+		partialResponseMatchers = append(
+			partialResponseMatchers,
+			&matchers.HaveHTTPHeaderWithValueMatcher{
+				Header: headerName,
+				Value:  headerMatch,
+			},
+		)
 	}
 	for _, headerName := range expected.NotHeaders {
 		partialResponseMatchers = append(partialResponseMatchers, &NotHaveHTTPHeaderMatcher{
@@ -193,11 +202,16 @@ type NotHaveHTTPHeaderMatcher struct {
 func (m *NotHaveHTTPHeaderMatcher) Match(actual interface{}) (success bool, err error) {
 	response, ok := actual.(*http.Response)
 	if !ok {
-		return false, fmt.Errorf("NotHaveHTTPHeaderMatcher expects an *http.Response, got %T", actual)
+		return false, fmt.Errorf(
+			"NotHaveHTTPHeaderMatcher expects an *http.Response, got %T",
+			actual,
+		)
 	}
 
 	if response == nil {
-		return false, errors.New("NotHaveHTTPHeaderMatcher matcher requires a non-nil *http.Response")
+		return false, errors.New(
+			"NotHaveHTTPHeaderMatcher matcher requires a non-nil *http.Response",
+		)
 	}
 
 	_, headerExists := response.Header[http.CanonicalHeaderKey(m.Header)]
@@ -210,7 +224,10 @@ func (m *NotHaveHTTPHeaderMatcher) FailureMessage(actual interface{}) string {
 		return fmt.Sprintf("Expected a valid *http.Response, got %T", actual)
 	}
 
-	return fmt.Sprintf("Expected HTTP response not to have header '%s', but it was present", m.Header)
+	return fmt.Sprintf(
+		"Expected HTTP response not to have header '%s', but it was present",
+		m.Header,
+	)
 }
 
 func (m *NotHaveHTTPHeaderMatcher) NegatedFailureMessage(actual interface{}) string {
@@ -219,7 +236,10 @@ func (m *NotHaveHTTPHeaderMatcher) NegatedFailureMessage(actual interface{}) str
 		return fmt.Sprintf("Expected a valid *http.Response, got %T", actual)
 	}
 
-	return fmt.Sprintf("Expected HTTP response to have header '%s', but it was not present", m.Header)
+	return fmt.Sprintf(
+		"Expected HTTP response to have header '%s', but it was not present",
+		m.Header,
+	)
 }
 
 // informativeComparison returns a string which presents data to the user to help them understand why a failure occurred.

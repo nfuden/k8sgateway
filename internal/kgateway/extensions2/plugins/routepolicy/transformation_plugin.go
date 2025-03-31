@@ -16,7 +16,9 @@ import (
 	"github.com/kgateway-dev/kgateway/v2/api/v1alpha1"
 )
 
-func toTraditionalTransform(t *v1alpha1.Transform) *transformationpb.Transformation_TransformationTemplate {
+func toTraditionalTransform(
+	t *v1alpha1.Transform,
+) *transformationpb.Transformation_TransformationTemplate {
 	if t == nil {
 		return nil
 	}
@@ -35,19 +37,25 @@ func toTraditionalTransform(t *v1alpha1.Transform) *transformationpb.Transformat
 	}
 
 	for _, h := range t.Add {
-		tt.TransformationTemplate.HeadersToAppend = append(tt.TransformationTemplate.GetHeadersToAppend(), &transformationpb.TransformationTemplate_HeaderToAppend{
-			Key: string(h.Name),
-			Value: &transformationpb.InjaTemplate{
-				Text: string(h.Value),
+		tt.TransformationTemplate.HeadersToAppend = append(
+			tt.TransformationTemplate.GetHeadersToAppend(),
+			&transformationpb.TransformationTemplate_HeaderToAppend{
+				Key: string(h.Name),
+				Value: &transformationpb.InjaTemplate{
+					Text: string(h.Value),
+				},
 			},
-		})
+		)
 		tt.TransformationTemplate.ParseBodyBehavior = transformationpb.TransformationTemplate_DontParse
 		hasTransform = true
 	}
 
 	tt.TransformationTemplate.HeadersToRemove = make([]string, 0, len(t.Remove))
 	for _, h := range t.Remove {
-		tt.TransformationTemplate.HeadersToRemove = append(tt.TransformationTemplate.GetHeadersToRemove(), string(h))
+		tt.TransformationTemplate.HeadersToRemove = append(
+			tt.TransformationTemplate.GetHeadersToRemove(),
+			string(h),
+		)
 		hasTransform = true
 	}
 
@@ -76,7 +84,9 @@ func toTraditionalTransform(t *v1alpha1.Transform) *transformationpb.Transformat
 	return tt
 }
 
-func toTransformFilterConfig(t *v1alpha1.TransformationPolicy) (*transformationpb.RouteTransformations, error) {
+func toTransformFilterConfig(
+	t *v1alpha1.TransformationPolicy,
+) (*transformationpb.RouteTransformations, error) {
 	if t == nil || *t == (v1alpha1.TransformationPolicy{}) {
 		return nil, nil
 	}

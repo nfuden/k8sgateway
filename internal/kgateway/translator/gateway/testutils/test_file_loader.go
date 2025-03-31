@@ -40,7 +40,8 @@ func LoadFromFiles(ctx context.Context, filename string) ([]client.Object, error
 
 	var yamlFiles []string
 	if fileOrDir.IsDir() {
-		contextutils.LoggerFrom(ctx).Infof("looking for YAML files in directory tree rooted at: %s", fileOrDir.Name())
+		contextutils.LoggerFrom(ctx).
+			Infof("looking for YAML files in directory tree rooted at: %s", fileOrDir.Name())
 		err := filepath.WalkDir(filename, func(path string, d fs.DirEntry, _ error) error {
 			if strings.HasSuffix(path, ".yml") || strings.HasSuffix(path, ".yaml") {
 				yamlFiles = append(yamlFiles, path)
@@ -58,7 +59,8 @@ func LoadFromFiles(ctx context.Context, filename string) ([]client.Object, error
 		return nil, NoFilesFound
 	}
 
-	contextutils.LoggerFrom(ctx).Infow("user configuration YAML files found", zap.Strings("files", yamlFiles))
+	contextutils.LoggerFrom(ctx).
+		Infow("user configuration YAML files found", zap.Strings("files", yamlFiles))
 
 	var resources []client.Object
 	for _, file := range yamlFiles {
@@ -70,7 +72,10 @@ func LoadFromFiles(ctx context.Context, filename string) ([]client.Object, error
 		for _, obj := range objs {
 			clientObj, ok := obj.(client.Object)
 			if !ok {
-				return nil, errors.Errorf("cannot convert runtime.Object to client.Object: %+v", obj)
+				return nil, errors.Errorf(
+					"cannot convert runtime.Object to client.Object: %+v",
+					obj,
+				)
 			}
 
 			_, isGwc := clientObj.(*gwv1.GatewayClass)
@@ -113,10 +118,11 @@ func parseFile(ctx context.Context, filename string) ([]runtime.Object, error) {
 
 		var meta metaOnly
 		if err := yaml.Unmarshal(objYaml, &meta); err != nil {
-			contextutils.LoggerFrom(ctx).Warnw("failed to parse resource metadata, skipping YAML document",
-				zap.String("filename", filename),
-				zap.String("truncatedYamlDoc", truncateString(string(objYaml), 100)),
-			)
+			contextutils.LoggerFrom(ctx).
+				Warnw("failed to parse resource metadata, skipping YAML document",
+					zap.String("filename", filename),
+					zap.String("truncatedYamlDoc", truncateString(string(objYaml), 100)),
+				)
 			continue
 		}
 

@@ -63,16 +63,19 @@ func NewGlooK8sEndpointInputs(
 	}
 
 	// Create index on EndpointSlices by service name and endpointslice namespace
-	endpointSlicesByService := krt.NewIndex(endpointSlices, func(es *discoveryv1.EndpointSlice) []types.NamespacedName {
-		svcName, ok := es.Labels[discoveryv1.LabelServiceName]
-		if !ok {
-			return nil
-		}
-		return []types.NamespacedName{{
-			Namespace: es.Namespace,
-			Name:      svcName,
-		}}
-	})
+	endpointSlicesByService := krt.NewIndex(
+		endpointSlices,
+		func(es *discoveryv1.EndpointSlice) []types.NamespacedName {
+			svcName, ok := es.Labels[discoveryv1.LabelServiceName]
+			if !ok {
+				return nil
+			}
+			return []types.NamespacedName{{
+				Namespace: es.Namespace,
+				Name:      svcName,
+			}}
+		},
+	)
 
 	return EndpointsInputs{
 		Backends:                k8sBackends,
@@ -84,11 +87,20 @@ func NewGlooK8sEndpointInputs(
 	}
 }
 
-func NewK8sEndpoints(ctx context.Context, inputs EndpointsInputs) krt.Collection[ir.EndpointsForBackend] {
-	return krt.NewCollection(inputs.Backends, transformK8sEndpoints(ctx, inputs), inputs.KrtOpts.ToOptions("K8sEndpoints")...)
+func NewK8sEndpoints(
+	ctx context.Context,
+	inputs EndpointsInputs,
+) krt.Collection[ir.EndpointsForBackend] {
+	return krt.NewCollection(
+		inputs.Backends,
+		transformK8sEndpoints(ctx, inputs),
+		inputs.KrtOpts.ToOptions("K8sEndpoints")...)
 }
 
-func transformK8sEndpoints(ctx context.Context, inputs EndpointsInputs) func(kctx krt.HandlerContext, backend ir.BackendObjectIR) *ir.EndpointsForBackend {
+func transformK8sEndpoints(
+	ctx context.Context,
+	inputs EndpointsInputs,
+) func(kctx krt.HandlerContext, backend ir.BackendObjectIR) *ir.EndpointsForBackend {
 	logger := contextutils.LoggerFrom(ctx).Desugar()
 	augmentedPods := inputs.Pods
 
@@ -121,9 +133,17 @@ func transformK8sEndpoints(ctx context.Context, inputs EndpointsInputs) func(kct
 		}
 
 		// Fetch all EndpointSlices for the backend service
-		endpointSlices := krt.Fetch(kctx, inputs.EndpointSlices, krt.FilterIndex(inputs.EndpointSlicesByService, key))
+		endpointSlices := krt.Fetch(
+			kctx,
+			inputs.EndpointSlices,
+			krt.FilterIndex(inputs.EndpointSlicesByService, key),
+		)
 		if len(endpointSlices) == 0 {
-			logger.Debug("no endpointslices found for service", zap.String("name", key.Name), zap.String("namespace", key.Namespace))
+			logger.Debug(
+				"no endpointslices found for service",
+				zap.String("name", key.Name),
+				zap.String("namespace", key.Namespace),
+			)
 			return nil
 		}
 
@@ -136,7 +156,11 @@ func transformK8sEndpoints(ctx context.Context, inputs EndpointsInputs) func(kct
 			}
 		}
 		if !found {
-			logger.Debug("no ports found in endpointslices for service", zap.String("name", key.Name), zap.String("namespace", key.Namespace))
+			logger.Debug(
+				"no ports found in endpointslices for service",
+				zap.String("name", key.Name),
+				zap.String("namespace", key.Namespace),
+			)
 			return nil
 		}
 
@@ -151,9 +175,11 @@ func transformK8sEndpoints(ctx context.Context, inputs EndpointsInputs) func(kct
 		for _, endpointSlice := range endpointSlices {
 			port := findPortInEndpointSlice(endpointSlice, singlePortSvc, kubeSvcPort)
 			if port == 0 {
-				logger.Debug("no port found in endpointslice; will try next endpointslice if one exists",
+				logger.Debug(
+					"no port found in endpointslice; will try next endpointslice if one exists",
 					zap.String("name", endpointSlice.Name),
-					zap.String("namespace", endpointSlice.Namespace))
+					zap.String("namespace", endpointSlice.Namespace),
+				)
 				continue
 			}
 
@@ -185,10 +211,14 @@ func transformK8sEndpoints(ctx context.Context, inputs EndpointsInputs) func(kct
 					var augmentedLabels map[string]string
 					var l ir.PodLocality
 					if podName != "" {
-						maybePod := krt.FetchOne(kctx, augmentedPods, krt.FilterObjectName(types.NamespacedName{
-							Namespace: podNamespace,
-							Name:      podName,
-						}))
+						maybePod := krt.FetchOne(
+							kctx,
+							augmentedPods,
+							krt.FilterObjectName(types.NamespacedName{
+								Namespace: podNamespace,
+								Name:      podName,
+							}),
+						)
 						if maybePod != nil {
 							l = maybePod.Locality
 							augmentedLabels = maybePod.AugmentedLabels
@@ -210,7 +240,12 @@ func transformK8sEndpoints(ctx context.Context, inputs EndpointsInputs) func(kct
 	}
 }
 
-func CreateLBEndpoint(address string, port uint32, podLabels map[string]string, enableAutoMtls bool) *envoy_config_endpoint_v3.LbEndpoint {
+func CreateLBEndpoint(
+	address string,
+	port uint32,
+	podLabels map[string]string,
+	enableAutoMtls bool,
+) *envoy_config_endpoint_v3.LbEndpoint {
 	// Don't get the metadata labels and filter metadata for the envoy load balancer based on the backend, as this is not used
 	// metadata := getLbMetadata(upstream, labels, "")
 	// Get the metadata labels for the transport socket match if Istio auto mtls is enabled
@@ -246,7 +281,11 @@ func CreateLBEndpoint(address string, port uint32, podLabels map[string]string, 
 	}
 }
 
-func addIstioAutomtlsMetadata(metadata *envoy_config_core_v3.Metadata, labels map[string]string, enableAutoMtls bool) *envoy_config_core_v3.Metadata {
+func addIstioAutomtlsMetadata(
+	metadata *envoy_config_core_v3.Metadata,
+	labels map[string]string,
+	enableAutoMtls bool,
+) *envoy_config_core_v3.Metadata {
 	const EnvoyTransportSocketMatch = "envoy.transport_socket_match"
 	if enableAutoMtls {
 		if _, ok := labels[wellknown.IstioTlsModeLabel]; ok {
@@ -274,7 +313,11 @@ func findPortForService(svc *corev1.Service, svcPort uint32) (*corev1.ServicePor
 	return nil, false
 }
 
-func findPortInEndpointSlice(endpointSlice *discoveryv1.EndpointSlice, singlePortService bool, kubeServicePort *corev1.ServicePort) uint32 {
+func findPortInEndpointSlice(
+	endpointSlice *discoveryv1.EndpointSlice,
+	singlePortService bool,
+	kubeServicePort *corev1.ServicePort,
+) uint32 {
 	var port uint32
 
 	if endpointSlice == nil || kubeServicePort == nil {

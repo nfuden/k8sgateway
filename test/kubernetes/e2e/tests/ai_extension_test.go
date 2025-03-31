@@ -167,7 +167,11 @@ spec:
   type: ClusterIP`, namespace, image, namespace)
 }
 
-func cleanupMockProvider(ctx context.Context, testInstallation *e2e.TestInstallation, namespace string) {
+func cleanupMockProvider(
+	ctx context.Context,
+	testInstallation *e2e.TestInstallation,
+	namespace string,
+) {
 	// Use empty image as it's not needed for cleanup
 	yaml := getMockProviderYAML(namespace, "")
 	err := testInstallation.ClusterContext.Cli.Delete(ctx, []byte(yaml))
@@ -176,7 +180,11 @@ func cleanupMockProvider(ctx context.Context, testInstallation *e2e.TestInstalla
 	}
 }
 
-func installProviderMockApp(ctx context.Context, testInstallation *e2e.TestInstallation, namespace string) {
+func installProviderMockApp(
+	ctx context.Context,
+	testInstallation *e2e.TestInstallation,
+	namespace string,
+) {
 	// Get version from environment variable or use default image
 	version := os.Getenv("VERSION")
 	image := "ghcr.io/kgateway-dev/test-ai-provider:1.0.0-ci1"
@@ -199,12 +207,18 @@ func installProviderMockApp(ctx context.Context, testInstallation *e2e.TestInsta
 	}
 
 	// Wait for the deployment to be ready
-	err = wait.PollUntilContextTimeout(ctx, time.Second, time.Minute*2, true, func(ctx context.Context) (done bool, err error) {
-		if err := testInstallation.ClusterContext.Client.Get(ctx, client.ObjectKeyFromObject(deployment), deployment); err != nil {
-			return false, nil
-		}
-		return deployment.Status.ReadyReplicas == deployment.Status.Replicas, nil
-	})
+	err = wait.PollUntilContextTimeout(
+		ctx,
+		time.Second,
+		time.Minute*2,
+		true,
+		func(ctx context.Context) (done bool, err error) {
+			if err := testInstallation.ClusterContext.Client.Get(ctx, client.ObjectKeyFromObject(deployment), deployment); err != nil {
+				return false, nil
+			}
+			return deployment.Status.ReadyReplicas == deployment.Status.Replicas, nil
+		},
+	)
 
 	if err != nil {
 		panic(fmt.Sprintf("Mock provider deployment failed to become ready: %v", err))

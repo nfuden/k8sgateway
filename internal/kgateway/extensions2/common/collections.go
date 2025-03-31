@@ -81,25 +81,34 @@ func NewCommonCollections(
 	settings settings.Settings,
 ) *CommonCollections {
 	secretClient := kclient.New[*corev1.Secret](client)
-	k8sSecretsRaw := krt.WrapClient(secretClient, krt.WithStop(krtOptions.Stop), krt.WithName("Secrets") /* no debug here - we don't want raw secrets printed*/)
-	k8sSecrets := krt.NewCollection(k8sSecretsRaw, func(kctx krt.HandlerContext, i *corev1.Secret) *ir.Secret {
-		res := ir.Secret{
-			ObjectSource: ir.ObjectSource{
-				Group:     "",
-				Kind:      "Secret",
-				Namespace: i.Namespace,
-				Name:      i.Name,
-			},
-			Obj:  i,
-			Data: i.Data,
-		}
-		return &res
-	}, krtOptions.ToOptions("secrets")...)
+	k8sSecretsRaw := krt.WrapClient(
+		secretClient,
+		krt.WithStop(krtOptions.Stop),
+		krt.WithName("Secrets"), /* no debug here - we don't want raw secrets printed*/
+	)
+	k8sSecrets := krt.NewCollection(
+		k8sSecretsRaw,
+		func(kctx krt.HandlerContext, i *corev1.Secret) *ir.Secret {
+			res := ir.Secret{
+				ObjectSource: ir.ObjectSource{
+					Group:     "",
+					Kind:      "Secret",
+					Namespace: i.Namespace,
+					Name:      i.Name,
+				},
+				Obj:  i,
+				Data: i.Data,
+			}
+			return &res
+		},
+		krtOptions.ToOptions("secrets")...)
 	secrets := map[schema.GroupKind]krt.Collection[ir.Secret]{
 		{Group: "", Kind: "Secret"}: k8sSecrets,
 	}
 
-	refgrantsCol := krt.WrapClient(kclient.New[*gwv1beta1.ReferenceGrant](client), krtOptions.ToOptions("RefGrants")...)
+	refgrantsCol := krt.WrapClient(
+		kclient.New[*gwv1beta1.ReferenceGrant](client),
+		krtOptions.ToOptions("RefGrants")...)
 	refgrants := krtcollections.NewRefGrantIndex(refgrantsCol)
 
 	namespaces := krtcollections.NewNamespaceCollection(ctx, client, krtOptions)

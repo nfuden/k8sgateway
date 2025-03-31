@@ -29,7 +29,7 @@ An example plugin, that uses a ConfigMap as a policy. We use a targetRef annotat
 policy to an HTTPRouter. We will then add the key value pairs in the ConfigMap to the metadata of
 the envoy route route.
 
-Exmaple ConfigMap:
+Example ConfigMap:
 
 apiVersion: v1
 kind: ConfigMap
@@ -127,27 +127,32 @@ func ourPolicies(commoncol *common.CommonCollections) krt.Collection[ir.PolicyWr
 	// the krt debug page.
 
 	// get a configmap client going
-	configMapCol := krt.WrapClient(kclient.New[*corev1.ConfigMap](commoncol.Client), commoncol.KrtOpts.ToOptions("ConfigMaps")...)
+	configMapCol := krt.WrapClient(
+		kclient.New[*corev1.ConfigMap](commoncol.Client),
+		commoncol.KrtOpts.ToOptions("ConfigMaps")...)
 
 	// convertIt to policy IR
-	return krt.NewCollection(configMapCol, func(krtctx krt.HandlerContext, i *corev1.ConfigMap) *ir.PolicyWrapper {
-		if i.Annotations["targetRef"] == "" {
-			return nil
-		}
+	return krt.NewCollection(
+		configMapCol,
+		func(krtctx krt.HandlerContext, i *corev1.ConfigMap) *ir.PolicyWrapper {
+			if i.Annotations["targetRef"] == "" {
+				return nil
+			}
 
-		pol := &ir.PolicyWrapper{
-			ObjectSource: ir.ObjectSource{
-				Group:     configMapGK.Group,
-				Kind:      configMapGK.Kind,
-				Namespace: i.Namespace,
-				Name:      i.Name,
-			},
-			Policy:     i,
-			PolicyIR:   configMapToIr(i),
-			TargetRefs: extractTargetRefs(i),
-		}
-		return pol
-	}, commoncol.KrtOpts.ToOptions("MetadataPolicies")...)
+			pol := &ir.PolicyWrapper{
+				ObjectSource: ir.ObjectSource{
+					Group:     configMapGK.Group,
+					Kind:      configMapGK.Kind,
+					Namespace: i.Namespace,
+					Name:      i.Name,
+				},
+				Policy:     i,
+				PolicyIR:   configMapToIr(i),
+				TargetRefs: extractTargetRefs(i),
+			}
+			return pol
+		},
+		commoncol.KrtOpts.ToOptions("MetadataPolicies")...)
 }
 
 // Our translation pass struct. This holds translation specific state.
@@ -161,7 +166,11 @@ type ourPolicyPass struct {
 }
 
 // ApplyForRoute is called when a an HTTPRouteRule is being translated to an envoy route.
-func (s *ourPolicyPass) ApplyForRoute(ctx context.Context, pCtx *ir.RouteContext, out *envoy_config_route_v3.Route) error {
+func (s *ourPolicyPass) ApplyForRoute(
+	ctx context.Context,
+	pCtx *ir.RouteContext,
+	out *envoy_config_route_v3.Route,
+) error {
 	// get our policy IR. Kgateway used the targetRef to attach the policy to the HTTPRoute. and now as it
 	// translates the HTTPRoute to xDS, it calls our plugin and passes the policy for the plugin's translation pass to do the
 	// policy to xDS translation.
@@ -185,7 +194,10 @@ func (s *ourPolicyPass) ApplyForRoute(ctx context.Context, pCtx *ir.RouteContext
 	return nil
 }
 
-func (s *ourPolicyPass) HttpFilters(ctx context.Context, fc ir.FilterChainCommon) ([]plugins.StagedHttpFilter, error) {
+func (s *ourPolicyPass) HttpFilters(
+	ctx context.Context,
+	fc ir.FilterChainCommon,
+) ([]plugins.StagedHttpFilter, error) {
 	if !s.filterNeeded[fc.FilterChainName] {
 		return nil, nil
 	}
@@ -213,7 +225,10 @@ func (s *ourPolicyPass) HttpFilters(ctx context.Context, fc ir.FilterChainCommon
 }
 
 // A function that initializes our plugins.
-func pluginFactory(ctx context.Context, commoncol *common.CommonCollections) []extensionsplug.Plugin {
+func pluginFactory(
+	ctx context.Context,
+	commoncol *common.CommonCollections,
+) []extensionsplug.Plugin {
 	return []extensionsplug.Plugin{
 		{
 			ContributesPolicies: extensionsplug.ContributesPolicies{

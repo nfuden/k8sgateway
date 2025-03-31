@@ -98,7 +98,14 @@ func (r *RouteInfo) Clone() *RouteInfo {
 // UniqueRouteName returns a unique name for the route based on the route kind, name, namespace,
 // and the given indexes.
 func (r *RouteInfo) UniqueRouteName(ruleIdx, matchIdx int) string {
-	return fmt.Sprintf("%s-%s-%s-%d-%d", strings.ToLower(r.GetKind()), r.GetName(), r.GetNamespace(), ruleIdx, matchIdx)
+	return fmt.Sprintf(
+		"%s-%s-%s-%d-%d",
+		strings.ToLower(r.GetKind()),
+		r.GetName(),
+		r.GetNamespace(),
+		ruleIdx,
+		matchIdx,
+	)
 }
 
 // GetRouteChain recursively resolves all backends for the given route object.
@@ -131,7 +138,10 @@ func (r *gatewayQueries) GetRouteChain(
 	}
 }
 
-func (r *gatewayQueries) allowedRoutes(gw *gwv1.Gateway, l *gwv1.Listener) (func(krt.HandlerContext, string) bool, []metav1.GroupKind, error) {
+func (r *gatewayQueries) allowedRoutes(
+	gw *gwv1.Gateway,
+	l *gwv1.Listener,
+) (func(krt.HandlerContext, string) bool, []metav1.GroupKind, error) {
 	var allowedKinds []metav1.GroupKind
 
 	// Determine the allowed route kinds based on the listener's protocol
@@ -226,7 +236,12 @@ func (r *gatewayQueries) getDelegatedChildren(
 			for _, childRoute := range referencedRoutes {
 				childRef := namespacedName(&childRoute)
 				if visited.Has(childRef) {
-					err := fmt.Errorf("ignoring child route %s for parent %s: %w", childRef, parentRef, ErrCyclicReference)
+					err := fmt.Errorf(
+						"ignoring child route %s for parent %s: %w",
+						childRef,
+						parentRef,
+						ErrCyclicReference,
+					)
 					children.AddError(ref, err)
 					// Don't resolve invalid child route
 					continue
@@ -241,7 +256,13 @@ func (r *gatewayQueries) getDelegatedChildren(
 						Name:      gwv1.ObjectName(parent.Name),
 					},
 					ListenerParentRef: listenerRef,
-					Children:          r.getDelegatedChildren(kctx, ctx, listenerRef, &childRoute, visited),
+					Children: r.getDelegatedChildren(
+						kctx,
+						ctx,
+						listenerRef,
+						&childRoute,
+						visited,
+					),
 				}
 				refChildren = append(refChildren, routeInfo)
 			}
@@ -283,7 +304,11 @@ func (r *gatewayQueries) fetchChildRoutes(
 	return refChildren, nil
 }
 
-func (r *gatewayQueries) GetRoutesForGateway(kctx krt.HandlerContext, ctx context.Context, gw *gwv1.Gateway) (*RoutesForGwResult, error) {
+func (r *gatewayQueries) GetRoutesForGateway(
+	kctx krt.HandlerContext,
+	ctx context.Context,
+	gw *gwv1.Gateway,
+) (*RoutesForGwResult, error) {
 	nns := types.NamespacedName{
 		Namespace: gw.Namespace,
 		Name:      gw.Name,
@@ -378,7 +403,10 @@ func (r *gatewayQueries) processRoute(
 			ret.RouteErrors = append(ret.RouteErrors, &RouteError{
 				Route:     route,
 				ParentRef: ref,
-				Error:     Error{E: ErrNotAllowedByListeners, Reason: gwv1.RouteReasonNotAllowedByListeners},
+				Error: Error{
+					E:      ErrNotAllowedByListeners,
+					Reason: gwv1.RouteReasonNotAllowedByListeners,
+				},
 			})
 		} else if !anyListenerMatched {
 			ret.RouteErrors = append(ret.RouteErrors, &RouteError{

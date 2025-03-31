@@ -168,12 +168,19 @@ var _ = Describe("Translator TCPRoute Listener", func() {
 				By("Appending the TCP listener")
 				ml.AppendTcpListener(lisToIr(gwListener), routes, listenerReporter)
 
-				By("Validating that the TCP listener is properly created with multiple backend references")
+				By(
+					"Validating that the TCP listener is properly created with multiple backend references",
+				)
 				Expect(ml.Listeners).To(HaveLen(1))
 				Expect(ml.Listeners[0].TcpFilterChains).To(HaveLen(1))
 
 				// Translate the listener to get the actual Gloo listener
-				translatedListener := ml.Listeners[0].TranslateListener(krt.TestingDummyContext{}, ctx, nil, reporter)
+				translatedListener := ml.Listeners[0].TranslateListener(
+					krt.TestingDummyContext{},
+					ctx,
+					nil,
+					reporter,
+				)
 				Expect(translatedListener).NotTo(BeNil())
 				Expect(translatedListener.TcpFilterChain).To(HaveLen(1))
 
@@ -197,7 +204,9 @@ var _ = Describe("Translator TCPRoute Listener", func() {
 				ml.AppendTcpListener(lisToIr(gwListener), routes, listenerReporter)
 
 				By("Validating that no TCP listeners are created")
-				Expect(ml.Listeners).To(BeEmpty(), "Expected no listeners due to missing ParentRefs")
+				Expect(
+					ml.Listeners,
+				).To(BeEmpty(), "Expected no listeners due to missing ParentRefs")
 			})
 
 			It("should handle TCPRoute with empty backend references", func() {
@@ -231,9 +240,16 @@ var _ = Describe("Translator TCPRoute Listener", func() {
 				By("Validating that a TCP listener is created with no TCPHosts")
 				Expect(ml.Listeners).To(HaveLen(1))
 
-				translatedListener := ml.Listeners[0].TranslateListener(krt.TestingDummyContext{}, ctx, nil, reporter)
+				translatedListener := ml.Listeners[0].TranslateListener(
+					krt.TestingDummyContext{},
+					ctx,
+					nil,
+					reporter,
+				)
 				Expect(translatedListener).NotTo(BeNil())
-				Expect(translatedListener.TcpFilterChain).To(BeEmpty(), "Expected no TCP listeners due to empty backend references")
+				Expect(
+					translatedListener.TcpFilterChain,
+				).To(BeEmpty(), "Expected no TCP listeners due to empty backend references")
 			})
 
 			It("should not append a listener for an unsupported protocol", func() {
@@ -250,7 +266,9 @@ var _ = Describe("Translator TCPRoute Listener", func() {
 				Expect(err.Error()).To(ContainSubstring("unsupported protocol"))
 
 				By("Validating that TCP listeners is empty due to the unsupported protocol")
-				Expect(ml.Listeners).To(BeEmpty(), "Expected no listeners due to unsupported protocol")
+				Expect(
+					ml.Listeners,
+				).To(BeEmpty(), "Expected no listeners due to unsupported protocol")
 			})
 
 			It("should skip routes with invalid parent references and process valid ones", func() {
@@ -305,7 +323,12 @@ var _ = Describe("Translator TCPRoute Listener", func() {
 				By("Validating that one single destination TCP listener is created")
 				Expect(ml.Listeners).To(HaveLen(1)) // One valid listener
 
-				translatedListener := ml.Listeners[0].TranslateListener(krt.TestingDummyContext{}, ctx, nil, reporter)
+				translatedListener := ml.Listeners[0].TranslateListener(
+					krt.TestingDummyContext{},
+					ctx,
+					nil,
+					reporter,
+				)
 				Expect(translatedListener).NotTo(BeNil())
 				Expect(translatedListener.TcpFilterChain).To(HaveLen(1))
 
@@ -357,7 +380,12 @@ var _ = Describe("Translator TCPRoute Listener", func() {
 				By("Validating that one TCP listener is created with a single destination")
 				Expect(ml.Listeners).To(HaveLen(1))
 
-				translatedListener := ml.Listeners[0].TranslateListener(krt.TestingDummyContext{}, ctx, nil, reporter)
+				translatedListener := ml.Listeners[0].TranslateListener(
+					krt.TestingDummyContext{},
+					ctx,
+					nil,
+					reporter,
+				)
 				Expect(translatedListener).NotTo(BeNil())
 				Expect(translatedListener.TcpFilterChain).To(HaveLen(1))
 
@@ -418,10 +446,17 @@ var _ = Describe("Translator TCPRoute Listener", func() {
 				By("Appending the TCP listener")
 				ml.AppendTcpListener(lisToIr(gwListener), routes, listenerReporter)
 
-				By("Validating that one TCP listener is created with multiple weighted destinations")
+				By(
+					"Validating that one TCP listener is created with multiple weighted destinations",
+				)
 				Expect(ml.Listeners).To(HaveLen(1))
 
-				translatedListener := ml.Listeners[0].TranslateListener(krt.TestingDummyContext{}, ctx, nil, reporter)
+				translatedListener := ml.Listeners[0].TranslateListener(
+					krt.TestingDummyContext{},
+					ctx,
+					nil,
+					reporter,
+				)
 				Expect(translatedListener).NotTo(BeNil())
 				Expect(translatedListener.TcpFilterChain).To(HaveLen(1))
 
@@ -430,7 +465,9 @@ var _ = Describe("Translator TCPRoute Listener", func() {
 
 				// Access the multi-destination field
 				multiDestination := tcpListener.BackendRefs
-				Expect(multiDestination).NotTo(BeNil(), "Expected a multi-destination for weighted backends")
+				Expect(
+					multiDestination,
+				).NotTo(BeNil(), "Expected a multi-destination for weighted backends")
 
 				// Validate that there are two destinations with the correct weights
 				Expect(multiDestination).To(HaveLen(2))
@@ -447,64 +484,72 @@ var _ = Describe("Translator TCPRoute Listener", func() {
 			})
 		})
 
-		It("should not create a DestinationSpec when backendRef refers to a service in a different namespace without a permitting ReferenceGrant", func() {
-			By("Creating a TCPRoute with a backendRef to a different namespace")
-			tcpRoute := tcpRoute("cross-namespace-tcp-route", "default")
-			tcpRoute.Spec = gwv1a2.TCPRouteSpec{
-				CommonRouteSpec: gwv1.CommonRouteSpec{
-					ParentRefs: []gwv1.ParentReference{
-						{
-							Name:      gwv1.ObjectName("test-gateway"),
-							Namespace: ptr.To(gwv1.Namespace("default")),
-							Kind:      ptr.To(gwv1.Kind(wellknown.GatewayKind)),
+		It(
+			"should not create a DestinationSpec when backendRef refers to a service in a different namespace without a permitting ReferenceGrant",
+			func() {
+				By("Creating a TCPRoute with a backendRef to a different namespace")
+				tcpRoute := tcpRoute("cross-namespace-tcp-route", "default")
+				tcpRoute.Spec = gwv1a2.TCPRouteSpec{
+					CommonRouteSpec: gwv1.CommonRouteSpec{
+						ParentRefs: []gwv1.ParentReference{
+							{
+								Name:      gwv1.ObjectName("test-gateway"),
+								Namespace: ptr.To(gwv1.Namespace("default")),
+								Kind:      ptr.To(gwv1.Kind(wellknown.GatewayKind)),
+							},
 						},
 					},
-				},
-				Rules: []gwv1a2.TCPRouteRule{
-					{
-						BackendRefs: []gwv1.BackendRef{
-							{
-								BackendObjectReference: gwv1.BackendObjectReference{
-									Name:      "backend-svc",
-									Namespace: ptr.To(gwv1.Namespace("other-namespace")),
-									Port:      ptr.To(gwv1.PortNumber(8080)),
+					Rules: []gwv1a2.TCPRouteRule{
+						{
+							BackendRefs: []gwv1.BackendRef{
+								{
+									BackendObjectReference: gwv1.BackendObjectReference{
+										Name:      "backend-svc",
+										Namespace: ptr.To(gwv1.Namespace("other-namespace")),
+										Port:      ptr.To(gwv1.PortNumber(8080)),
+									},
 								},
 							},
 						},
 					},
-				},
-			}
+				}
 
-			By("Setting up the mock to return an error when ReferenceGrant is missing")
-			tcpIr := tcpToIr(tcpRoute)
-			// simulate missing reference grant
-			tcpIr.Backends[0].BackendObject = nil
-			tcpIr.Backends[0].Err = errors.New("missing reference grant")
+				By("Setting up the mock to return an error when ReferenceGrant is missing")
+				tcpIr := tcpToIr(tcpRoute)
+				// simulate missing reference grant
+				tcpIr.Backends[0].BackendObject = nil
+				tcpIr.Backends[0].Err = errors.New("missing reference grant")
 
-			By("Creating the RouteInfo")
-			routes := []*query.RouteInfo{
-				{
-					Object: tcpIr,
-				},
-			}
+				By("Creating the RouteInfo")
+				routes := []*query.RouteInfo{
+					{
+						Object: tcpIr,
+					},
+				}
 
-			By("Appending the TCP listener")
-			ml.AppendTcpListener(lisToIr(gwListener), routes, listenerReporter)
+				By("Appending the TCP listener")
+				ml.AppendTcpListener(lisToIr(gwListener), routes, listenerReporter)
 
-			By("Validating that a TCP listener is created with no TCPHosts")
-			Expect(ml.Listeners).To(HaveLen(1))
+				By("Validating that a TCP listener is created with no TCPHosts")
+				Expect(ml.Listeners).To(HaveLen(1))
 
-			translatedListener := ml.Listeners[0].TranslateListener(krt.TestingDummyContext{}, ctx, nil, reporter)
-			Expect(translatedListener).NotTo(BeNil())
-			Expect(translatedListener.TcpFilterChain).To(HaveLen(1))
+				translatedListener := ml.Listeners[0].TranslateListener(
+					krt.TestingDummyContext{},
+					ctx,
+					nil,
+					reporter,
+				)
+				Expect(translatedListener).NotTo(BeNil())
+				Expect(translatedListener.TcpFilterChain).To(HaveLen(1))
 
-			tcpListener := translatedListener.TcpFilterChain[0]
-			Expect(tcpListener).NotTo(BeNil())
-			Expect(tcpListener.BackendRefs).To(HaveLen(1))
+				tcpListener := translatedListener.TcpFilterChain[0]
+				Expect(tcpListener).NotTo(BeNil())
+				Expect(tcpListener.BackendRefs).To(HaveLen(1))
 
-			tcpHost := tcpListener.BackendRefs[0]
-			Expect(tcpHost.BackendObject).To(BeNil())
-		})
+				tcpHost := tcpListener.BackendRefs[0]
+				Expect(tcpHost.BackendObject).To(BeNil())
+			},
+		)
 
 		/* i think this is not needed, as refgrants are resolved a this point
 		It("should create a TCP listener when backendRef refers to a service in a different namespace with a permitting ReferenceGrant", func() {
@@ -660,17 +705,26 @@ var _ = Describe("Translator TCPRoute Listener", func() {
 				By("Appending the TLS listener")
 				ml.AppendTlsListener(lisToIr(gwListener), routes, listenerReporter)
 
-				By("Validating that the TLS listener is properly created with multiple backend references")
+				By(
+					"Validating that the TLS listener is properly created with multiple backend references",
+				)
 				Expect(ml.Listeners).To(HaveLen(1))
 				Expect(ml.Listeners[0].TcpFilterChains).To(HaveLen(1))
 
-				translatedListener := ml.Listeners[0].TranslateListener(krt.TestingDummyContext{}, ctx, nil, reporter)
+				translatedListener := ml.Listeners[0].TranslateListener(
+					krt.TestingDummyContext{},
+					ctx,
+					nil,
+					reporter,
+				)
 				Expect(translatedListener).NotTo(BeNil())
 				Expect(translatedListener.TcpFilterChain).To(HaveLen(1))
 
 				tlsListener := translatedListener.TcpFilterChain[0]
 				Expect(tlsListener.BackendRefs).To(HaveLen(2))
-				Expect(tlsListener.FilterChainCommon.Matcher.SniDomains).To(ContainElement("example.com"))
+				Expect(
+					tlsListener.FilterChainCommon.Matcher.SniDomains,
+				).To(ContainElement("example.com"))
 			})
 
 			It("should log an error for TLSRoute with missing parent reference", func() {
@@ -689,7 +743,9 @@ var _ = Describe("Translator TCPRoute Listener", func() {
 				ml.AppendTlsListener(lisToIr(gwListener), routes, listenerReporter)
 
 				By("Validating that no TLS listeners are created")
-				Expect(ml.Listeners).To(BeEmpty(), "Expected no listeners due to missing ParentRefs")
+				Expect(
+					ml.Listeners,
+				).To(BeEmpty(), "Expected no listeners due to missing ParentRefs")
 			})
 
 			It("should skip routes with invalid parent references and process valid ones", func() {
@@ -744,7 +800,12 @@ var _ = Describe("Translator TCPRoute Listener", func() {
 				By("Validating that one single destination TLS listener is created")
 				Expect(ml.Listeners).To(HaveLen(1)) // One valid listener
 
-				translatedListener := ml.Listeners[0].TranslateListener(krt.TestingDummyContext{}, ctx, nil, reporter)
+				translatedListener := ml.Listeners[0].TranslateListener(
+					krt.TestingDummyContext{},
+					ctx,
+					nil,
+					reporter,
+				)
 				Expect(translatedListener).NotTo(BeNil())
 				Expect(translatedListener.TcpFilterChain).To(HaveLen(1))
 
@@ -752,7 +813,9 @@ var _ = Describe("Translator TCPRoute Listener", func() {
 				Expect(tlsListener).NotTo(BeNil())
 				Expect(tlsListener.BackendRefs[0]).NotTo(BeNil())
 				Expect(tlsListener.BackendRefs[0].ClusterName).To(Equal("backend-svc1"))
-				Expect(tlsListener.FilterChainCommon.Matcher.SniDomains).To(ContainElement("example.com"))
+				Expect(
+					tlsListener.FilterChainCommon.Matcher.SniDomains,
+				).To(ContainElement("example.com"))
 			})
 
 			It("should create a TLS listener with a single weighted backend reference", func() {
@@ -797,7 +860,12 @@ var _ = Describe("Translator TCPRoute Listener", func() {
 				By("Validating that one TLS listener is created with a single destination")
 				Expect(ml.Listeners).To(HaveLen(1))
 
-				translatedListener := ml.Listeners[0].TranslateListener(krt.TestingDummyContext{}, ctx, nil, reporter)
+				translatedListener := ml.Listeners[0].TranslateListener(
+					krt.TestingDummyContext{},
+					ctx,
+					nil,
+					reporter,
+				)
 				Expect(translatedListener).NotTo(BeNil())
 				Expect(translatedListener.TcpFilterChain).To(HaveLen(1))
 
@@ -809,7 +877,9 @@ var _ = Describe("Translator TCPRoute Listener", func() {
 				singleDestination := tlsListener.BackendRefs[0]
 				Expect(singleDestination).NotTo(BeNil(), "Expected a single-destination")
 				Expect(tlsListener.BackendRefs[0].ClusterName).To(Equal("backend-svc1"))
-				Expect(tlsListener.FilterChainCommon.Matcher.SniDomains).To(ContainElement("example.com"))
+				Expect(
+					tlsListener.FilterChainCommon.Matcher.SniDomains,
+				).To(ContainElement("example.com"))
 			})
 		})
 	})

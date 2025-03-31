@@ -73,13 +73,22 @@ func (s *testingSuite) SetupSuite() {
 	s.testInstallation.Assertions.EventuallyObjectsExist(s.ctx, s.commonResources...)
 
 	// make sure pods are running
-	s.testInstallation.Assertions.EventuallyPodsRunning(s.ctx, defaults.CurlPod.GetNamespace(), metav1.ListOptions{
-		LabelSelector: defaults.CurlPodLabelSelector,
-	})
+	s.testInstallation.Assertions.EventuallyPodsRunning(
+		s.ctx,
+		defaults.CurlPod.GetNamespace(),
+		metav1.ListOptions{
+			LabelSelector: defaults.CurlPodLabelSelector,
+		},
+	)
 
-	s.testInstallation.Assertions.EventuallyPodsRunning(s.ctx, proxyObjMeta.GetNamespace(), metav1.ListOptions{
-		LabelSelector: fmt.Sprintf("app.kubernetes.io/name=%s", proxyObjMeta.GetName()),
-	}, time.Minute*2)
+	s.testInstallation.Assertions.EventuallyPodsRunning(
+		s.ctx,
+		proxyObjMeta.GetNamespace(),
+		metav1.ListOptions{
+			LabelSelector: fmt.Sprintf("app.kubernetes.io/name=%s", proxyObjMeta.GetName()),
+		},
+		time.Minute*2,
+	)
 }
 
 func (s *testingSuite) TearDownSuite() {
@@ -90,9 +99,13 @@ func (s *testingSuite) TearDownSuite() {
 	}
 	s.testInstallation.Assertions.EventuallyObjectsNotExist(s.ctx, s.commonResources...)
 
-	s.testInstallation.Assertions.EventuallyPodsNotExist(s.ctx, proxyObjMeta.GetNamespace(), metav1.ListOptions{
-		LabelSelector: fmt.Sprintf("app.kubernetes.io/name=%s", proxyObjMeta.GetName()),
-	})
+	s.testInstallation.Assertions.EventuallyPodsNotExist(
+		s.ctx,
+		proxyObjMeta.GetNamespace(),
+		metav1.ListOptions{
+			LabelSelector: fmt.Sprintf("app.kubernetes.io/name=%s", proxyObjMeta.GetName()),
+		},
+	)
 }
 
 // TestExtAuthPolicy tests the basic ExtAuth functionality with header-based allow/deny
@@ -285,13 +298,26 @@ func (s *testingSuite) TextRouteTargetedExtAuthPolicy() {
 }
 
 func (s *testingSuite) ensureBasicRunning() {
-	s.testInstallation.Assertions.EventuallyPodsRunning(s.ctx, testdefaults.CurlPod.GetNamespace(), metav1.ListOptions{
-		LabelSelector: "app.kubernetes.io/name=curl",
-	})
-	s.testInstallation.Assertions.EventuallyPodsRunning(s.ctx, proxyObjMeta.GetNamespace(), metav1.ListOptions{
-		LabelSelector: "app.kubernetes.io/name=super-gateway",
-	}, time.Minute)
-	s.testInstallation.Assertions.EventuallyPodsRunning(s.ctx, extAuthSvc.GetNamespace(), metav1.ListOptions{
-		LabelSelector: "app=ext-authz",
-	})
+	s.testInstallation.Assertions.EventuallyPodsRunning(
+		s.ctx,
+		testdefaults.CurlPod.GetNamespace(),
+		metav1.ListOptions{
+			LabelSelector: "app.kubernetes.io/name=curl",
+		},
+	)
+	s.testInstallation.Assertions.EventuallyPodsRunning(
+		s.ctx,
+		proxyObjMeta.GetNamespace(),
+		metav1.ListOptions{
+			LabelSelector: "app.kubernetes.io/name=super-gateway",
+		},
+		time.Minute,
+	)
+	s.testInstallation.Assertions.EventuallyPodsRunning(
+		s.ctx,
+		extAuthSvc.GetNamespace(),
+		metav1.ListOptions{
+			LabelSelector: "app=ext-authz",
+		},
+	)
 }

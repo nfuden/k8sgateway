@@ -29,5 +29,6 @@ var (
 	DirectResponseGVR     = DirectResponseGVK.GroupVersion().WithResource("directresponses")
 	BackendGVR            = BackendGVK.GroupVersion().WithResource("backends")
 	TrafficPolicyGVR      = TrafficPolicyGVK.GroupVersion().WithResource("trafficpolicies")
-	HTTPListenerPolicyGVR = HTTPListenerPolicyGVK.GroupVersion().WithResource("httplistenerpolicies")
+	HTTPListenerPolicyGVR = HTTPListenerPolicyGVK.GroupVersion().
+				WithResource("httplistenerpolicies")
 )

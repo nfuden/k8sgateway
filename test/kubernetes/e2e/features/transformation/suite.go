@@ -76,15 +76,27 @@ func (s *testingSuite) SetupSuite() {
 	s.testInstallation.Assertions.EventuallyObjectsExist(s.ctx, s.commonResources...)
 
 	// make sure pods are running
-	s.testInstallation.Assertions.EventuallyPodsRunning(s.ctx, defaults.CurlPod.GetNamespace(), metav1.ListOptions{
-		LabelSelector: defaults.CurlPodLabelSelector,
-	})
-	s.testInstallation.Assertions.EventuallyPodsRunning(s.ctx, simpleDeployment.GetNamespace(), metav1.ListOptions{
-		LabelSelector: "app=backend-0,version=v1",
-	})
-	s.testInstallation.Assertions.EventuallyPodsRunning(s.ctx, proxyObjectMeta.GetNamespace(), metav1.ListOptions{
-		LabelSelector: fmt.Sprintf("app.kubernetes.io/name=%s", proxyObjectMeta.GetName()),
-	})
+	s.testInstallation.Assertions.EventuallyPodsRunning(
+		s.ctx,
+		defaults.CurlPod.GetNamespace(),
+		metav1.ListOptions{
+			LabelSelector: defaults.CurlPodLabelSelector,
+		},
+	)
+	s.testInstallation.Assertions.EventuallyPodsRunning(
+		s.ctx,
+		simpleDeployment.GetNamespace(),
+		metav1.ListOptions{
+			LabelSelector: "app=backend-0,version=v1",
+		},
+	)
+	s.testInstallation.Assertions.EventuallyPodsRunning(
+		s.ctx,
+		proxyObjectMeta.GetNamespace(),
+		metav1.ListOptions{
+			LabelSelector: fmt.Sprintf("app.kubernetes.io/name=%s", proxyObjectMeta.GetName()),
+		},
+	)
 
 	s.assertStatus(metav1.Condition{
 		Type:    "Accepted",
@@ -103,12 +115,20 @@ func (s *testingSuite) TearDownSuite() {
 	s.testInstallation.Assertions.EventuallyObjectsNotExist(s.ctx, s.commonResources...)
 
 	// make sure pods are gone
-	s.testInstallation.Assertions.EventuallyPodsNotExist(s.ctx, simpleDeployment.GetNamespace(), metav1.ListOptions{
-		LabelSelector: "app=backend-0,version=v1",
-	})
-	s.testInstallation.Assertions.EventuallyPodsNotExist(s.ctx, proxyObjectMeta.GetNamespace(), metav1.ListOptions{
-		LabelSelector: fmt.Sprintf("app.kubernetes.io/name=%s", proxyObjectMeta.GetName()),
-	})
+	s.testInstallation.Assertions.EventuallyPodsNotExist(
+		s.ctx,
+		simpleDeployment.GetNamespace(),
+		metav1.ListOptions{
+			LabelSelector: "app=backend-0,version=v1",
+		},
+	)
+	s.testInstallation.Assertions.EventuallyPodsNotExist(
+		s.ctx,
+		proxyObjectMeta.GetNamespace(),
+		metav1.ListOptions{
+			LabelSelector: fmt.Sprintf("app.kubernetes.io/name=%s", proxyObjectMeta.GetName()),
+		},
+	)
 }
 
 func (s *testingSuite) TestGatewayWithTransformedRoute() {
@@ -178,7 +198,11 @@ func (s *testingSuite) TestGatewayRustformationsWithTransformedRoute() {
 
 	// patch the deployment
 	controllerDeployModified.ResourceVersion = ""
-	err = s.testInstallation.ClusterContext.Client.Patch(s.ctx, controllerDeployModified, client.MergeFrom(controllerDeploymentOriginal))
+	err = s.testInstallation.ClusterContext.Client.Patch(
+		s.ctx,
+		controllerDeployModified,
+		client.MergeFrom(controllerDeploymentOriginal),
+	)
 	s.Assert().NoError(err, "patching controller deployment")
 
 	// wait for the changes to be reflected in pod
@@ -195,7 +219,11 @@ func (s *testingSuite) TestGatewayRustformationsWithTransformedRoute() {
 	s.T().Cleanup(func() {
 		// revert to original version of deployment
 		controllerDeploymentOriginal.ResourceVersion = ""
-		err = s.testInstallation.ClusterContext.Client.Patch(s.ctx, controllerDeploymentOriginal, client.MergeFrom(controllerDeployModified))
+		err = s.testInstallation.ClusterContext.Client.Patch(
+			s.ctx,
+			controllerDeploymentOriginal,
+			client.MergeFrom(controllerDeployModified),
+		)
 		s.Require().NoError(err)
 
 		// make sure the env var is removed
@@ -211,26 +239,43 @@ func (s *testingSuite) TestGatewayRustformationsWithTransformedRoute() {
 	})
 
 	// wait for pods to be running again, since controller deployment was patched
-	s.testInstallation.Assertions.EventuallyPodsRunning(s.ctx, s.testInstallation.Metadata.InstallNamespace, metav1.ListOptions{
-		LabelSelector: "app.kubernetes.io/name=kgateway",
-	})
-	s.testInstallation.Assertions.EventuallyPodsRunning(s.ctx, proxyObjectMeta.GetNamespace(), metav1.ListOptions{
-		LabelSelector: "app.kubernetes.io/name=gw",
-	})
+	s.testInstallation.Assertions.EventuallyPodsRunning(
+		s.ctx,
+		s.testInstallation.Metadata.InstallNamespace,
+		metav1.ListOptions{
+			LabelSelector: "app.kubernetes.io/name=kgateway",
+		},
+	)
+	s.testInstallation.Assertions.EventuallyPodsRunning(
+		s.ctx,
+		proxyObjectMeta.GetNamespace(),
+		metav1.ListOptions{
+			LabelSelector: "app.kubernetes.io/name=gw",
+		},
+	)
 
-	adminClient, closeFwd, err := envoyadmincli.NewPortForwardedClient(s.ctx, "deploy/"+proxyObjectMeta.Name, proxyObjectMeta.Namespace)
+	adminClient, closeFwd, err := envoyadmincli.NewPortForwardedClient(
+		s.ctx,
+		"deploy/"+proxyObjectMeta.Name,
+		proxyObjectMeta.Namespace,
+	)
 	s.Assert().NoError(err, "get admin cli for envoy")
 
 	s.testInstallation.Assertions.Gomega.Eventually(func(g gomega.Gomega) {
-		listener, err := adminClient.GetSingleListenerFromDynamicListeners(context.Background(), "http")
+		listener, err := adminClient.GetSingleListenerFromDynamicListeners(
+			context.Background(),
+			"http",
+		)
 		g.Expect(err).ToNot(gomega.HaveOccurred(), "failed to get listener")
 
 		// use a weak filter name check for cyclic imports
 		// also we dont intend for this to be long term so dont worry about pulling it out to wellknown or something like that for now
 		dynamicModuleLoaded := strings.Contains(listener.String(), "dynamic_modules/")
-		g.Expect(dynamicModuleLoaded).To(gomega.BeTrue(), fmt.Sprintf("dynamic module not loaded: %v", listener.String()))
+		g.Expect(dynamicModuleLoaded).
+			To(gomega.BeTrue(), fmt.Sprintf("dynamic module not loaded: %v", listener.String()))
 		dynamicModuleRouteConfigured := strings.Contains(listener.String(), "transformation/helper")
-		g.Expect(dynamicModuleRouteConfigured).To(gomega.BeTrue(), fmt.Sprintf("dynamic module routespecific not loaded: %v", listener.String()))
+		g.Expect(dynamicModuleRouteConfigured).
+			To(gomega.BeTrue(), fmt.Sprintf("dynamic module routespecific not loaded: %v", listener.String()))
 	}).
 		WithTimeout(time.Second*20).
 		WithPolling(time.Second).Should(gomega.Succeed(), "failed to load in dynamic modules")

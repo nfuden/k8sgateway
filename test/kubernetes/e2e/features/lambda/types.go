@@ -20,12 +20,28 @@ const (
 )
 
 var (
-	setupManifest           = filepath.Join(fsutils.MustGetThisDir(), "testdata", "setup.yaml")
-	awsCliPodManifest       = filepath.Join(fsutils.MustGetThisDir(), "testdata", "aws-cli.yaml")
-	lambdaBackendManifest   = filepath.Join(fsutils.MustGetThisDir(), "testdata", "lambda-backend.yaml")
-	lambdaAsyncManifest     = filepath.Join(fsutils.MustGetThisDir(), "testdata", "lambda-async.yaml")
-	lambdaQualifierManifest = filepath.Join(fsutils.MustGetThisDir(), "testdata", "lambda-qualifier.yaml")
-	lambdaFunctionPath      = filepath.Join(fsutils.MustGetThisDir(), "functions", "hello-function.js")
+	setupManifest         = filepath.Join(fsutils.MustGetThisDir(), "testdata", "setup.yaml")
+	awsCliPodManifest     = filepath.Join(fsutils.MustGetThisDir(), "testdata", "aws-cli.yaml")
+	lambdaBackendManifest = filepath.Join(
+		fsutils.MustGetThisDir(),
+		"testdata",
+		"lambda-backend.yaml",
+	)
+	lambdaAsyncManifest = filepath.Join(
+		fsutils.MustGetThisDir(),
+		"testdata",
+		"lambda-async.yaml",
+	)
+	lambdaQualifierManifest = filepath.Join(
+		fsutils.MustGetThisDir(),
+		"testdata",
+		"lambda-qualifier.yaml",
+	)
+	lambdaFunctionPath = filepath.Join(
+		fsutils.MustGetThisDir(),
+		"functions",
+		"hello-function.js",
+	)
 
 	localstackService = corev1.Service{
 		ObjectMeta: metav1.ObjectMeta{

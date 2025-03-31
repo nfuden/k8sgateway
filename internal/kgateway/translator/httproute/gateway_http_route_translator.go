@@ -47,7 +47,16 @@ func TranslateGatewayHTTPRouteRules(
 	delegationChain := list.New()
 
 	translateGatewayHTTPRouteRulesUtil(
-		ctx, gwListener, routeInfo, reporter, baseReporter, &finalRoutes, routesVisited, hostnames, delegationChain)
+		ctx,
+		gwListener,
+		routeInfo,
+		reporter,
+		baseReporter,
+		&finalRoutes,
+		routesVisited,
+		hostnames,
+		delegationChain,
+	)
 	return finalRoutes
 }
 

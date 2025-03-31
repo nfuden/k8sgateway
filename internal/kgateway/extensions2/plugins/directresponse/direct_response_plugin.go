@@ -50,12 +50,21 @@ type directResponsePluginGwPass struct {
 	ir.UnimplementedProxyTranslationPass
 }
 
-func (p *directResponsePluginGwPass) ApplyHCM(ctx context.Context, pCtx *ir.HcmContext, out *envoyhttp.HttpConnectionManager) error {
+func (p *directResponsePluginGwPass) ApplyHCM(
+	ctx context.Context,
+	pCtx *ir.HcmContext,
+	out *envoyhttp.HttpConnectionManager,
+) error {
 	// no op
 	return nil
 }
 
-func (p *directResponsePluginGwPass) ApplyForBackend(ctx context.Context, pCtx *ir.RouteBackendContext, in ir.HttpBackend, out *envoy_config_route_v3.Route) error {
+func (p *directResponsePluginGwPass) ApplyForBackend(
+	ctx context.Context,
+	pCtx *ir.RouteBackendContext,
+	in ir.HttpBackend,
+	out *envoy_config_route_v3.Route,
+) error {
 	// no op
 	return nil
 }
@@ -68,7 +77,9 @@ func registerTypes(ourCli versioned.Interface) {
 			return ourCli.GatewayV1alpha1().DirectResponses(namespace).List(context.Background(), o)
 		},
 		func(c skubeclient.ClientGetter, namespace string, o metav1.ListOptions) (watch.Interface, error) {
-			return ourCli.GatewayV1alpha1().DirectResponses(namespace).Watch(context.Background(), o)
+			return ourCli.GatewayV1alpha1().
+				DirectResponses(namespace).
+				Watch(context.Background(), o)
 		},
 	)
 }
@@ -76,23 +87,28 @@ func registerTypes(ourCli versioned.Interface) {
 func NewPlugin(ctx context.Context, commoncol *common.CommonCollections) extensionplug.Plugin {
 	registerTypes(commoncol.OurClient)
 
-	col := krt.WrapClient(kclient.New[*v1alpha1.DirectResponse](commoncol.Client), commoncol.KrtOpts.ToOptions("DirectResponse")...)
+	col := krt.WrapClient(
+		kclient.New[*v1alpha1.DirectResponse](commoncol.Client),
+		commoncol.KrtOpts.ToOptions("DirectResponse")...)
 
 	gk := wellknown.DirectResponseGVK.GroupKind()
-	policyCol := krt.NewCollection(col, func(krtctx krt.HandlerContext, i *v1alpha1.DirectResponse) *ir.PolicyWrapper {
-		var pol = &ir.PolicyWrapper{
-			ObjectSource: ir.ObjectSource{
-				Group:     gk.Group,
-				Kind:      gk.Kind,
-				Namespace: i.Namespace,
-				Name:      i.Name,
-			},
-			Policy:   i,
-			PolicyIR: &directResponse{ct: i.CreationTimestamp.Time, spec: i.Spec},
-			// no target refs for direct response
-		}
-		return pol
-	})
+	policyCol := krt.NewCollection(
+		col,
+		func(krtctx krt.HandlerContext, i *v1alpha1.DirectResponse) *ir.PolicyWrapper {
+			var pol = &ir.PolicyWrapper{
+				ObjectSource: ir.ObjectSource{
+					Group:     gk.Group,
+					Kind:      gk.Kind,
+					Namespace: i.Namespace,
+					Name:      i.Name,
+				},
+				Policy:   i,
+				PolicyIR: &directResponse{ct: i.CreationTimestamp.Time, spec: i.Spec},
+				// no target refs for direct response
+			}
+			return pol
+		},
+	)
 
 	return extensionplug.Plugin{
 		ContributesPolicies: map[schema.GroupKind]extensionplug.PolicyPlugin{
@@ -107,19 +123,34 @@ func NewPlugin(ctx context.Context, commoncol *common.CommonCollections) extensi
 	}
 }
 
-func NewGatewayTranslationPass(ctx context.Context, tctx ir.GwTranslationCtx) ir.ProxyTranslationPass {
+func NewGatewayTranslationPass(
+	ctx context.Context,
+	tctx ir.GwTranslationCtx,
+) ir.ProxyTranslationPass {
 	return &directResponsePluginGwPass{}
 }
 
 // called 1 time for each listener
-func (p *directResponsePluginGwPass) ApplyListenerPlugin(ctx context.Context, pCtx *ir.ListenerContext, out *envoy_config_listener_v3.Listener) {
+func (p *directResponsePluginGwPass) ApplyListenerPlugin(
+	ctx context.Context,
+	pCtx *ir.ListenerContext,
+	out *envoy_config_listener_v3.Listener,
+) {
 }
 
-func (p *directResponsePluginGwPass) ApplyVhostPlugin(ctx context.Context, pCtx *ir.VirtualHostContext, out *envoy_config_route_v3.VirtualHost) {
+func (p *directResponsePluginGwPass) ApplyVhostPlugin(
+	ctx context.Context,
+	pCtx *ir.VirtualHostContext,
+	out *envoy_config_route_v3.VirtualHost,
+) {
 }
 
 // called 0 or more times
-func (p *directResponsePluginGwPass) ApplyForRoute(ctx context.Context, pCtx *ir.RouteContext, outputRoute *envoy_config_route_v3.Route) error {
+func (p *directResponsePluginGwPass) ApplyForRoute(
+	ctx context.Context,
+	pCtx *ir.RouteContext,
+	outputRoute *envoy_config_route_v3.Route,
+) error {
 	dr, ok := pCtx.Policy.(*directResponse)
 	if !ok {
 		return fmt.Errorf("internal error: expected *directResponse, got %T", pCtx.Policy)
@@ -134,7 +165,10 @@ func (p *directResponsePluginGwPass) ApplyForRoute(ctx context.Context, pCtx *ir
 				Status: http.StatusInternalServerError,
 			},
 		}
-		return fmt.Errorf("DirectResponse cannot be applied to route with existing action: %T", outputRoute.GetAction())
+		return fmt.Errorf(
+			"DirectResponse cannot be applied to route with existing action: %T",
+			outputRoute.GetAction(),
+		)
 	}
 
 	outputRoute.Action = &envoy_config_route_v3.Route_DirectResponse{
@@ -161,11 +195,16 @@ func (p *directResponsePluginGwPass) ApplyForRouteBackend(
 // called 1 time per listener
 // if a plugin emits new filters, they must be with a plugin unique name.
 // any filter returned from route config must be disabled, so it doesnt impact other routes.
-func (p *directResponsePluginGwPass) HttpFilters(ctx context.Context, fcc ir.FilterChainCommon) ([]plugins.StagedHttpFilter, error) {
+func (p *directResponsePluginGwPass) HttpFilters(
+	ctx context.Context,
+	fcc ir.FilterChainCommon,
+) ([]plugins.StagedHttpFilter, error) {
 	return nil, nil
 }
 
-func (p *directResponsePluginGwPass) NetworkFilters(ctx context.Context) ([]plugins.StagedNetworkFilter, error) {
+func (p *directResponsePluginGwPass) NetworkFilters(
+	ctx context.Context,
+) ([]plugins.StagedNetworkFilter, error) {
 	return nil, nil
 }
 

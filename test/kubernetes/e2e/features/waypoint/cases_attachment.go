@@ -31,13 +31,26 @@ var (
 
 func (s *testingSuite) useWaypointLabelForTest(kind, name, namespace string) {
 	s.T().Cleanup(func() {
-		err := s.testInstallation.ClusterContext.Cli.UnsetLabel(s.ctx, kind, name, namespace, waypointLabel)
+		err := s.testInstallation.ClusterContext.Cli.UnsetLabel(
+			s.ctx,
+			kind,
+			name,
+			namespace,
+			waypointLabel,
+		)
 		if err != nil {
 			// this could break other tests, so fail here
 			s.FailNow("failed removing label", err)
 		}
 	})
-	err := s.testInstallation.ClusterContext.Cli.SetLabel(s.ctx, kind, name, namespace, waypointLabel, gwName)
+	err := s.testInstallation.ClusterContext.Cli.SetLabel(
+		s.ctx,
+		kind,
+		name,
+		namespace,
+		waypointLabel,
+		gwName,
+	)
 	if err != nil {
 		s.FailNow("failed applying label", err)
 		return

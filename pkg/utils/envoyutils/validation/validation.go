@@ -27,7 +27,11 @@ const (
 )
 
 func ValidateBootstrap(ctx context.Context, bootstrap string) error {
-	return runner.RunEnvoyValidate(ctx, envutils.GetOrDefault(EnvoyBinaryEnv, defaultEnvoyPath, false), bootstrap)
+	return runner.RunEnvoyValidate(
+		ctx,
+		envutils.GetOrDefault(EnvoyBinaryEnv, defaultEnvoyPath, false),
+		bootstrap,
+	)
 }
 
 // ValidateSnapshot accepts an xDS snapshot, clones it, and does the necessary

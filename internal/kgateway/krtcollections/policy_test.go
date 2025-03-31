@@ -405,41 +405,49 @@ func refGrant() *gwv1beta1.ReferenceGrant {
 }
 
 func k8sSvcUpstreams(services krt.Collection[*corev1.Service]) krt.Collection[ir.BackendObjectIR] {
-	return krt.NewManyCollection(services, func(kctx krt.HandlerContext, svc *corev1.Service) []ir.BackendObjectIR {
-		uss := []ir.BackendObjectIR{}
+	return krt.NewManyCollection(
+		services,
+		func(kctx krt.HandlerContext, svc *corev1.Service) []ir.BackendObjectIR {
+			uss := []ir.BackendObjectIR{}
 
-		for _, port := range svc.Spec.Ports {
-			uss = append(uss, ir.BackendObjectIR{
-				ObjectSource: ir.ObjectSource{
-					Kind:      svcGk.Kind,
-					Group:     svcGk.Group,
-					Namespace: svc.Namespace,
-					Name:      svc.Name,
-				},
-				Obj:  svc,
-				Port: port.Port,
-			})
-		}
-		return uss
-	})
+			for _, port := range svc.Spec.Ports {
+				uss = append(uss, ir.BackendObjectIR{
+					ObjectSource: ir.ObjectSource{
+						Kind:      svcGk.Kind,
+						Group:     svcGk.Group,
+						Namespace: svc.Namespace,
+						Name:      svc.Name,
+					},
+					Obj:  svc,
+					Port: port.Port,
+				})
+			}
+			return uss
+		},
+	)
 }
 
-func infPoolUpstreams(poolCol krt.Collection[*infextv1a2.InferencePool]) krt.Collection[ir.BackendObjectIR] {
-	return krt.NewCollection(poolCol, func(kctx krt.HandlerContext, pool *infextv1a2.InferencePool) *ir.BackendObjectIR {
-		// Create a BackendObjectIR IR representation from the given InferencePool.
-		return &ir.BackendObjectIR{
-			ObjectSource: ir.ObjectSource{
-				Kind:      infPoolGk.Kind,
-				Group:     infPoolGk.Group,
-				Namespace: pool.Namespace,
-				Name:      pool.Name,
-			},
-			Obj:               pool,
-			Port:              pool.Spec.TargetPortNumber,
-			GvPrefix:          "endpoint-picker",
-			CanonicalHostname: "",
-		}
-	})
+func infPoolUpstreams(
+	poolCol krt.Collection[*infextv1a2.InferencePool],
+) krt.Collection[ir.BackendObjectIR] {
+	return krt.NewCollection(
+		poolCol,
+		func(kctx krt.HandlerContext, pool *infextv1a2.InferencePool) *ir.BackendObjectIR {
+			// Create a BackendObjectIR IR representation from the given InferencePool.
+			return &ir.BackendObjectIR{
+				ObjectSource: ir.ObjectSource{
+					Kind:      infPoolGk.Kind,
+					Group:     infPoolGk.Group,
+					Namespace: pool.Namespace,
+					Name:      pool.Name,
+				},
+				Obj:               pool,
+				Port:              pool.Spec.TargetPortNumber,
+				GvPrefix:          "endpoint-picker",
+				CanonicalHostname: "",
+			}
+		},
+	)
 }
 
 func httpRouteWithSvcBackendRef(refN, refNs string) *gwv1.HTTPRoute {
@@ -552,7 +560,15 @@ func preRouteIndex(t *testing.T, inputs []any) *RoutesIndex {
 	httproutes := krttest.GetMockCollection[*gwv1.HTTPRoute](mock)
 	tcpproutes := krttest.GetMockCollection[*gwv1a2.TCPRoute](mock)
 	tlsroutes := krttest.GetMockCollection[*gwv1a2.TLSRoute](mock)
-	rtidx := NewRoutesIndex(krtutil.KrtOptions{}, httproutes, tcpproutes, tlsroutes, policies, upstreams, refgrants)
+	rtidx := NewRoutesIndex(
+		krtutil.KrtOptions{},
+		httproutes,
+		tcpproutes,
+		tlsroutes,
+		policies,
+		upstreams,
+		refgrants,
+	)
 	services.WaitUntilSynced(nil)
 	for !rtidx.HasSynced() || !refgrants.HasSynced() {
 		time.Sleep(time.Second / 10)

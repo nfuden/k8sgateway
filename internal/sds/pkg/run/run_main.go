@@ -109,7 +109,9 @@ func setup(ctx context.Context) Config {
 
 	// At least one must be enabled, otherwise we have nothing to do.
 	if !c.GlooMtlsSdsEnabled && !c.IstioMtlsSdsEnabled {
-		err := fmt.Errorf("at least one of Istio Cert rotation or Gloo Cert rotation must be enabled, using env vars GLOO_MTLS_SDS_ENABLED or ISTIO_MTLS_SDS_ENABLED")
+		err := fmt.Errorf(
+			"at least one of Istio Cert rotation or Gloo Cert rotation must be enabled, using env vars GLOO_MTLS_SDS_ENABLED or ISTIO_MTLS_SDS_ENABLED",
+		)
 		contextutils.LoggerFrom(ctx).Fatal(err)
 	}
 	return c

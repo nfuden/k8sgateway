@@ -51,9 +51,13 @@ func (s *testingSuite) SetupSuite() {
 	s.NoError(err, "can apply aws-cli pod manifest")
 
 	s.ti.Assertions.EventuallyObjectsExist(s.ctx, testdefaults.CurlPod)
-	s.ti.Assertions.EventuallyPodsRunning(s.ctx, testdefaults.CurlPod.GetNamespace(), metav1.ListOptions{
-		LabelSelector: "app.kubernetes.io/name=curl",
-	})
+	s.ti.Assertions.EventuallyPodsRunning(
+		s.ctx,
+		testdefaults.CurlPod.GetNamespace(),
+		metav1.ListOptions{
+			LabelSelector: "app.kubernetes.io/name=curl",
+		},
+	)
 	s.ti.Assertions.EventuallyPodReady(s.ctx, "lambda-test", "aws-cli")
 
 	s.manifests = map[string][]string{
@@ -100,15 +104,23 @@ func (s *testingSuite) BeforeTest(suiteName, testName string) {
 	}
 
 	s.ti.Assertions.EventuallyObjectsExist(s.ctx, testdefaults.CurlPod)
-	s.ti.Assertions.EventuallyPodsRunning(s.ctx, testdefaults.CurlPod.GetNamespace(), metav1.ListOptions{
-		LabelSelector: "app.kubernetes.io/name=curl",
-	})
+	s.ti.Assertions.EventuallyPodsRunning(
+		s.ctx,
+		testdefaults.CurlPod.GetNamespace(),
+		metav1.ListOptions{
+			LabelSelector: "app.kubernetes.io/name=curl",
+		},
+	)
 
 	s.ti.Assertions.EventuallyObjectsExist(s.ctx, proxyServiceMeta)
 	s.ti.Assertions.EventuallyObjectsExist(s.ctx, proxyDeploymentMeta)
-	s.ti.Assertions.EventuallyPodsRunning(s.ctx, proxyDeploymentMeta.GetNamespace(), metav1.ListOptions{
-		LabelSelector: fmt.Sprintf("app.kubernetes.io/name=%s", gatewayName),
-	})
+	s.ti.Assertions.EventuallyPodsRunning(
+		s.ctx,
+		proxyDeploymentMeta.GetNamespace(),
+		metav1.ListOptions{
+			LabelSelector: fmt.Sprintf("app.kubernetes.io/name=%s", gatewayName),
+		},
+	)
 }
 
 func (s *testingSuite) AfterTest(suiteName, testName string) {
@@ -288,7 +300,18 @@ func (s *testingSuite) createLambdaFunctions() {
 	s.Require().NoError(err, "can create function code in pod")
 
 	// Create the zip file in the pod
-	err = k.RunCommand(s.ctx, "exec", "-n", "lambda-test", "aws-cli", "--", "zip", "-j", "/tmp/function.zip", "/tmp/hello-function.js")
+	err = k.RunCommand(
+		s.ctx,
+		"exec",
+		"-n",
+		"lambda-test",
+		"aws-cli",
+		"--",
+		"zip",
+		"-j",
+		"/tmp/function.zip",
+		"/tmp/hello-function.js",
+	)
 	s.Require().NoError(err, "can create zip file")
 
 	// Create the Lambda functions with different qualifiers

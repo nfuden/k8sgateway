@@ -15,7 +15,11 @@ import (
 var (
 	// manifests
 	simpleServiceManifest    = filepath.Join(fsutils.MustGetThisDir(), "testdata", "service.yaml")
-	gatewayWithRouteManifest = filepath.Join(fsutils.MustGetThisDir(), "testdata", "gateway-with-transformed-route.yaml")
+	gatewayWithRouteManifest = filepath.Join(
+		fsutils.MustGetThisDir(),
+		"testdata",
+		"gateway-with-transformed-route.yaml",
+	)
 
 	// objects from gateway manifest
 	gateway = &gwv1.Gateway{

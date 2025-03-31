@@ -41,10 +41,16 @@ func registerTypes(ourCli versioned.Interface) {
 		gvr.TCPRoute,
 		gvk.TCPRoute.Kubernetes(),
 		func(c kubeclient.ClientGetter, namespace string, o metav1.ListOptions) (runtime.Object, error) {
-			return c.GatewayAPI().GatewayV1alpha2().TCPRoutes(namespace).List(context.Background(), o)
+			return c.GatewayAPI().
+				GatewayV1alpha2().
+				TCPRoutes(namespace).
+				List(context.Background(), o)
 		},
 		func(c kubeclient.ClientGetter, namespace string, o metav1.ListOptions) (watch.Interface, error) {
-			return c.GatewayAPI().GatewayV1alpha2().TCPRoutes(namespace).Watch(context.Background(), o)
+			return c.GatewayAPI().
+				GatewayV1alpha2().
+				TCPRoutes(namespace).
+				Watch(context.Background(), o)
 		},
 	)
 	kubeclient.Register[*gwv1.Gateway](
@@ -81,11 +87,31 @@ func InitCollections(
 	registerTypes(ourClient)
 
 	// create the KRT clients, remember to also register any needed types in the type registration setup.
-	httpRoutes := krt.WrapClient(kclient.New[*gwv1.HTTPRoute](istioClient), krtopts.ToOptions("HTTPRoute")...)
-	tcproutes := krt.WrapClient(kclient.NewDelayedInformer[*gwv1a2.TCPRoute](istioClient, gvr.TCPRoute, kubetypes.StandardInformer, kclient.Filter{}), krtopts.ToOptions("TCPRoute")...)
-	tlsRoutes := krt.WrapClient(kclient.NewDelayedInformer[*gwv1a2.TLSRoute](istioClient, gvr.TLSRoute, kubetypes.StandardInformer, kclient.Filter{}), krtopts.ToOptions("TLSRoute")...)
-	kubeRawGateways := krt.WrapClient(kclient.New[*gwv1.Gateway](istioClient), krtopts.ToOptions("KubeGateways")...)
-	gatewayClasses := krt.WrapClient(kclient.New[*gwv1.GatewayClass](istioClient), krtopts.ToOptions("KubeGatewayClasses")...)
+	httpRoutes := krt.WrapClient(
+		kclient.New[*gwv1.HTTPRoute](istioClient),
+		krtopts.ToOptions("HTTPRoute")...)
+	tcproutes := krt.WrapClient(
+		kclient.NewDelayedInformer[*gwv1a2.TCPRoute](
+			istioClient,
+			gvr.TCPRoute,
+			kubetypes.StandardInformer,
+			kclient.Filter{},
+		),
+		krtopts.ToOptions("TCPRoute")...)
+	tlsRoutes := krt.WrapClient(
+		kclient.NewDelayedInformer[*gwv1a2.TLSRoute](
+			istioClient,
+			gvr.TLSRoute,
+			kubetypes.StandardInformer,
+			kclient.Filter{},
+		),
+		krtopts.ToOptions("TLSRoute")...)
+	kubeRawGateways := krt.WrapClient(
+		kclient.New[*gwv1.Gateway](istioClient),
+		krtopts.ToOptions("KubeGateways")...)
+	gatewayClasses := krt.WrapClient(
+		kclient.New[*gwv1.GatewayClass](istioClient),
+		krtopts.ToOptions("KubeGatewayClasses")...)
 
 	policies := NewPolicyIndex(krtopts, plugins.ContributesPolicies)
 	var backendRefPlugins []extensionsplug.GetBackendForRefPlugin
@@ -99,7 +125,15 @@ func InitCollections(
 	endpointIRs := initEndpoints(plugins, krtopts)
 	gateways := NewGatewayIndex(krtopts, controllerName, policies, kubeRawGateways, gatewayClasses)
 
-	routes := NewRoutesIndex(krtopts, httpRoutes, tcproutes, tlsRoutes, policies, backendIndex, refgrants)
+	routes := NewRoutesIndex(
+		krtopts,
+		httpRoutes,
+		tcproutes,
+		tlsRoutes,
+		policies,
+		backendIndex,
+		refgrants,
+	)
 	return gateways, routes, backendIndex, endpointIRs
 }
 
@@ -111,7 +145,10 @@ func initBackends(plugins extensionsplug.Plugin, backendIndex *BackendIndex) {
 	}
 }
 
-func initEndpoints(plugins extensionsplug.Plugin, krtopts krtutil.KrtOptions) krt.Collection[ir.EndpointsForBackend] {
+func initEndpoints(
+	plugins extensionsplug.Plugin,
+	krtopts krtutil.KrtOptions,
+) krt.Collection[ir.EndpointsForBackend] {
 	allEndpoints := []krt.Collection[ir.EndpointsForBackend]{}
 	for _, plugin := range plugins.ContributesBackends {
 		if plugin.Endpoints != nil {

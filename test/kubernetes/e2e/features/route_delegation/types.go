@@ -59,7 +59,12 @@ var (
 	}
 	proxyDeployment = &appsv1.Deployment{ObjectMeta: proxyMeta}
 	proxyService    = &corev1.Service{ObjectMeta: proxyMeta}
-	proxyHostPort   = fmt.Sprintf("%s.%s.svc:%d", proxyService.Name, proxyService.Namespace, gatewayPort)
+	proxyHostPort   = fmt.Sprintf(
+		"%s.%s.svc:%d",
+		proxyService.Name,
+		proxyService.Namespace,
+		gatewayPort,
+	)
 )
 
 // ref: basic.yaml
@@ -111,20 +116,61 @@ var (
 	proxyTestDeployment = &appsv1.Deployment{ObjectMeta: proxyTestMeta}
 	proxyTestService    = &corev1.Service{ObjectMeta: proxyTestMeta}
 
-	proxyTestHostPort = fmt.Sprintf("%s.%s.svc:%d", proxyTestService.Name, proxyTestService.Namespace, gatewayTestPort)
+	proxyTestHostPort = fmt.Sprintf(
+		"%s.%s.svc:%d",
+		proxyTestService.Name,
+		proxyTestService.Namespace,
+		gatewayTestPort,
+	)
 
 	routeParentHost = "parent.com"
 	routeTeam2Host  = "team2.com"
 )
 
 var (
-	basicRoutesManifest                 = filepath.Join(fsutils.MustGetThisDir(), "testdata", "basic.yaml")
-	recursiveRoutesManifest             = filepath.Join(fsutils.MustGetThisDir(), "testdata", "recursive.yaml")
-	cyclicRoutesManifest                = filepath.Join(fsutils.MustGetThisDir(), "testdata", "cyclic.yaml")
-	invalidChildRoutesManifest          = filepath.Join(fsutils.MustGetThisDir(), "testdata", "invalid_child.yaml")
-	headerQueryMatchRoutesManifest      = filepath.Join(fsutils.MustGetThisDir(), "testdata", "header_query_match.yaml")
-	multipleParentsManifest             = filepath.Join(fsutils.MustGetThisDir(), "testdata", "multiple_parents.yaml")
-	invalidChildValidStandaloneManifest = filepath.Join(fsutils.MustGetThisDir(), "testdata", "invalid_child_valid_standalone.yaml")
-	unresolvedChildManifest             = filepath.Join(fsutils.MustGetThisDir(), "testdata", "unresolved_child.yaml")
-	matcherInheritanceManifest          = filepath.Join(fsutils.MustGetThisDir(), "testdata", "matcher_inheritance.yaml")
+	basicRoutesManifest = filepath.Join(
+		fsutils.MustGetThisDir(),
+		"testdata",
+		"basic.yaml",
+	)
+	recursiveRoutesManifest = filepath.Join(
+		fsutils.MustGetThisDir(),
+		"testdata",
+		"recursive.yaml",
+	)
+	cyclicRoutesManifest = filepath.Join(
+		fsutils.MustGetThisDir(),
+		"testdata",
+		"cyclic.yaml",
+	)
+	invalidChildRoutesManifest = filepath.Join(
+		fsutils.MustGetThisDir(),
+		"testdata",
+		"invalid_child.yaml",
+	)
+	headerQueryMatchRoutesManifest = filepath.Join(
+		fsutils.MustGetThisDir(),
+		"testdata",
+		"header_query_match.yaml",
+	)
+	multipleParentsManifest = filepath.Join(
+		fsutils.MustGetThisDir(),
+		"testdata",
+		"multiple_parents.yaml",
+	)
+	invalidChildValidStandaloneManifest = filepath.Join(
+		fsutils.MustGetThisDir(),
+		"testdata",
+		"invalid_child_valid_standalone.yaml",
+	)
+	unresolvedChildManifest = filepath.Join(
+		fsutils.MustGetThisDir(),
+		"testdata",
+		"unresolved_child.yaml",
+	)
+	matcherInheritanceManifest = filepath.Join(
+		fsutils.MustGetThisDir(),
+		"testdata",
+		"matcher_inheritance.yaml",
+	)
 )

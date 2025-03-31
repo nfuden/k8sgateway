@@ -40,7 +40,11 @@ type filterChainTranslator struct {
 	PluginPass TranslationPassPlugins
 }
 
-func computeListenerAddress(bindAddress string, port uint32, reporter reports.GatewayReporter) *envoy_config_core_v3.Address {
+func computeListenerAddress(
+	bindAddress string,
+	port uint32,
+	reporter reports.GatewayReporter,
+) *envoy_config_core_v3.Address {
 	_, isIpv4Address, err := utils.IsIpv4Address(bindAddress)
 	if err != nil {
 		// TODO: return error ????
@@ -80,7 +84,11 @@ func tlsInspectorFilter() *envoy_config_listener_v3.ListenerFilter {
 	}
 }
 
-func (h *filterChainTranslator) initFilterChain(ctx context.Context, fcc ir.FilterChainCommon, reporter reports.ListenerReporter) *envoy_config_listener_v3.FilterChain {
+func (h *filterChainTranslator) initFilterChain(
+	ctx context.Context,
+	fcc ir.FilterChainCommon,
+	reporter reports.ListenerReporter,
+) *envoy_config_listener_v3.FilterChain {
 	info := &FilterChainInfo{
 		Match: fcc.Matcher,
 		TLS:   fcc.TLS,
@@ -95,7 +103,11 @@ func (h *filterChainTranslator) initFilterChain(ctx context.Context, fcc ir.Filt
 	return fc
 }
 
-func (h *filterChainTranslator) computeHttpFilters(ctx context.Context, l ir.HttpFilterChainIR, reporter reports.ListenerReporter) []*envoy_config_listener_v3.Filter {
+func (h *filterChainTranslator) computeHttpFilters(
+	ctx context.Context,
+	l ir.HttpFilterChainIR,
+	reporter reports.ListenerReporter,
+) []*envoy_config_listener_v3.Filter {
 	log := contextutils.LoggerFrom(ctx).Desugar()
 
 	// 1. Generate all the network filters (including the HttpConnectionManager)
@@ -112,14 +124,20 @@ func (h *filterChainTranslator) computeHttpFilters(ctx context.Context, l ir.Htt
 	return networkFilters
 }
 
-func (n *filterChainTranslator) computeNetworkFiltersForHttp(ctx context.Context, l ir.HttpFilterChainIR, reporter reports.ListenerReporter) ([]*envoy_config_listener_v3.Filter, error) {
+func (n *filterChainTranslator) computeNetworkFiltersForHttp(
+	ctx context.Context,
+	l ir.HttpFilterChainIR,
+	reporter reports.ListenerReporter,
+) ([]*envoy_config_listener_v3.Filter, error) {
 	hcm := hcmNetworkFilterTranslator{
 		routeConfigName: n.routeConfigName,
 		PluginPass:      n.PluginPass,
 		reporter:        reporter,
 		gateway:         n.gateway, // corresponds to Gateway API listener
 	}
-	networkFilters := sortNetworkFilters(n.computeCustomFilters(ctx, l.CustomNetworkFilters, reporter))
+	networkFilters := sortNetworkFilters(
+		n.computeCustomFilters(ctx, l.CustomNetworkFilters, reporter),
+	)
 	networkFilter, err := hcm.computeNetworkFilters(ctx, l)
 	if err != nil {
 		return nil, err
@@ -161,7 +179,9 @@ func (n *filterChainTranslator) computeCustomFilters(
 	return networkFilters
 }
 
-func convertCustomNetworkFilters(customNetworkFilters []ir.CustomEnvoyFilter) []plugins.StagedNetworkFilter {
+func convertCustomNetworkFilters(
+	customNetworkFilters []ir.CustomEnvoyFilter,
+) []plugins.StagedNetworkFilter {
 	var out []plugins.StagedNetworkFilter
 	for _, customFilter := range customNetworkFilters {
 		out = append(out, plugins.StagedNetworkFilter{
@@ -177,7 +197,9 @@ func convertCustomNetworkFilters(customNetworkFilters []ir.CustomEnvoyFilter) []
 	return out
 }
 
-func sortNetworkFilters(filters plugins.StagedNetworkFilterList) []*envoy_config_listener_v3.Filter {
+func sortNetworkFilters(
+	filters plugins.StagedNetworkFilterList,
+) []*envoy_config_listener_v3.Filter {
 	sort.Sort(filters)
 	var sortedFilters []*envoy_config_listener_v3.Filter
 	for _, filter := range filters {
@@ -194,7 +216,10 @@ type hcmNetworkFilterTranslator struct {
 	gateway         ir.GatewayIR         // policies attached to gateway
 }
 
-func (h *hcmNetworkFilterTranslator) computeNetworkFilters(ctx context.Context, l ir.HttpFilterChainIR) (*envoy_config_listener_v3.Filter, error) {
+func (h *hcmNetworkFilterTranslator) computeNetworkFilters(
+	ctx context.Context,
+	l ir.HttpFilterChainIR,
+) (*envoy_config_listener_v3.Filter, error) {
 	ctx = contextutils.WithLogger(ctx, "compute_http_connection_manager")
 
 	// 1. Initialize the HttpConnectionManager (HCM)
@@ -236,7 +261,10 @@ func (h *hcmNetworkFilterTranslator) computeNetworkFilters(ctx context.Context, 
 	// TODO: should we enable websockets by default?
 
 	// 4. Generate the typedConfig for the HCM
-	hcmFilter, err := NewFilterWithTypedConfig(wellknown.HTTPConnectionManager, httpConnectionManager)
+	hcmFilter, err := NewFilterWithTypedConfig(
+		wellknown.HTTPConnectionManager,
+		httpConnectionManager,
+	)
 	if err != nil {
 		contextutils.LoggerFrom(ctx).DPanic("failed to convert proto message to struct")
 		return nil, fmt.Errorf("failed to convert proto message to any: %w", err)
@@ -271,7 +299,10 @@ func (h *hcmNetworkFilterTranslator) initializeHCM() *envoyhttp.HttpConnectionMa
 	}
 }
 
-func (h *hcmNetworkFilterTranslator) computeHttpFilters(ctx context.Context, l ir.HttpFilterChainIR) []*envoyhttp.HttpFilter {
+func (h *hcmNetworkFilterTranslator) computeHttpFilters(
+	ctx context.Context,
+	l ir.HttpFilterChainIR,
+) []*envoyhttp.HttpFilter {
 	var httpFilters plugins.StagedHttpFilterList
 
 	log := contextutils.LoggerFrom(ctx).Desugar()
@@ -366,8 +397,14 @@ func sortHttpFilters(filters plugins.StagedHttpFilterList) []*envoyhttp.HttpFilt
 	return sortedFilters
 }
 
-func (h *filterChainTranslator) computeTcpFilters(ctx context.Context, l ir.TcpIR, reporter reports.ListenerReporter) []*envoy_config_listener_v3.Filter {
-	networkFilters := sortNetworkFilters(h.computeCustomFilters(ctx, l.CustomNetworkFilters, reporter))
+func (h *filterChainTranslator) computeTcpFilters(
+	ctx context.Context,
+	l ir.TcpIR,
+	reporter reports.ListenerReporter,
+) []*envoy_config_listener_v3.Filter {
+	networkFilters := sortNetworkFilters(
+		h.computeCustomFilters(ctx, l.CustomNetworkFilters, reporter),
+	)
 
 	cfg := &envoytcp.TcpProxy{
 		StatPrefix: l.FilterChainName,
@@ -398,7 +435,10 @@ func (h *filterChainTranslator) computeTcpFilters(ctx context.Context, l ir.TcpI
 	return append(networkFilters, tcpFilter)
 }
 
-func NewFilterWithTypedConfig(name string, config proto.Message) (*envoy_config_listener_v3.Filter, error) {
+func NewFilterWithTypedConfig(
+	name string,
+	config proto.Message,
+) (*envoy_config_listener_v3.Filter, error) {
 	s := &envoy_config_listener_v3.Filter{
 		Name: name,
 	}
@@ -439,7 +479,8 @@ func (info *FilterChainInfo) toMatch() *envoy_config_listener_v3.FilterChainMatc
 	}
 
 	// if all fields are empty, return nil
-	if len(info.Match.SniDomains) == 0 && info.Match.DestinationPort == nil && len(info.Match.PrefixRanges) == 0 {
+	if len(info.Match.SniDomains) == 0 && info.Match.DestinationPort == nil &&
+		len(info.Match.PrefixRanges) == 0 {
 		return nil
 	}
 

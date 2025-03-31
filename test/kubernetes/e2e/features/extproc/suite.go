@@ -65,15 +65,27 @@ func (s *testingSuite) SetupSuite() {
 
 	// Wait for core infrastructure to be ready
 	s.testInstallation.Assertions.EventuallyObjectsExist(s.ctx, s.activeObjects...)
-	s.testInstallation.Assertions.EventuallyPodsRunning(s.ctx, testdefaults.CurlPod.GetNamespace(), metav1.ListOptions{
-		LabelSelector: testdefaults.CurlPodLabelSelector,
-	})
-	s.testInstallation.Assertions.EventuallyPodsRunning(s.ctx, extProcDeployment.ObjectMeta.GetNamespace(), metav1.ListOptions{
-		LabelSelector: "app=ext-proc-grpc",
-	})
-	s.testInstallation.Assertions.EventuallyPodsRunning(s.ctx, backendDeployment.ObjectMeta.GetNamespace(), metav1.ListOptions{
-		LabelSelector: "app=backend-0",
-	})
+	s.testInstallation.Assertions.EventuallyPodsRunning(
+		s.ctx,
+		testdefaults.CurlPod.GetNamespace(),
+		metav1.ListOptions{
+			LabelSelector: testdefaults.CurlPodLabelSelector,
+		},
+	)
+	s.testInstallation.Assertions.EventuallyPodsRunning(
+		s.ctx,
+		extProcDeployment.ObjectMeta.GetNamespace(),
+		metav1.ListOptions{
+			LabelSelector: "app=ext-proc-grpc",
+		},
+	)
+	s.testInstallation.Assertions.EventuallyPodsRunning(
+		s.ctx,
+		backendDeployment.ObjectMeta.GetNamespace(),
+		metav1.ListOptions{
+			LabelSelector: "app=backend-0",
+		},
+	)
 }
 
 // TearDownSuite cleans up any remaining resources

@@ -16,8 +16,9 @@ const (
 
 func SanitizeForEnvoy(ctx context.Context, resourceName, resourceTypeName string) string {
 	if strings.Contains(resourceName, illegalChar) {
-		contextutils.LoggerFrom(ctx).Debugf("illegal character(s) '%s' in %s name [%s] will be replaced by '%s'",
-			illegalChar, resourceTypeName, resourceName, replacementChar)
+		contextutils.LoggerFrom(ctx).
+			Debugf("illegal character(s) '%s' in %s name [%s] will be replaced by '%s'",
+				illegalChar, resourceTypeName, resourceName, replacementChar)
 		resourceName = strings.ReplaceAll(resourceName, illegalChar, replacementChar)
 	}
 	return resourceName

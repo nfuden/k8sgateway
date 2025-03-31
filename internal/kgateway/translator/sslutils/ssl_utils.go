@@ -22,7 +22,10 @@ func ValidateTlsSecret(sslSecret *corev1.Secret) (cleanedCertChain string, err e
 	return ValidateTlsSecretData(sslSecret.Name, sslSecret.Namespace, sslSecret.Data)
 }
 
-func ValidateTlsSecretData(n, ns string, sslSecretData map[string][]byte) (cleanedCertChain string, err error) {
+func ValidateTlsSecretData(
+	n, ns string,
+	sslSecretData map[string][]byte,
+) (cleanedCertChain string, err error) {
 	certChain := string(sslSecretData[corev1.TLSCertKey])
 	privateKey := string(sslSecretData[corev1.TLSPrivateKeyKey])
 	rootCa := string(sslSecretData[corev1.ServiceAccountRootCAKey])

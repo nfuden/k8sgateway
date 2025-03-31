@@ -39,7 +39,14 @@ func TranslateListeners(
 ) []ir.ListenerIR {
 	validatedListeners := validateListeners(gateway, reporter.Gateway(gateway.Obj))
 
-	mergedListeners := mergeGWListeners(queries, gateway.Namespace, validatedListeners, *gateway, routesForGw, reporter.Gateway(gateway.Obj))
+	mergedListeners := mergeGWListeners(
+		queries,
+		gateway.Namespace,
+		validatedListeners,
+		*gateway,
+		routesForGw,
+		reporter.Gateway(gateway.Obj),
+	)
 	translatedListeners := mergedListeners.translateListeners(kctx, ctx, queries, reporter)
 	return translatedListeners
 }
@@ -401,7 +408,8 @@ func (ml *MergedListener) TranslateListener(
 		)
 		if httpsFilterChain == nil {
 			// Log and skip invalid HTTPS filter chains
-			contextutils.LoggerFrom(ctx).Errorf("Failed to translate HTTPS filter chain for listener: %s", ml.name)
+			contextutils.LoggerFrom(ctx).
+				Errorf("Failed to translate HTTPS filter chain for listener: %s", ml.name)
 			continue
 		}
 
@@ -451,7 +459,10 @@ type tcpFilterChainParent struct {
 	routesWithHosts     []*query.RouteInfo
 }
 
-func (tc *tcpFilterChain) translateTcpFilterChain(_ ir.Listener, reporter reports.Reporter) *ir.TcpIR {
+func (tc *tcpFilterChain) translateTcpFilterChain(
+	_ ir.Listener,
+	reporter reports.Reporter,
+) *ir.TcpIR {
 	parent := tc.parents
 	if len(parent.routesWithHosts) == 0 {
 		return nil
@@ -467,7 +478,9 @@ func (tc *tcpFilterChain) translateTcpFilterChain(_ ir.Listener, reporter report
 		//	})
 	}
 	r := slices.MinFunc(parent.routesWithHosts, func(a, b *query.RouteInfo) int {
-		return a.Object.GetSourceObject().GetCreationTimestamp().Compare(b.Object.GetSourceObject().GetCreationTimestamp().Time)
+		return a.Object.GetSourceObject().
+			GetCreationTimestamp().
+			Compare(b.Object.GetSourceObject().GetCreationTimestamp().Time)
 	})
 
 	switch r.Object.(type) {
@@ -792,7 +805,8 @@ func buildRoutesPerHost(
 ) {
 	//func() { panic("TODO: handle policy attachment") }()
 	for _, routeWithHosts := range routes {
-		parentRefReporter := reporter.Route(routeWithHosts.Object.GetSourceObject()).ParentRef(&routeWithHosts.ParentRef)
+		parentRefReporter := reporter.Route(routeWithHosts.Object.GetSourceObject()).
+			ParentRef(&routeWithHosts.ParentRef)
 		routes := route.TranslateGatewayHTTPRouteRules(
 			ctx,
 			gwListener.Listener,
@@ -812,7 +826,9 @@ func buildRoutesPerHost(
 		}
 
 		for _, host := range hostnames {
-			routesByHost[host] = append(routesByHost[host], routeutils.ToSortable(routeWithHosts.Object.GetSourceObject(), routes)...)
+			routesByHost[host] = append(
+				routesByHost[host],
+				routeutils.ToSortable(routeWithHosts.Object.GetSourceObject(), routes)...)
 		}
 	}
 }

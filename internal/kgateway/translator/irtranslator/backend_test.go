@@ -15,7 +15,11 @@ import (
 	"github.com/kgateway-dev/kgateway/v2/internal/kgateway/translator/irtranslator"
 )
 
-func testBInitBackend(ctx context.Context, in ir.BackendObjectIR, out *envoy_config_cluster_v3.Cluster) {
+func testBInitBackend(
+	ctx context.Context,
+	in ir.BackendObjectIR,
+	out *envoy_config_cluster_v3.Cluster,
+) {
 }
 
 func TestBackendTranslatorTranslatesAppProtocol(t *testing.T) {

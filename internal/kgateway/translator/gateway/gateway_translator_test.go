@@ -33,7 +33,14 @@ var _ = DescribeTable("Basic GatewayTranslator Tests",
 
 		inputFiles := []string{filepath.Join(dir, "testutils/inputs/", in.inputFile)}
 		expectedProxyFile := filepath.Join(dir, "testutils/outputs/", in.outputFile)
-		testutils.TestTranslation(GinkgoT(), ctx, inputFiles, expectedProxyFile, in.gwNN, in.assertReports)
+		testutils.TestTranslation(
+			GinkgoT(),
+			ctx,
+			inputFiles,
+			expectedProxyFile,
+			in.gwNN,
+			in.assertReports,
+		)
 	},
 	Entry(
 		"http gateway with basic routing",
@@ -131,10 +138,17 @@ var _ = DescribeTable("Basic GatewayTranslator Tests",
 						Namespace: "default",
 					},
 				}
-				routeStatus := reportsMap.BuildRouteStatus(context.TODO(), route, wellknown.GatewayControllerName)
+				routeStatus := reportsMap.BuildRouteStatus(
+					context.TODO(),
+					route,
+					wellknown.GatewayControllerName,
+				)
 				Expect(routeStatus).NotTo(BeNil())
 				Expect(routeStatus.Parents).To(HaveLen(1))
-				resolvedRefs := meta.FindStatusCondition(routeStatus.Parents[0].Conditions, string(gwv1.RouteConditionResolvedRefs))
+				resolvedRefs := meta.FindStatusCondition(
+					routeStatus.Parents[0].Conditions,
+					string(gwv1.RouteConditionResolvedRefs),
+				)
 				Expect(resolvedRefs).NotTo(BeNil())
 				Expect(resolvedRefs.Message).To(Equal("Service \"example-svc\" not found"))
 			},
@@ -155,10 +169,17 @@ var _ = DescribeTable("Basic GatewayTranslator Tests",
 						Namespace: "default",
 					},
 				}
-				routeStatus := reportsMap.BuildRouteStatus(context.TODO(), route, wellknown.GatewayControllerName)
+				routeStatus := reportsMap.BuildRouteStatus(
+					context.TODO(),
+					route,
+					wellknown.GatewayControllerName,
+				)
 				Expect(routeStatus).NotTo(BeNil())
 				Expect(routeStatus.Parents).To(HaveLen(1))
-				resolvedRefs := meta.FindStatusCondition(routeStatus.Parents[0].Conditions, string(gwv1.RouteConditionResolvedRefs))
+				resolvedRefs := meta.FindStatusCondition(
+					routeStatus.Parents[0].Conditions,
+					string(gwv1.RouteConditionResolvedRefs),
+				)
 				Expect(resolvedRefs).NotTo(BeNil())
 				Expect(resolvedRefs.Message).To(Equal("unknown backend kind"))
 			},
@@ -189,10 +210,17 @@ var _ = DescribeTable("Basic GatewayTranslator Tests",
 						Namespace: "default",
 					},
 				}
-				routeStatus := reportsMap.BuildRouteStatus(context.TODO(), route, wellknown.GatewayControllerName)
+				routeStatus := reportsMap.BuildRouteStatus(
+					context.TODO(),
+					route,
+					wellknown.GatewayControllerName,
+				)
 				Expect(routeStatus).NotTo(BeNil())
 				Expect(routeStatus.Parents).To(HaveLen(1))
-				resolvedRefs := meta.FindStatusCondition(routeStatus.Parents[0].Conditions, string(gwv1.RouteConditionResolvedRefs))
+				resolvedRefs := meta.FindStatusCondition(
+					routeStatus.Parents[0].Conditions,
+					string(gwv1.RouteConditionResolvedRefs),
+				)
 				Expect(resolvedRefs).NotTo(BeNil())
 				Expect(resolvedRefs.Status).To(Equal(metav1.ConditionTrue))
 				Expect(resolvedRefs.Reason).To(Equal(string(gwv1.RouteReasonResolvedRefs)))
@@ -214,10 +242,17 @@ var _ = DescribeTable("Basic GatewayTranslator Tests",
 						Namespace: "default",
 					},
 				}
-				routeStatus := reportsMap.BuildRouteStatus(context.TODO(), route, wellknown.GatewayControllerName)
+				routeStatus := reportsMap.BuildRouteStatus(
+					context.TODO(),
+					route,
+					wellknown.GatewayControllerName,
+				)
 				Expect(routeStatus).NotTo(BeNil())
 				Expect(routeStatus.Parents).To(HaveLen(1))
-				resolvedRefs := meta.FindStatusCondition(routeStatus.Parents[0].Conditions, string(gwv1.RouteConditionResolvedRefs))
+				resolvedRefs := meta.FindStatusCondition(
+					routeStatus.Parents[0].Conditions,
+					string(gwv1.RouteConditionResolvedRefs),
+				)
 				Expect(resolvedRefs).NotTo(BeNil())
 				Expect(resolvedRefs.Status).To(Equal(metav1.ConditionFalse))
 				Expect(resolvedRefs.Message).To(Equal("Service \"example-tcp-svc\" not found"))
@@ -239,10 +274,17 @@ var _ = DescribeTable("Basic GatewayTranslator Tests",
 						Namespace: "default",
 					},
 				}
-				routeStatus := reportsMap.BuildRouteStatus(context.TODO(), route, wellknown.GatewayControllerName)
+				routeStatus := reportsMap.BuildRouteStatus(
+					context.TODO(),
+					route,
+					wellknown.GatewayControllerName,
+				)
 				Expect(routeStatus).NotTo(BeNil())
 				Expect(routeStatus.Parents).To(HaveLen(1))
-				resolvedRefs := meta.FindStatusCondition(routeStatus.Parents[0].Conditions, string(gwv1.RouteConditionResolvedRefs))
+				resolvedRefs := meta.FindStatusCondition(
+					routeStatus.Parents[0].Conditions,
+					string(gwv1.RouteConditionResolvedRefs),
+				)
 				Expect(resolvedRefs).NotTo(BeNil())
 				Expect(resolvedRefs.Status).To(Equal(metav1.ConditionFalse))
 				Expect(resolvedRefs.Message).To(Equal("unknown backend kind"))
@@ -274,10 +316,17 @@ var _ = DescribeTable("Basic GatewayTranslator Tests",
 						Namespace: "default",
 					},
 				}
-				routeStatus := reportsMap.BuildRouteStatus(context.TODO(), route, wellknown.GatewayControllerName)
+				routeStatus := reportsMap.BuildRouteStatus(
+					context.TODO(),
+					route,
+					wellknown.GatewayControllerName,
+				)
 				Expect(routeStatus).NotTo(BeNil())
 				Expect(routeStatus.Parents).To(HaveLen(1))
-				resolvedRefs := meta.FindStatusCondition(routeStatus.Parents[0].Conditions, string(gwv1.RouteConditionResolvedRefs))
+				resolvedRefs := meta.FindStatusCondition(
+					routeStatus.Parents[0].Conditions,
+					string(gwv1.RouteConditionResolvedRefs),
+				)
 				Expect(resolvedRefs).NotTo(BeNil())
 				Expect(resolvedRefs.Status).To(Equal(metav1.ConditionTrue))
 				Expect(resolvedRefs.Reason).To(Equal(string(gwv1.RouteReasonResolvedRefs)))
@@ -299,10 +348,17 @@ var _ = DescribeTable("Basic GatewayTranslator Tests",
 						Namespace: "default",
 					},
 				}
-				routeStatus := reportsMap.BuildRouteStatus(context.TODO(), route, wellknown.GatewayControllerName)
+				routeStatus := reportsMap.BuildRouteStatus(
+					context.TODO(),
+					route,
+					wellknown.GatewayControllerName,
+				)
 				Expect(routeStatus).NotTo(BeNil())
 				Expect(routeStatus.Parents).To(HaveLen(1))
-				resolvedRefs := meta.FindStatusCondition(routeStatus.Parents[0].Conditions, string(gwv1.RouteConditionResolvedRefs))
+				resolvedRefs := meta.FindStatusCondition(
+					routeStatus.Parents[0].Conditions,
+					string(gwv1.RouteConditionResolvedRefs),
+				)
 				Expect(resolvedRefs).NotTo(BeNil())
 				Expect(resolvedRefs.Status).To(Equal(metav1.ConditionFalse))
 				Expect(resolvedRefs.Message).To(Equal("Service \"example-tls-svc\" not found"))
@@ -324,10 +380,17 @@ var _ = DescribeTable("Basic GatewayTranslator Tests",
 						Namespace: "default",
 					},
 				}
-				routeStatus := reportsMap.BuildRouteStatus(context.TODO(), route, wellknown.GatewayControllerName)
+				routeStatus := reportsMap.BuildRouteStatus(
+					context.TODO(),
+					route,
+					wellknown.GatewayControllerName,
+				)
 				Expect(routeStatus).NotTo(BeNil())
 				Expect(routeStatus.Parents).To(HaveLen(1))
-				resolvedRefs := meta.FindStatusCondition(routeStatus.Parents[0].Conditions, string(gwv1.RouteConditionResolvedRefs))
+				resolvedRefs := meta.FindStatusCondition(
+					routeStatus.Parents[0].Conditions,
+					string(gwv1.RouteConditionResolvedRefs),
+				)
 				Expect(resolvedRefs).NotTo(BeNil())
 				Expect(resolvedRefs.Status).To(Equal(metav1.ConditionFalse))
 				Expect(resolvedRefs.Message).To(Equal("unknown backend kind"))
@@ -369,7 +432,8 @@ var _ = DescribeTable("Basic GatewayTranslator Tests",
 	}),
 )
 
-var _ = DescribeTable("Route Delegation translator",
+var _ = DescribeTable(
+	"Route Delegation translator",
 	func(inputFile string, errdesc string) {
 		dir := fsutils.MustGetThisDir()
 		testutils.TestTranslation(
@@ -397,20 +461,48 @@ var _ = DescribeTable("Route Delegation translator",
 	Entry("Child matches parent via parentRefs", "basic_parentref_match.yaml", ""),
 	Entry("Child doesn't match parent via parentRefs", "basic_parentref_mismatch.yaml", ""),
 	Entry("Parent delegates to multiple chidren", "multiple_children.yaml", ""),
-	Entry("Child is invalid as it is delegatee and specifies hostnames", "basic_invalid_hostname.yaml", "spec.hostnames must be unset on a delegatee route as they are inherited from the parent route"),
+	Entry(
+		"Child is invalid as it is delegatee and specifies hostnames",
+		"basic_invalid_hostname.yaml",
+		"spec.hostnames must be unset on a delegatee route as they are inherited from the parent route",
+	),
 	Entry("Multi-level recursive delegation", "recursive.yaml", ""),
-	Entry("Cyclic child route", "cyclic1.yaml", "cyclic reference detected while evaluating delegated routes"),
-	Entry("Multi-level cyclic child route", "cyclic2.yaml", "cyclic reference detected while evaluating delegated routes"),
+	Entry(
+		"Cyclic child route",
+		"cyclic1.yaml",
+		"cyclic reference detected while evaluating delegated routes",
+	),
+	Entry(
+		"Multi-level cyclic child route",
+		"cyclic2.yaml",
+		"cyclic reference detected while evaluating delegated routes",
+	),
 	Entry("Child rule matcher", "child_rule_matcher.yaml", ""),
 	Entry("Child with multiple parents", "multiple_parents.yaml", ""),
-	Entry("Child can be an invalid delegatee but valid standalone", "invalid_child_valid_standalone.yaml", "spec.hostnames must be unset on a delegatee route as they are inherited from the parent route"),
+	Entry(
+		"Child can be an invalid delegatee but valid standalone",
+		"invalid_child_valid_standalone.yaml",
+		"spec.hostnames must be unset on a delegatee route as they are inherited from the parent route",
+	),
 	Entry("Relative paths", "relative_paths.yaml", ""),
 	Entry("Nested absolute and relative path inheritance", "nested_absolute_relative.yaml", ""),
 	Entry("TrafficPolicy only on child", "route_policy.yaml", ""),
 	Entry("TrafficPolicy inheritance from parent", "route_policy_inheritance.yaml", ""),
-	XEntry("TrafficPolicy ignore child override on conflict", "route_policy_inheritance_child_override_ignore.yaml", ""),
-	XEntry("TrafficPolicy merge child override on no conflict", "route_policy_inheritance_child_override_ok.yaml", ""),
-	XEntry("TrafficPolicy multi level inheritance with child override", "route_policy_multi_level_inheritance_override_ok.yaml", ""),
+	XEntry(
+		"TrafficPolicy ignore child override on conflict",
+		"route_policy_inheritance_child_override_ignore.yaml",
+		"",
+	),
+	XEntry(
+		"TrafficPolicy merge child override on no conflict",
+		"route_policy_inheritance_child_override_ok.yaml",
+		"",
+	),
+	XEntry(
+		"TrafficPolicy multi level inheritance with child override",
+		"route_policy_multi_level_inheritance_override_ok.yaml",
+		"",
+	),
 	XEntry("TrafficPolicy filter override merge", "route_policy_filter_override_merge.yaml", ""),
 	Entry("Child route matcher does not match parent", "discard_invalid_child_matches.yaml", ""),
 	Entry("Multi-level multiple parents delegation", "multi_level_multiple_parents.yaml", ""),

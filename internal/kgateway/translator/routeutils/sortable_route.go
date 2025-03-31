@@ -124,12 +124,22 @@ func routeWrapperLessFunc(wrapperA, wrapperB *SortableRoute) bool {
 		return len(matchA.QueryParams) < len(matchB.QueryParams)
 	}
 
-	if !wrapperA.RouteObject.GetCreationTimestamp().Time.Equal(wrapperB.RouteObject.GetCreationTimestamp().Time) {
-		return wrapperA.RouteObject.GetCreationTimestamp().After(wrapperB.RouteObject.GetCreationTimestamp().Time)
+	if !wrapperA.RouteObject.GetCreationTimestamp().Time.Equal(
+		wrapperB.RouteObject.GetCreationTimestamp().Time,
+	) {
+		return wrapperA.RouteObject.GetCreationTimestamp().
+			After(wrapperB.RouteObject.GetCreationTimestamp().Time)
 	}
-	if wrapperA.RouteObject.GetName() != wrapperB.RouteObject.GetName() || wrapperA.RouteObject.GetNamespace() != wrapperB.RouteObject.GetNamespace() {
-		return types.NamespacedName{Namespace: wrapperA.RouteObject.GetNamespace(), Name: wrapperA.RouteObject.GetName()}.String() >
-			types.NamespacedName{Namespace: wrapperB.RouteObject.GetNamespace(), Name: wrapperB.RouteObject.GetName()}.String()
+	if wrapperA.RouteObject.GetName() != wrapperB.RouteObject.GetName() ||
+		wrapperA.RouteObject.GetNamespace() != wrapperB.RouteObject.GetNamespace() {
+		return types.NamespacedName{
+			Namespace: wrapperA.RouteObject.GetNamespace(),
+			Name:      wrapperA.RouteObject.GetName(),
+		}.String() >
+			types.NamespacedName{
+				Namespace: wrapperB.RouteObject.GetNamespace(),
+				Name:      wrapperB.RouteObject.GetName(),
+			}.String()
 	}
 
 	return wrapperA.Idx > wrapperB.Idx

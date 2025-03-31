@@ -21,7 +21,10 @@ type inferencePoolReconciler struct {
 	deployer *deployer.Deployer
 }
 
-func (r *inferencePoolReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
+func (r *inferencePoolReconciler) Reconcile(
+	ctx context.Context,
+	req ctrl.Request,
+) (ctrl.Result, error) {
 	log := log.FromContext(ctx).WithValues("inferencepool", req.NamespacedName)
 	log.V(1).Info("reconciling request", "request", req)
 
@@ -31,7 +34,13 @@ func (r *inferencePoolReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 	}
 
 	if pool.GetDeletionTimestamp() != nil {
-		log.Info("Removing endpoint picker for InferencePool", "name", pool.Name, "namespace", pool.Namespace)
+		log.Info(
+			"Removing endpoint picker for InferencePool",
+			"name",
+			pool.Name,
+			"namespace",
+			pool.Namespace,
+		)
 
 		// TODO [danehans]: EPP should use role and rolebinding RBAC: https://github.com/kubernetes-sigs/gateway-api-inference-extension/issues/224
 		if err := r.deployer.CleanupClusterScopedResources(ctx, pool); err != nil {
@@ -60,7 +69,14 @@ func (r *inferencePoolReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 		client.InNamespace(pool.Namespace),
 		client.MatchingFields{InferencePoolField: pool.Name},
 	); err != nil {
-		log.Error(err, "failed to list HTTPRoutes referencing InferencePool", "name", pool.Name, "namespace", pool.Namespace)
+		log.Error(
+			err,
+			"failed to list HTTPRoutes referencing InferencePool",
+			"name",
+			pool.Name,
+			"namespace",
+			pool.Namespace,
+		)
 		return ctrl.Result{}, err
 	}
 
