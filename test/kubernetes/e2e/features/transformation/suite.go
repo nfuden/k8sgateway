@@ -213,7 +213,7 @@ func (s *testingSuite) TestGatewayRustformationsWithTransformedRoute() {
 		Namespace: s.testInstallation.Metadata.InstallNamespace,
 		Name:      helpers.DefaultKgatewayDeploymentName,
 	}, controllerDeploymentOriginal)
-	s.Assert().NoError(err, "has controller deploymnet")
+	s.Assert().NoError(err, "has controller deployment")
 
 	// add the environment variable RUSTFORMATIONS to the modified controller deployment
 	rustFormationsEnvVar := corev1.EnvVar{
@@ -230,6 +230,27 @@ func (s *testingSuite) TestGatewayRustformationsWithTransformedRoute() {
 	controllerDeployModified.ResourceVersion = ""
 	err = s.testInstallation.ClusterContext.Client.Patch(s.ctx, controllerDeployModified, client.MergeFrom(controllerDeploymentOriginal))
 	s.Assert().NoError(err, "patching controller deployment")
+
+	gwDeploymentOriginal := &appsv1.Deployment{}
+	err = s.testInstallation.ClusterContext.Client.Get(s.ctx, client.ObjectKey{
+		Namespace: "default",
+		Name:      "gw",
+	}, gwDeploymentOriginal)
+	s.Assert().NoError(err, "has gw deploymnet")
+	rustBacktraceEnv := corev1.EnvVar{
+		Name:  "RUST_BACKTRACE",
+		Value: "1",
+	}
+	gwDeploymentModified := gwDeploymentOriginal.DeepCopy()
+	gwDeploymentModified.Spec.Template.Spec.Containers[0].Env = append(
+		controllerDeployModified.Spec.Template.Spec.Containers[0].Env,
+		rustBacktraceEnv,
+	)
+
+	// patch the deployment
+	gwDeploymentModified.ResourceVersion = ""
+	err = s.testInstallation.ClusterContext.Client.Patch(s.ctx, gwDeploymentModified, client.MergeFrom(gwDeploymentOriginal))
+	s.Assert().NoError(err, "patching gateway deployment")
 
 	// wait for the changes to be reflected in pod
 	s.testInstallation.Assertions.EventuallyPodContainerContainsEnvVar(

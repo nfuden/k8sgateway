@@ -183,16 +183,15 @@ impl<EHF: EnvoyHttpFilter> HttpFilter<EHF> for Filter {
                 .get_dynamic_metadata_string("kgateway", "route")
                 .unwrap();
             let route_name = std::str::from_utf8(route_name_data.as_slice()).unwrap();
-            setters = self
+            let route_config  = self
                 .route_specific
-                .get(route_name)
+                .get(route_name);
+            if !route_config.is_none() {
+                setters = route_config
                 .unwrap()
                 .request_headers_setter
                 .clone();
-
-            // TODO(nfuden)remove
-            // add a debug to the setters
-            setters.append(&mut vec![("x-debuggs".to_string(), route_name.to_string())]);
+            }
         }
 
         // TODO(nfuden): find someone who knows rust to see if we really need this Hash map for serialization
@@ -256,15 +255,16 @@ impl<EHF: EnvoyHttpFilter> HttpFilter<EHF> for Filter {
                 .get_dynamic_metadata_string("kgateway", "route")
                 .unwrap();
 
-            // let route_name_slice =  .as_slice();
             let route_name = std::str::from_utf8(route_name_data.as_slice()).unwrap();
-            setters = self
+            let route_config  = self
                 .route_specific
-                .get(route_name)
+                .get(route_name);
+            if !route_config.is_none() {
+                setters = route_config
                 .unwrap()
                 .response_headers_setter
                 .clone();
-
+            }
         }
 
         for (key, value) in &setters {
