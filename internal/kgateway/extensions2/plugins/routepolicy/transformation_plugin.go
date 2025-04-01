@@ -1,6 +1,7 @@
 package routepolicy
 
 import (
+	"context"
 	"encoding/json"
 
 	// cncfcorev3 "github.com/cncf/xds/go/xds/core/v3"
@@ -11,12 +12,13 @@ import (
 	exteniondynamicmodulev3 "github.com/envoyproxy/go-control-plane/envoy/extensions/dynamic_modules/v3"
 	dynamicmodulesv3 "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/http/dynamic_modules/v3"
 	transformationpb "github.com/solo-io/envoy-gloo/go/config/filter/http/transformation/v2"
+	"github.com/solo-io/go-utils/contextutils"
 	"google.golang.org/protobuf/proto"
 
 	"github.com/kgateway-dev/kgateway/v2/api/v1alpha1"
 )
 
-func toTraditionalTransform(t *v1alpha1.Transform) *transformationpb.Transformation_TransformationTemplate {
+func toTraditionalTransform(ctx context.Context, t *v1alpha1.Transform) *transformationpb.Transformation_TransformationTemplate {
 	if t == nil {
 		return nil
 	}
@@ -64,7 +66,7 @@ func toTraditionalTransform(t *v1alpha1.Transform) *transformationpb.Transformat
 				// in traditional if unset this would be the default but we are changing the default in kgateway ordering
 				traditionalParsing = transformationpb.TransformationTemplate_ParseAsJson
 			default:
-				panic("unimplemented api")
+				contextutils.LoggerFrom(ctx).DPanic(t.Body.ParseAs, "unrecognized body parse behavior")
 			}
 		}
 		tt.TransformationTemplate.ParseBodyBehavior = traditionalParsing
@@ -84,7 +86,7 @@ func toTraditionalTransform(t *v1alpha1.Transform) *transformationpb.Transformat
 	return tt
 }
 
-func toTransformFilterConfig(t *v1alpha1.TransformationPolicy) (*transformationpb.RouteTransformations, error) {
+func toTransformFilterConfig(ctx context.Context, t *v1alpha1.TransformationPolicy) (*transformationpb.RouteTransformations, error) {
 	if t == nil || *t == (v1alpha1.TransformationPolicy{}) {
 		return nil, nil
 	}
@@ -92,12 +94,12 @@ func toTransformFilterConfig(t *v1alpha1.TransformationPolicy) (*transformationp
 	var reqt *transformationpb.Transformation
 	var respt *transformationpb.Transformation
 
-	if rtt := toTraditionalTransform(t.Request); rtt != nil {
+	if rtt := toTraditionalTransform(ctx, t.Request); rtt != nil {
 		reqt = &transformationpb.Transformation{
 			TransformationType: rtt,
 		}
 	}
-	if rtt := toTraditionalTransform(t.Response); rtt != nil {
+	if rtt := toTraditionalTransform(ctx, t.Response); rtt != nil {
 		respt = &transformationpb.Transformation{
 			TransformationType: rtt,
 		}

@@ -592,7 +592,7 @@ func buildTranslateFunc(
 			}
 		}
 		// Apply transformation specific translation
-		transformationForSpec(policyCR.Spec, &outSpec)
+		transformationForSpec(ctx, policyCR.Spec, &outSpec)
 
 		if policyCR.Spec.ExtProc != nil {
 			extproc, err := toEnvoyExtProc(policyCR, krtctx, commoncol)
@@ -652,13 +652,13 @@ func aiSecretForSpec(
 }
 
 // transformationForSpec translates the transformation spec into and onto the IR policy
-func transformationForSpec(spec v1alpha1.TrafficPolicySpec, out *trafficPolicySpecIr) {
+func transformationForSpec(ctx context.Context, spec v1alpha1.TrafficPolicySpec, out *trafficPolicySpecIr) {
 	if spec.Transformation == nil {
 		return
 	}
 	var err error
 	if !useRustformations {
-		out.transform, err = toTransformFilterConfig(spec.Transformation)
+		out.transform, err = toTransformFilterConfig(ctx, spec.Transformation)
 		if err != nil {
 			out.errors = append(out.errors, err)
 		}
