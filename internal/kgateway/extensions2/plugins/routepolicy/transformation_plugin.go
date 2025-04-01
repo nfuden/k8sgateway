@@ -64,7 +64,7 @@ func toTraditionalTransform(t *v1alpha1.Transform) *transformationpb.Transformat
 				// in traditional if unset this would be the default but we are changing the default in kgateway ordering
 				traditionalParsing = transformationpb.TransformationTemplate_ParseAsJson
 			default:
-				// TODO: Warn
+				panic("unimplemented api")
 			}
 		}
 		tt.TransformationTemplate.ParseBodyBehavior = traditionalParsing
