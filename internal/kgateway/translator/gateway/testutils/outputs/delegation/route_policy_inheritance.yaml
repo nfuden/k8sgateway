@@ -52,7 +52,6 @@ Routes:
                   - key: abc
                     value:
                       text: custom-value-abc
-                  parseBodyBehavior: DontParse
                   passthrough: {}
     - match:
         prefix: /
@@ -71,5 +70,4 @@ Routes:
                   - key: abc
                     value:
                       text: custom-value-abc
-                  parseBodyBehavior: DontParse
                   passthrough: {}
