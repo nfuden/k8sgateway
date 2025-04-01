@@ -8,6 +8,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	gwv1 "sigs.k8s.io/gateway-api/apis/v1"
 
+	"github.com/kgateway-dev/kgateway/v2/api/v1alpha1"
 	"github.com/kgateway-dev/kgateway/v2/pkg/utils/fsutils"
 )
 
@@ -35,8 +36,8 @@ var (
 			},
 		}
 	}
-	policyForName = func(name string) *gwv1.HTTPRoute {
-		return &gwv1.HTTPRoute{
+	policyForName = func(name string) *v1alpha1.TrafficPolicy {
+		return &v1alpha1.TrafficPolicy{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      name,
 				Namespace: "default",
