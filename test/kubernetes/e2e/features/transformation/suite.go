@@ -206,7 +206,7 @@ func (s *testingSuite) TestGatewayWithTransformedRoute() {
 	}
 }
 
-func (s *testingSuite) BTestGatewayRustformationsWithTransformedRoute() {
+func (s *testingSuite) TestGatewayRustformationsWithTransformedRoute() {
 	// make a copy of the original controller deployment
 	controllerDeploymentOriginal := &appsv1.Deployment{}
 	err := s.testInstallation.ClusterContext.Client.Get(s.ctx, client.ObjectKey{
