@@ -352,7 +352,7 @@ func buildEndpointMeta(token, model string, additionalFields map[string]string) 
 	}
 	return &envoy_config_core_v3.Metadata{
 		FilterMetadata: map[string]*structpb.Struct{
-			"io.solo.transformation": {
+			"kgateway.transformation": {
 				Fields: fields,
 			},
 		},

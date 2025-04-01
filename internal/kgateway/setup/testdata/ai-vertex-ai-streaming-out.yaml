@@ -79,7 +79,7 @@ clusters:
           filterMetadata:
             envoy.transport_socket_match:
               tls: "true"
-            io.solo.transformation:
+            kgateway.transformation:
               api_version: v1
               auth_token: mysecretkey
               location: us-central1
@@ -173,7 +173,7 @@ listeners:
                 typed:
                 - envoy.filters.ai.solo.io
                 untyped:
-                - io.solo.transformation
+                - kgateway.transformation
                 - envoy.filters.ai.solo.io
               receivingNamespaces:
                 untyped:
@@ -251,6 +251,7 @@ routes:
                 transformationTemplate:
                   dynamicMetadataValues:
                   - key: route_type
+                    metadataNamespace: kgateway.transformation
                     value:
                       text: CHAT_STREAMING
                   mergeJsonKeys: {}

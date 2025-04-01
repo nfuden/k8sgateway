@@ -254,7 +254,7 @@ spec:
                                 metadataNamespace:
                                   enum:
                                   - envoy.filters.http.jwt_authn
-                                  - io.solo.transformation
+                                  - kgateway.transformation
                                   type: string
                                 name:
                                   minLength: 1

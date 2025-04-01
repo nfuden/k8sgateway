@@ -36,7 +36,7 @@ clusters:
           hostname: model-failover.default.svc.cluster.local
         metadata:
           filterMetadata:
-            io.solo.transformation:
+            kgateway.transformation:
               auth_token: mysecretkey
               model: gpt-4o
   metadata: {}
@@ -102,7 +102,7 @@ listeners:
                 typed:
                 - envoy.filters.ai.solo.io
                 untyped:
-                - io.solo.transformation
+                - kgateway.transformation
                 - envoy.filters.ai.solo.io
               receivingNamespaces:
                 untyped:

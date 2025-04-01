@@ -82,8 +82,9 @@ func preProcessAITrafficPolicy(
 			Value: "true",
 		})
 		transformationTemplate.DynamicMetadataValues = append(transformationTemplate.GetDynamicMetadataValues(), &envoytransformation.TransformationTemplate_DynamicMetadataValue{
-			Key:   "route_type",
-			Value: &envoytransformation.InjaTemplate{Text: "CHAT_STREAMING"},
+			MetadataNamespace: wellknown.TransformationMetadataNamespace,
+			Key:               "route_type",
+			Value:             &envoytransformation.InjaTemplate{Text: "CHAT_STREAMING"},
 		})
 	}
 

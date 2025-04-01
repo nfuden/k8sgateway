@@ -77,7 +77,7 @@ clusters:
           hostname: ollama-deepseek-r1.ollama.svc.cluster.local
         metadata:
           filterMetadata:
-            io.solo.transformation:
+            kgateway.transformation:
               auth_token: mysecretkey
   metadata: {}
   name: backend_gwtest_deepseek_0
@@ -166,7 +166,7 @@ listeners:
                 typed:
                 - envoy.filters.ai.solo.io
                 untyped:
-                - io.solo.transformation
+                - kgateway.transformation
                 - envoy.filters.ai.solo.io
               receivingNamespaces:
                 untyped:

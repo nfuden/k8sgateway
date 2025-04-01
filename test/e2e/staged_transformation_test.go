@@ -295,7 +295,7 @@ var _ = Describe("Staged Transformation", FlakeAttempts(3), func() {
 				}
 				// Set a metadata key in the transformation namespace
 				static.Hosts[0].Metadata = map[string]*structpb.Struct{
-					"io.solo.transformation": {
+					"kgateway.transformation": {
 						Fields: map[string]*structpb.Value{
 							"key": {
 								Kind: &structpb.Value_StringValue{

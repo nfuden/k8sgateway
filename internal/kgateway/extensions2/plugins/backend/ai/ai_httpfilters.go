@@ -136,7 +136,7 @@ func AddExtprocHTTPFilter() ([]plugins.StagedHttpFilter, error) {
 		MessageTimeout: durationpb.New(5 * time.Second),
 		MetadataOptions: &envoy_ext_proc_v3.MetadataOptions{
 			ForwardingNamespaces: &envoy_ext_proc_v3.MetadataOptions_MetadataNamespaces{
-				Untyped: []string{"io.solo.transformation", "envoy.filters.ai.solo.io"},
+				Untyped: []string{"kgateway.transformation", "envoy.filters.ai.solo.io"},
 				Typed:   []string{"envoy.filters.ai.solo.io"},
 			},
 			ReceivingNamespaces: &envoy_ext_proc_v3.MetadataOptions_MetadataNamespaces{
