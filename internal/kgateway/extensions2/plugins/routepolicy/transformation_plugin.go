@@ -30,7 +30,6 @@ func toTraditionalTransform(t *v1alpha1.Transform) *transformationpb.Transformat
 		tt.TransformationTemplate.GetHeaders()[string(h.Name)] = &transformationpb.InjaTemplate{
 			Text: string(h.Value),
 		}
-		tt.TransformationTemplate.ParseBodyBehavior = transformationpb.TransformationTemplate_DontParse
 		hasTransform = true
 	}
 
@@ -41,7 +40,6 @@ func toTraditionalTransform(t *v1alpha1.Transform) *transformationpb.Transformat
 				Text: string(h.Value),
 			},
 		})
-		tt.TransformationTemplate.ParseBodyBehavior = transformationpb.TransformationTemplate_DontParse
 		hasTransform = true
 	}
 
@@ -57,9 +55,19 @@ func toTraditionalTransform(t *v1alpha1.Transform) *transformationpb.Transformat
 			Passthrough: &transformationpb.Passthrough{},
 		}
 	} else {
-		if t.Body.ParseAs == v1alpha1.BodyParseBehaviorAsString {
-			tt.TransformationTemplate.ParseBodyBehavior = transformationpb.TransformationTemplate_DontParse
+		var traditionalParsing transformationpb.TransformationTemplate_RequestBodyParse
+		{
+			switch t.Body.ParseAs {
+			case v1alpha1.BodyParseBehaviorAsString:
+				traditionalParsing = transformationpb.TransformationTemplate_DontParse
+			case v1alpha1.BodyParseBehaviorAsJSON:
+				// in traditional if unset this would be the default but we are changing the default in kgateway ordering
+				traditionalParsing = transformationpb.TransformationTemplate_ParseAsJson
+			default:
+				// TODO: Warn
+			}
 		}
+		tt.TransformationTemplate.ParseBodyBehavior = traditionalParsing
 		if value := t.Body.Value; value != nil {
 			hasTransform = true
 			tt.TransformationTemplate.BodyTransformation = &transformationpb.TransformationTemplate_Body{
