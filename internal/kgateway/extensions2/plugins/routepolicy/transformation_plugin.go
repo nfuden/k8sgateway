@@ -57,7 +57,7 @@ func toTraditionalTransform(ctx context.Context, t *v1alpha1.Transform) *transfo
 			Passthrough: &transformationpb.Passthrough{},
 		}
 	} else {
-		var traditionalParsing transformationpb.TransformationTemplate_RequestBodyParse
+		traditionalParsing := transformationpb.TransformationTemplate_DontParse
 		{
 			switch t.Body.ParseAs {
 			case v1alpha1.BodyParseBehaviorAsString:
