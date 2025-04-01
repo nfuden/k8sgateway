@@ -54,7 +54,7 @@ const (
 	extauthFilterNamePrefix               = "ext_auth"
 	localRateLimitFilterNamePrefix        = "ratelimit/local"
 	localRateLimitStatPrefix              = "http_local_rate_limiter"
-	transformationFilterMetadataNamespace = "io.solo.transformation" // TODO: remove this as we move onto rustformations and off envoy-gloo
+	transformationFilterMetadataNamespace = "kgateway.transformation" // TODO: remove this as we move onto rustformations and off envoy-gloo
 )
 
 func extAuthFilterName(name string) string {
@@ -308,7 +308,7 @@ func (p *trafficPolicyPluginGwPass) ApplyForRoute(ctx context.Context, pCtx *ir.
 						ParseBodyBehavior: transformationpb.TransformationTemplate_DontParse, // Default is to try for JSON... Its kinda nice but failure is bad...
 						DynamicMetadataValues: []*transformationpb.TransformationTemplate_DynamicMetadataValue{
 							{
-								MetadataNamespace: "kgateway",
+								MetadataNamespace: wellknown.TransformationMetadataNamespace,
 								Key:               "route",
 								Value: &transformationpb.InjaTemplate{
 									Text: routeHash,
