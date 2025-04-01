@@ -18,7 +18,7 @@ const (
 	TLSModeLabelShortname = "tlsMode"
 
 	// TransformationMetadataNamespace is the metadata namespace used for transformation policies
-	// For now this must be added to override the envoy defaults. // TODO(nfuden): Remove this when off of envoy-gloo which uses kgateway.transformation by default
+	// For now this must be added to override the envoy defaults. // TODO(nfuden): Remove this when off of envoy-gloo which uses io.solo.transformation by default
 	TransformationMetadataNamespace = "kgateway.transformation"
 )
 

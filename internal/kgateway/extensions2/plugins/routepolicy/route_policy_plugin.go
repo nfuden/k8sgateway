@@ -46,15 +46,14 @@ import (
 )
 
 const (
-	transformationFilterNamePrefix        = "transformation"
-	extAuthGlobalDisableFilterName        = "global_disable/ext_auth"
-	extAuthGlobalDisableFilterKey         = "global_disable/ext_auth"
-	rustformationFilterNamePrefix         = "dynamic_modules/simple_mutations"
-	metadataRouteTransformation           = "transformation/helper"
-	extauthFilterNamePrefix               = "ext_auth"
-	localRateLimitFilterNamePrefix        = "ratelimit/local"
-	localRateLimitStatPrefix              = "http_local_rate_limiter"
-	transformationFilterMetadataNamespace = "kgateway.transformation" // TODO: remove this as we move onto rustformations and off envoy-gloo
+	transformationFilterNamePrefix = "transformation"
+	extAuthGlobalDisableFilterName = "global_disable/ext_auth"
+	extAuthGlobalDisableFilterKey  = "global_disable/ext_auth"
+	rustformationFilterNamePrefix  = "dynamic_modules/simple_mutations"
+	metadataRouteTransformation    = "transformation/helper"
+	extauthFilterNamePrefix        = "ext_auth"
+	localRateLimitFilterNamePrefix = "ratelimit/local"
+	localRateLimitStatPrefix       = "http_local_rate_limiter"
 )
 
 func extAuthFilterName(name string) string {
@@ -510,7 +509,7 @@ func (p *trafficPolicyPluginGwPass) HttpFilters(ctx context.Context, fcc ir.Filt
 
 		// handled opt out from all via metadata this is purely for the fully disabled functionality
 		extAuthFilter.FilterEnabledMetadata = &envoy_matcher_v3.MetadataMatcher{
-			Filter: transformationFilterMetadataNamespace, // the transformation filter instance's name
+			Filter: wellknown.TransformationMetadataNamespace, // the transformation filter instance's name
 			Invert: true,
 			Path: []*envoy_matcher_v3.MetadataMatcher_PathSegment{
 				{
