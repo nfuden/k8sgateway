@@ -181,7 +181,7 @@ impl<EHF: EnvoyHttpFilter> HttpFilter<EHF> for Filter {
             // check filter state for info
             let route_name_data = envoy_filter
                 .get_dynamic_metadata_string("kgateway", "route")
-                .unwrap();
+                .unwrap_or_default();
             let route_name = std::str::from_utf8(route_name_data.as_slice()).unwrap();
             let route_config  = self
                 .route_specific
@@ -253,7 +253,7 @@ impl<EHF: EnvoyHttpFilter> HttpFilter<EHF> for Filter {
             // check filter state for info
             let route_name_data = envoy_filter
                 .get_dynamic_metadata_string("kgateway", "route")
-                .unwrap();
+                .unwrap_or_default();
 
             let route_name = std::str::from_utf8(route_name_data.as_slice()).unwrap();
             let route_config  = self
