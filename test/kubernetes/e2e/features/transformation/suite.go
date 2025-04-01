@@ -68,7 +68,7 @@ func (s *testingSuite) SetupSuite() {
 		// resources from gateway manifest
 		gateway,
 		// resources from specific routes
-		routeForHeaders, routeForBodyJson,
+		routeForHeaders, routeForBodyJson, routeBasic, routeForBodyAsString,
 		// deployer-generated resources
 		proxyDeployment, proxyService, proxyServiceAccount,
 	}
@@ -343,6 +343,9 @@ func (s *testingSuite) assertStatus(expected metav1.Condition) {
 		err := s.testInstallation.ClusterContext.Client.Get(s.ctx, objKey, be)
 		g.Expect(err).NotTo(gomega.HaveOccurred(), "failed to get route policy %s", objKey)
 		objKey = client.ObjectKeyFromObject(trafficPolicyForBodyJson)
+		err = s.testInstallation.ClusterContext.Client.Get(s.ctx, objKey, be)
+		g.Expect(err).NotTo(gomega.HaveOccurred(), "failed to get route policy %s", objKey)
+		objKey = client.ObjectKeyFromObject(trafficPolicyForBodyAsString)
 		err = s.testInstallation.ClusterContext.Client.Get(s.ctx, objKey, be)
 		g.Expect(err).NotTo(gomega.HaveOccurred(), "failed to get route policy %s", objKey)
 
