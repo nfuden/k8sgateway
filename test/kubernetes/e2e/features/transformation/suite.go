@@ -125,7 +125,7 @@ func (s *testingSuite) TestGatewayWithTransformedRoute() {
 	}{
 		{
 			name:      "basic",
-			routeName: "route-for-headers",
+			routeName: "headers",
 			opts: []curl.Option{
 				curl.WithBody("hello"),
 			},
@@ -138,7 +138,7 @@ func (s *testingSuite) TestGatewayWithTransformedRoute() {
 		},
 		{
 			name:      "conditional set by request header", // inja and the request_header function in use
-			routeName: "route-for-headers",
+			routeName: "headers",
 			opts: []curl.Option{
 				curl.WithBody("hello"),
 				curl.WithHeader("x-add-bar", "super"),
@@ -316,7 +316,7 @@ func (s *testingSuite) TestGatewayRustformationsWithTransformedRoute() {
 	}{
 		{
 			name:      "basic",
-			routeName: "route-for-headers",
+			routeName: "headers",
 			opts: []curl.Option{
 				curl.WithBody("hello"),
 			},
@@ -329,7 +329,7 @@ func (s *testingSuite) TestGatewayRustformationsWithTransformedRoute() {
 		},
 		{
 			name:      "conditional set by request header", // inja and the request_header function in use
-			routeName: "route-for-headers",
+			routeName: "headers",
 			opts: []curl.Option{
 				curl.WithBody("hello"),
 				curl.WithHeader("x-add-bar", "super"),
