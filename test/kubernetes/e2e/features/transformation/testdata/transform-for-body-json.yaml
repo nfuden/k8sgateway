@@ -26,7 +26,7 @@ spec:
     response:
       set:
         - name: "x-how-great"
-          value: "level_{%- if headers != \"\" -%}{{headers.X-Incoming-Stuff.0}}  {% endif %}"
+          value: "level_{%- if headers != \"\" -%}{{headers.X-Incoming-Stuff.0}}{% else %}unknown{% endif %}"
       body:
         parseAs: "AsJson"
         value: "{{headers.X-Incoming-Stuff}}" # use the parsed body of the returned format (pull from input headers as returned by echo service)

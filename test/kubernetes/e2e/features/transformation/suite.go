@@ -188,7 +188,7 @@ func (s *testingSuite) TestGatewayWithTransformedRoute() {
 			resp: &testmatchers.HttpResponse{
 				StatusCode: http.StatusOK,
 				Headers: map[string]interface{}{
-					"x-foo-response": "level_unknown",
+					"x-how-great": "level_unknown",
 				},
 			},
 		},
