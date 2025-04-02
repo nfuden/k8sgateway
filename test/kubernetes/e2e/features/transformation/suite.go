@@ -204,7 +204,7 @@ func (s *testingSuite) TestGatewayWithTransformedRoute() {
 				curl.WithHeader("X-Incoming-Stuff", "super"),
 			},
 			resp: &testmatchers.HttpResponse{
-				StatusCode: http.StatusOK,
+				StatusCode: http.StatusBadRequest, // bad transformation results in 400
 				Headers: map[string]interface{}{
 					"x-how-great": "level_unknown",
 				},
