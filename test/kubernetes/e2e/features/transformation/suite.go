@@ -381,7 +381,6 @@ func (s *testingSuite) hasDynamicModuleLoaded(shouldBeLoaded bool) {
 		} else {
 			g.Expect(dynamicModuleLoaded).To(gomega.BeFalse(), fmt.Sprintf("dynamic module should not be loaded: %v", listener.String()))
 		}
-
 	}).
 		WithTimeout(time.Second*20).
 		WithPolling(time.Second).Should(gomega.Succeed(), "failed to get expected load of dynamic modules")
