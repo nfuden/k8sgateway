@@ -59,6 +59,7 @@ func (s *testingSuite) SetupSuite() {
 		transformForHeadersManifest,
 		transformForBodyJsonManifest,
 		transformForBodyAsStringManifest,
+		gatewayAttachedTransformManifest,
 	}
 	s.commonResources = []client.Object{
 		// resources from curl manifest
@@ -125,6 +126,19 @@ func (s *testingSuite) TestGatewayWithTransformedRoute() {
 		resp      *testmatchers.HttpResponse
 	}{
 		{
+			name:      "basic-gateway-attached",
+			routeName: "gateway-attached-transform",
+			resp: &testmatchers.HttpResponse{
+				StatusCode: http.StatusOK,
+				Headers: map[string]interface{}{
+					"response-gateway": "goodbye",
+				},
+				NotHeaders: []string{
+					"x-foo-response",
+				},
+			},
+		},
+		{
 			name:      "basic",
 			routeName: "headers",
 			opts: []curl.Option{
@@ -134,6 +148,9 @@ func (s *testingSuite) TestGatewayWithTransformedRoute() {
 				StatusCode: http.StatusOK,
 				Headers: map[string]interface{}{
 					"x-foo-response": "notsuper",
+				},
+				NotHeaders: []string{
+					"response-gateway",
 				},
 			},
 		},
@@ -350,6 +367,9 @@ func (s *testingSuite) assertStatus(expected metav1.Condition) {
 		err = s.testInstallation.ClusterContext.Client.Get(s.ctx, objKey, be)
 		g.Expect(err).NotTo(gomega.HaveOccurred(), "failed to get route policy %s", objKey)
 		objKey = client.ObjectKeyFromObject(trafficPolicyForBodyAsString)
+		err = s.testInstallation.ClusterContext.Client.Get(s.ctx, objKey, be)
+		g.Expect(err).NotTo(gomega.HaveOccurred(), "failed to get route policy %s", objKey)
+		objKey = client.ObjectKeyFromObject(trafficPolicyForGatewayAttachedTransform)
 		err = s.testInstallation.ClusterContext.Client.Get(s.ctx, objKey, be)
 		g.Expect(err).NotTo(gomega.HaveOccurred(), "failed to get route policy %s", objKey)
 

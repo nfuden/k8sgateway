@@ -19,6 +19,7 @@ var (
 	transformForHeadersManifest      = filepath.Join(fsutils.MustGetThisDir(), "testdata", "transform-for-headers.yaml")
 	transformForBodyJsonManifest     = filepath.Join(fsutils.MustGetThisDir(), "testdata", "transform-for-body-json.yaml")
 	transformForBodyAsStringManifest = filepath.Join(fsutils.MustGetThisDir(), "testdata", "transform-for-body-as-string.yaml")
+	gatewayAttachedTransformManifest = filepath.Join(fsutils.MustGetThisDir(), "testdata", "gateway-attached-transform.yaml")
 
 	// objects from gateway manifest
 	gateway = &gwv1.Gateway{
@@ -50,9 +51,10 @@ var (
 	routeForBodyJson     = routeForName("example-route-for-body-json")
 	routeForBodyAsString = routeForName("example-route-for-body-as-string")
 
-	trafficPolicyForHeaders      = policyForName("example-traffic-policy-for-headers")
-	trafficPolicyForBodyJson     = policyForName("example-traffic-policy-for-body-json")
-	trafficPolicyForBodyAsString = policyForName("example-traffic-policy-for-body-as-string")
+	trafficPolicyForHeaders                  = policyForName("example-traffic-policy-for-headers")
+	trafficPolicyForBodyJson                 = policyForName("example-traffic-policy-for-body-json")
+	trafficPolicyForBodyAsString             = policyForName("example-traffic-policy-for-body-as-string")
+	trafficPolicyForGatewayAttachedTransform = policyForName("example-traffic-policy-for-gateway-attached-transform")
 
 	// objects created by deployer after applying gateway manifest
 	proxyObjectMeta = metav1.ObjectMeta{
