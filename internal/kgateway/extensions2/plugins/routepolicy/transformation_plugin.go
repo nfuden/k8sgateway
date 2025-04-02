@@ -215,11 +215,11 @@ func toRustformFilterConfig(t *v1alpha1.TransformationPolicy) (proto.Message, st
 func convertClassicRouteToListener(
 	listenerFilter *transformationpb.FilterTransformations,
 	routeCfg *transformationpb.RouteTransformations) {
-	if len(routeCfg.Transformations) == 0 {
+	if len(routeCfg.GetTransformations()) == 0 {
 		return
 	}
 	// we only set this type of matcher for now so its safe to do this
-	routeTransform := routeCfg.Transformations[0].Match.(*transformationpb.RouteTransformations_RouteTransformation_RequestMatch_)
+	routeTransform := routeCfg.GetTransformations()[0].GetMatch().(*transformationpb.RouteTransformations_RouteTransformation_RequestMatch_)
 
 	transform := transformationpb.TransformationRule{
 		Match: &envoy_config_route_v3.RouteMatch{
@@ -231,9 +231,9 @@ func convertClassicRouteToListener(
 		},
 
 		RouteTransformations: &transformationpb.TransformationRule_Transformations{
-			RequestTransformation:  routeTransform.RequestMatch.RequestTransformation,
-			ResponseTransformation: routeTransform.RequestMatch.ResponseTransformation,
+			RequestTransformation:  routeTransform.RequestMatch.GetRequestTransformation(),
+			ResponseTransformation: routeTransform.RequestMatch.GetResponseTransformation(),
 		},
 	}
-	listenerFilter.Transformations = append(listenerFilter.Transformations, &transform)
+	listenerFilter.Transformations = append(listenerFilter.GetTransformations(), &transform)
 }
