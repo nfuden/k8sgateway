@@ -451,14 +451,10 @@ spec:
                       body:
                         properties:
                           parseAs:
-                            allOf:
-                            - enum:
-                              - AsString
-                              - AsJson
-                            - enum:
-                              - AsString
-                              - AsJson
                             default: AsString
+                            enum:
+                            - AsString
+                            - AsJson
                             type: string
                           value:
                             type: string
@@ -507,14 +503,10 @@ spec:
                       body:
                         properties:
                           parseAs:
-                            allOf:
-                            - enum:
-                              - AsString
-                              - AsJson
-                            - enum:
-                              - AsString
-                              - AsJson
                             default: AsString
+                            enum:
+                            - AsString
+                            - AsJson
                             type: string
                           value:
                             type: string

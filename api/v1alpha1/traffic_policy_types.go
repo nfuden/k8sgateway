@@ -138,7 +138,6 @@ type BodyTransformation struct {
 	// ParseAs defines what auto formatting should be applied to the body.
 	// This can make interacting with keys within a json body much easier if AsJson is selected.
 	// +kubebuilder:default=AsString
-	// +kubebuilder:validation:Enum=AsString;AsJson
 	ParseAs BodyParseBehavior `json:"parseAs"`
 
 	// Value is the template to apply to generate the output value for the body.
