@@ -9,6 +9,7 @@ import (
 	// v31 "github.com/cncf/xds/go/xds/type/matcher/v3"
 	// corev3 "github.com/envoyproxy/go-control-plane/envoy/config/core/v3"
 	// extensionmatcherv3 "github.com/envoyproxy/go-control-plane/envoy/extensions/common/matching/v3"
+	envoy_config_route_v3 "github.com/envoyproxy/go-control-plane/envoy/config/route/v3"
 	exteniondynamicmodulev3 "github.com/envoyproxy/go-control-plane/envoy/extensions/dynamic_modules/v3"
 	dynamicmodulesv3 "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/http/dynamic_modules/v3"
 	transformationpb "github.com/solo-io/envoy-gloo/go/config/filter/http/transformation/v2"
@@ -107,7 +108,8 @@ func toTransformFilterConfig(ctx context.Context, t *v1alpha1.TransformationPoli
 	if reqt == nil && respt == nil {
 		return nil, nil
 	}
-
+	// note we use request match as we arent really doing anything on the matching
+	// once we figure out inheritance then we can go deeper on how to deal with matches
 	reqm := &transformationpb.RouteTransformations_RouteTransformation_RequestMatch{
 		RequestTransformation:  reqt,
 		ResponseTransformation: respt,
@@ -208,4 +210,31 @@ func toRustformFilterConfig(t *v1alpha1.TransformationPolicy) (proto.Message, st
 	}
 
 	return rustCfg, stringConf, nil
+}
+
+func convertClassicRouteToListener(
+	listenerFilter *transformationpb.FilterTransformations,
+	routeCfg *transformationpb.RouteTransformations) {
+	if len(routeCfg.Transformations) == 0 {
+		return
+	}
+	// we only set this type of matcher for now so its safe to do this
+	routeTransform := routeCfg.Transformations[0].Match.(*transformationpb.RouteTransformations_RouteTransformation_RequestMatch_)
+
+	transform := transformationpb.TransformationRule{
+		Match: &envoy_config_route_v3.RouteMatch{
+			PathSpecifier: &envoy_config_route_v3.RouteMatch_Prefix{
+				// match all as we arent doing submatches at this point
+				// consider attaching to a route or wiating until merging logic is done
+				Prefix: "/",
+			},
+		},
+
+		RouteTransformations: &transformationpb.TransformationRule_Transformations{
+			RequestTransformation:  routeTransform.RequestMatch.RequestTransformation,
+			ResponseTransformation: routeTransform.RequestMatch.ResponseTransformation,
+		},
+	}
+	listenerFilter.Transformations = append(listenerFilter.Transformations, &transform)
+
 }
