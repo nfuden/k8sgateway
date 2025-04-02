@@ -7,7 +7,7 @@ spec:
   parentRefs:
     - name: gw
   hostnames:
-    - "example-for-body.com"
+    - "example-route-for-body.com"
   rules:
     - backendRefs:
         - name: simple-svc
