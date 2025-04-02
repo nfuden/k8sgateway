@@ -172,13 +172,14 @@ func (s *testingSuite) TestGatewayWithTransformedRoute() {
 			name:      "pull json info", // shows we parse the body as json
 			routeName: "route-for-body-json",
 			opts: []curl.Option{
-				curl.WithBody("hello"),
+				curl.WithBody(`{"mykey": {"myinnerkey": "myinnervalue"}}`),
 				curl.WithHeader("X-Incoming-Stuff", "super"),
 			},
 			resp: &testmatchers.HttpResponse{
 				StatusCode: http.StatusOK,
 				Headers: map[string]interface{}{
-					"x-how-great": "level_super",
+					"x-how-great":   "level_super",
+					"from-incoming": "key_level_myinnervalue",
 				},
 			},
 		},
@@ -186,11 +187,11 @@ func (s *testingSuite) TestGatewayWithTransformedRoute() {
 			name:      "dont pull info if we dont parse json", // shows we parse the body as json
 			routeName: "route-for-body",
 			opts: []curl.Option{
-				curl.WithBody("hello"),
+				curl.WithBody(`{"mykey": {"myinnerkey": "myinnervalue"}}`),
 				curl.WithHeader("X-Incoming-Stuff", "super"),
 			},
 			resp: &testmatchers.HttpResponse{
-				StatusCode: http.StatusOK,
+				StatusCode: http.StatusBadRequest, // bad transformation results in 400
 				NotHeaders: []string{
 					"x-how-great",
 				},
@@ -201,13 +202,9 @@ func (s *testingSuite) TestGatewayWithTransformedRoute() {
 			routeName: "route-for-body-json",
 			opts: []curl.Option{
 				curl.WithBody("hello"),
-				curl.WithHeader("X-Incoming-Stuff", "super"),
 			},
 			resp: &testmatchers.HttpResponse{
-				StatusCode: http.StatusBadRequest, // bad transformation results in 400
-				Headers: map[string]interface{}{
-					"x-how-great": "level_unknown",
-				},
+				StatusCode: http.StatusBadRequest, // transformation should choke
 			},
 		},
 	}

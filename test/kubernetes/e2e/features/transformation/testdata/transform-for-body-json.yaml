@@ -23,10 +23,18 @@ spec:
     kind: HTTPRoute
     name: example-route-for-body-json
   transformation:
+    request:
+      set:
+        - name: "x-transformed-incoming"
+          value: "level_{%- if mykey != \"\" -%}{{mykey.myinnerkey}}{% else %}unknown{% endif %}"
+      body:
+        parseAs: "AsJson"
     response:
       set:
         - name: "x-how-great"
           value: "level_{%- if headers != \"\" -%}{{headers.X-Incoming-Stuff.0}}{% else %}unknown{% endif %}"
+        - name: "from-incoming"
+          value: "key_{%- if headers != \"\" -%}{{headers.X-Transformed-Incoming.0}}{% else %}unknown{% endif %}"
       body:
         parseAs: "AsJson"
-        value: "{{headers.X-Incoming-Stuff}}" # use the parsed body of the returned format (pull from input headers as returned by echo service)
+        value: "{{headers}}" # use the parsed body of the returned format (pull from input headers as returned by echo service)
