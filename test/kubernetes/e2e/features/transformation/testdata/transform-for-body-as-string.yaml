@@ -27,5 +27,3 @@ spec:
       set:
         - name: "x-how-great"
           value: "level_{%- if headers != \"\" -%}{{headers.X-Incoming-Stuff.0}}{% else %}unknown{% endif %}"
-      body:
-        value: "{{headers}}" # use the parsed body of the returned format (pull from input headers as returned by echo service)
