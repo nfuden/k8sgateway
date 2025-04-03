@@ -163,4 +163,5 @@ routes:
                       text: '{{ request_header("x-solo-request") }}'
                   headersToRemove:
                   - x-solo-request
+                  parseBodyBehavior: DontParse
                   passthrough: {}

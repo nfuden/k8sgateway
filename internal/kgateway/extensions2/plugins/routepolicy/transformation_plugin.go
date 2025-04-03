@@ -27,6 +27,9 @@ func toTraditionalTransform(ctx context.Context, t *v1alpha1.Transform) *transfo
 	tt := &transformationpb.Transformation_TransformationTemplate{
 		TransformationTemplate: &transformationpb.TransformationTemplate{
 			Headers: map[string]*transformationpb.InjaTemplate{},
+			// can be overriden by the setting in body
+			// this means we have less json failures by default when not parsing
+			ParseBodyBehavior: transformationpb.TransformationTemplate_DontParse,
 		},
 	}
 	for _, h := range t.Set {
