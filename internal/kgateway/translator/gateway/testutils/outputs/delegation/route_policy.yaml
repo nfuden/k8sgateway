@@ -51,12 +51,14 @@ Routes:
                   headers:
                     x-foo-req:
                       text: abc
+                  parseBodyBehavior: DontParse
                   passthrough: {}
               responseTransformation:
                 transformationTemplate:
                   headers:
                     x-foo-resp:
                       text: xyz
+                  parseBodyBehavior: DontParse
                   passthrough: {}
     - match:
         prefix: /
