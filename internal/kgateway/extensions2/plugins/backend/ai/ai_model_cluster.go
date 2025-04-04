@@ -19,6 +19,7 @@ import (
 	aiutils "github.com/kgateway-dev/kgateway/v2/internal/kgateway/extensions2/pluginutils"
 	"github.com/kgateway-dev/kgateway/v2/internal/kgateway/ir"
 	"github.com/kgateway-dev/kgateway/v2/internal/kgateway/utils"
+	kgateway_wellknown "github.com/kgateway-dev/kgateway/v2/internal/kgateway/wellknown"
 )
 
 const (
@@ -352,7 +353,7 @@ func buildEndpointMeta(token, model string, additionalFields map[string]string) 
 	}
 	return &envoy_config_core_v3.Metadata{
 		FilterMetadata: map[string]*structpb.Struct{
-			"kgateway.transformation": {
+			kgateway_wellknown.TransformationMetadataNamespace: {
 				Fields: fields,
 			},
 		},

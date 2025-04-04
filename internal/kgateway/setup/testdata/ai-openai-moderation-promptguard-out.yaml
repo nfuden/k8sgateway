@@ -182,10 +182,10 @@ listeners:
             metadataOptions:
               forwardingNamespaces:
                 typed:
-                - envoy.filters.ai.solo.io
+                - envoy.filters.ai.kgateway
                 untyped:
                 - kgateway.transformation
-                - envoy.filters.ai.solo.io
+                - envoy.filters.ai.kgateway
               receivingNamespaces:
                 untyped:
                 - ai.kgateway.io
