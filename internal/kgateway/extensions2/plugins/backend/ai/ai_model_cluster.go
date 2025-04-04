@@ -428,11 +428,11 @@ func getTransformation(ctx context.Context, llm *v1alpha1.LLMProvider) (string, 
 }
 
 func getGeminiPath() string {
-	return `/{{host_metadata("api_version")}}/models/{{host_metadata("model")}}:{% if dynamic_metadata("route_type") == "CHAT_STREAMING" %}streamGenerateContent?key={{host_metadata("auth_token")}}&alt=sse{% else %}generateContent?key={{host_metadata("auth_token")}}{% endif %}`
+	return `/{{host_metadata("api_version")}}/models/{{host_metadata("model")}}:{% if dynamic_metadata("route_type","kgateway.transformation") == "CHAT_STREAMING" %}streamGenerateContent?key={{host_metadata("auth_token")}}&alt=sse{% else %}generateContent?key={{host_metadata("auth_token")}}{% endif %}`
 }
 
 func getVertexAIGeminiModelPath() string {
-	return `models/{{host_metadata("model")}}:{% if dynamic_metadata("route_type") == "CHAT_STREAMING" %}streamGenerateContent?alt=sse{% else %}generateContent{% endif %}`
+	return `models/{{host_metadata("model")}}:{% if dynamic_metadata("route_type","kgateway.transformation") == "CHAT_STREAMING" %}streamGenerateContent?alt=sse{% else %}generateContent{% endif %}`
 }
 
 func defaultBodyTransformation() *envoytransformation.TransformationTemplate_MergeJsonKeys {
