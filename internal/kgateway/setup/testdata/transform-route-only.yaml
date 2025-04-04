@@ -132,7 +132,7 @@ spec:
         - name: "x-greatness"
           value: '{{ length(headers(":path")) }}'
       body:
-        value: 'reqest-response'
+        value: 'request-response'
     response:
       add:
         - name: "original-greatness"
