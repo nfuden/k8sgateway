@@ -13,6 +13,11 @@ spec:
       env:
       - name: LOG_LEVEL
         value: DEBUG
+    envoyContainer:
+      bootstrap:
+        logLevel: debug
+        componentLogLevels:
+          extproc: trace
 ---
 kind: Gateway
 apiVersion: gateway.networking.k8s.io/v1
