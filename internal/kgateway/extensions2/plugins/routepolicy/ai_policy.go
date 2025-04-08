@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"hash"
 	"hash/fnv"
-	"os"
 	"reflect"
 	"strings"
 
@@ -82,8 +81,9 @@ func preProcessAITrafficPolicy(
 			Value: "true",
 		})
 		transformationTemplate.DynamicMetadataValues = append(transformationTemplate.GetDynamicMetadataValues(), &envoytransformation.TransformationTemplate_DynamicMetadataValue{
-			Key:   "route_type",
-			Value: &envoytransformation.InjaTemplate{Text: "CHAT_STREAMING"},
+			MetadataNamespace: wellknown.TransformationMetadataNamespace,
+			Key:               "route_type",
+			Value:             &envoytransformation.InjaTemplate{Text: "CHAT_STREAMING"},
 		})
 	}
 
@@ -99,7 +99,7 @@ func preProcessAITrafficPolicy(
 					RequestMatch: &envoytransformation.RouteTransformations_RouteTransformation_RequestMatch{
 						RequestTransformation: &envoytransformation.Transformation{
 							// Set this env var to true to log the request/response info for each transformation
-							LogRequestResponseInfo: wrapperspb.Bool(os.Getenv("AI_PLUGIN_DEBUG_TRANSFORMATIONS") == "true"),
+							LogRequestResponseInfo: wrapperspb.Bool(true),
 							TransformationType: &envoytransformation.Transformation_TransformationTemplate{
 								TransformationTemplate: transformationTemplate,
 							},

@@ -179,8 +179,9 @@ impl<EHF: EnvoyHttpFilter> HttpFilter<EHF> for Filter {
         // use the sub route version if appropriate as we dont have valid perroute config today
         if self.route_specific.len() > 0 {
             // check filter state for info
+          
             let route_name_data_option = envoy_filter
-                .get_dynamic_metadata_string("kgateway", "route");
+                .get_dynamic_metadata_string("kgateway.transformation", "route");
             if ! route_name_data_option.is_none() {
                 let route_name_data = route_name_data_option.unwrap();
                 // if its there then we should be able to pull the data name
@@ -255,7 +256,7 @@ impl<EHF: EnvoyHttpFilter> HttpFilter<EHF> for Filter {
         if self.route_specific.len() > 0 {
             // check filter state for info
             let route_name_data_option = envoy_filter
-                .get_dynamic_metadata_string("kgateway", "route");
+                .get_dynamic_metadata_string("kgateway.transformation", "route");
             if ! route_name_data_option.is_none() {
                 let route_name_data = route_name_data_option.unwrap();
                 // if its there then we should be able to pull the data name

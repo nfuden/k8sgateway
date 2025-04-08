@@ -686,7 +686,7 @@ type CustomLabel struct {
 	// This can also be used in combination with early_transformations to insert custom data.
 	// +optional
 	//
-	// +kubebuilder:validation:Enum=envoy.filters.http.jwt_authn;io.solo.transformation
+	// +kubebuilder:validation:Enum=envoy.filters.http.jwt_authn;kgateway.transformation
 	MetadataNamespace *string `json:"metadataNamespace,omitempty"`
 
 	// The key to use to get the data from the metadata namespace.

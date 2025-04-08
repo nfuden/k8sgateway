@@ -12,6 +12,7 @@ import (
 	"github.com/kgateway-dev/kgateway/v2/internal/kgateway/extensions2/common"
 	"github.com/kgateway-dev/kgateway/v2/internal/kgateway/extensions2/pluginutils"
 	"github.com/kgateway-dev/kgateway/v2/internal/kgateway/ir"
+	"github.com/kgateway-dev/kgateway/v2/internal/kgateway/wellknown"
 )
 
 type extAuthIR struct {
@@ -137,8 +138,9 @@ func extAuthEnablementPerRoute() proto.Message {
 				TransformationTemplate: &envoytransformation.TransformationTemplate{
 					DynamicMetadataValues: []*envoytransformation.TransformationTemplate_DynamicMetadataValue{
 						{
-							Key:   extAuthGlobalDisableFilterKey,
-							Value: &envoytransformation.InjaTemplate{Text: "false"},
+							MetadataNamespace: wellknown.TransformationMetadataNamespace,
+							Key:               extAuthGlobalDisableFilterKey,
+							Value:             &envoytransformation.InjaTemplate{Text: "false"},
 						},
 					},
 				},

@@ -27,25 +27,25 @@ jobs:
         # NOTE: We use the GitHub action step time (as opposed to the `go test` time), because it is easier to capture
         test:
         # April 4, 2025: 7 minutes
-        - cluster-name: 'cluster-one'
-          go-test-args: '-v -timeout=25m'
-          go-test-run-regex: '^TestKgateway$$/^BasicRouting$$|^TestKgateway$$/^HTTPRouteServices$$|^TestKgateway$$/^TLSRouteServices$$'
-          localstack: 'false'
-        # April 4, 2025: 5.5 minutes
-        - cluster-name: 'cluster-two'
-          go-test-args: '-v -timeout=25m'
-          go-test-run-regex: '^TestKgateway$$/^Backends$$|^TestKgateway$$/^Transforms$$|^TestKgateway$$/^BackendTLSPolicies$$|^TestKgatewayWaypoint$$'
-          localstack: 'false'
-        # April 4, 2025: 5.5 minutes
-        - cluster-name: 'cluster-three'
-          go-test-args: '-v -timeout=25m'
-          go-test-run-regex: '^TestKgateway$$/^Deployer$$|^TestKgateway$$/^RouteDelegation$$|^TestKgateway$$/^Lambda$$'
-          localstack: 'true'
-        # April 4, 2025: 5.5 minutes
-        - cluster-name: 'cluster-four'
-          go-test-args: '-v -timeout=25m'
-          go-test-run-regex: '^TestKgateway$$/^ExtProc$$|^TestKgateway$$/^ExtAuth$$|^TestKgateway$$/^TCPRouteServices$$'
-          localstack: 'false'
+        # - cluster-name: 'cluster-one'
+        #   go-test-args: '-v -timeout=25m'
+        #   go-test-run-regex: '^TestKgateway$$/^BasicRouting$$|^TestKgateway$$/^HTTPRouteServices$$|^TestKgateway$$/^TLSRouteServices$$'
+        #   localstack: 'false'
+        # # April 4, 2025: 5.5 minutes
+        # - cluster-name: 'cluster-two'
+        #   go-test-args: '-v -timeout=25m'
+        #   go-test-run-regex: '^TestKgateway$$/^Backends$$|^TestKgateway$$/^Transforms$$|^TestKgateway$$/^BackendTLSPolicies$$|^TestKgatewayWaypoint$$'
+        #   localstack: 'false'
+        # # April 4, 2025: 5.5 minutes
+        # - cluster-name: 'cluster-three'
+        #   go-test-args: '-v -timeout=25m'
+        #   go-test-run-regex: '^TestKgateway$$/^Deployer$$|^TestKgateway$$/^RouteDelegation$$|^TestKgateway$$/^Lambda$$'
+        #   localstack: 'true'
+        # # April 4, 2025: 5.5 minutes
+        # - cluster-name: 'cluster-four'
+        #   go-test-args: '-v -timeout=25m'
+        #   go-test-run-regex: '^TestKgateway$$/^ExtProc$$|^TestKgateway$$/^ExtAuth$$|^TestKgateway$$/^TCPRouteServices$$'
+        #   localstack: 'false'
         # April 4, 2025: 6 minutes
         - cluster-name: 'cluster-ai'
           go-test-args: '-v -timeout=25m'

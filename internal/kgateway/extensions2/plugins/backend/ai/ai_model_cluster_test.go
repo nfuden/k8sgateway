@@ -79,7 +79,7 @@ func TestProcessAIBackend_OpenAI(t *testing.T) {
 
 	// Verify metadata (auth token and model)
 	require.NotNil(t, endpoint.Metadata)
-	filterMeta := endpoint.Metadata.FilterMetadata["io.solo.transformation"]
+	filterMeta := endpoint.Metadata.FilterMetadata["kgateway.transformation"]
 	require.NotNil(t, filterMeta)
 	assert.Equal(t, "test-token", filterMeta.Fields["auth_token"].GetStringValue())
 	assert.Equal(t, "gpt-4", filterMeta.Fields["model"].GetStringValue())
@@ -140,7 +140,7 @@ func TestProcessAIBackend_Anthropic(t *testing.T) {
 
 	// Verify metadata
 	require.NotNil(t, endpoint.Metadata)
-	filterMeta := endpoint.Metadata.FilterMetadata["io.solo.transformation"]
+	filterMeta := endpoint.Metadata.FilterMetadata["kgateway.transformation"]
 	require.NotNil(t, filterMeta)
 	assert.Equal(t, "anthropic-token", filterMeta.Fields["auth_token"].GetStringValue())
 	assert.Equal(t, "claude-3-opus-20240229", filterMeta.Fields["model"].GetStringValue())
@@ -191,7 +191,7 @@ func TestProcessAIBackend_AzureOpenAI(t *testing.T) {
 
 	// Verify metadata
 	require.NotNil(t, endpoint.Metadata)
-	filterMeta := endpoint.Metadata.FilterMetadata["io.solo.transformation"]
+	filterMeta := endpoint.Metadata.FilterMetadata["kgateway.transformation"]
 	require.NotNil(t, filterMeta)
 	assert.Equal(t, "azure-token", filterMeta.Fields["auth_token"].GetStringValue())
 	assert.Equal(t, "gpt-4-deployment", filterMeta.Fields["model"].GetStringValue())
@@ -242,7 +242,7 @@ func TestProcessAIBackend_Gemini(t *testing.T) {
 
 	// Verify metadata
 	require.NotNil(t, endpoint.Metadata)
-	filterMeta := endpoint.Metadata.FilterMetadata["io.solo.transformation"]
+	filterMeta := endpoint.Metadata.FilterMetadata["kgateway.transformation"]
 	require.NotNil(t, filterMeta)
 	assert.Equal(t, "gemini-token", filterMeta.Fields["auth_token"].GetStringValue())
 	assert.Equal(t, "gemini-pro", filterMeta.Fields["model"].GetStringValue())
@@ -296,7 +296,7 @@ func TestProcessAIBackend_VertexAI(t *testing.T) {
 
 	// Verify metadata
 	require.NotNil(t, endpoint.Metadata)
-	filterMeta := endpoint.Metadata.FilterMetadata["io.solo.transformation"]
+	filterMeta := endpoint.Metadata.FilterMetadata["kgateway.transformation"]
 	require.NotNil(t, filterMeta)
 	assert.Equal(t, "vertex-token", filterMeta.Fields["auth_token"].GetStringValue())
 	assert.Equal(t, "gemini-1.5-pro", filterMeta.Fields["model"].GetStringValue())
@@ -420,7 +420,7 @@ func TestProcessAIBackend_MultiPool(t *testing.T) {
 	require.NotNil(t, address0)
 	assert.Equal(t, "api.openai.com", address0.Address)
 
-	metadata0 := endpoint0.Metadata.FilterMetadata["io.solo.transformation"]
+	metadata0 := endpoint0.Metadata.FilterMetadata["kgateway.transformation"]
 	require.NotNil(t, metadata0)
 	assert.Equal(t, "primary-token", metadata0.Fields["auth_token"].GetStringValue())
 	assert.Equal(t, "gpt-4", metadata0.Fields["model"].GetStringValue())
@@ -435,7 +435,7 @@ func TestProcessAIBackend_MultiPool(t *testing.T) {
 	require.NotNil(t, address1)
 	assert.Equal(t, "api.openai.com", address1.Address)
 
-	metadata1 := endpoint1.Metadata.FilterMetadata["io.solo.transformation"]
+	metadata1 := endpoint1.Metadata.FilterMetadata["kgateway.transformation"]
 	require.NotNil(t, metadata1)
 	assert.Equal(t, "fallback-token", metadata1.Fields["auth_token"].GetStringValue())
 	assert.Equal(t, "gpt-3.5-turbo", metadata1.Fields["model"].GetStringValue())

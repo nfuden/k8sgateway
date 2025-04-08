@@ -79,7 +79,7 @@ clusters:
           filterMetadata:
             envoy.transport_socket_match:
               tls: "true"
-            io.solo.transformation:
+            kgateway.transformation:
               api_version: 2024-02-15-preview
               auth_token: mysecretkey
               model: gpt-4o-mini
@@ -162,7 +162,7 @@ clusters:
           filterMetadata:
             envoy.transport_socket_match:
               tls: "true"
-            io.solo.transformation:
+            kgateway.transformation:
               auth_token: mysecretkey
   metadata: {}
   name: backend_gwtest_openai_0
@@ -249,10 +249,10 @@ listeners:
             metadataOptions:
               forwardingNamespaces:
                 typed:
-                - envoy.filters.ai.solo.io
+                - envoy.filters.ai.kgateway
                 untyped:
-                - io.solo.transformation
-                - envoy.filters.ai.solo.io
+                - kgateway.transformation
+                - envoy.filters.ai.kgateway
               receivingNamespaces:
                 untyped:
                 - ai.kgateway.io

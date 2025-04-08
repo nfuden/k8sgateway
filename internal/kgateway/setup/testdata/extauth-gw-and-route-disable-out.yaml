@@ -181,7 +181,7 @@ listeners:
           typedConfig:
             '@type': type.googleapis.com/envoy.extensions.filters.http.ext_authz.v3.ExtAuthz
             filterEnabledMetadata:
-              filter: io.solo.transformation
+              filter: kgateway.transformation
               invert: true
               path:
               - key: global_disable/ext_auth
@@ -194,7 +194,7 @@ listeners:
           typedConfig:
             '@type': type.googleapis.com/envoy.extensions.filters.http.ext_authz.v3.ExtAuthz
             filterEnabledMetadata:
-              filter: io.solo.transformation
+              filter: kgateway.transformation
               invert: true
               path:
               - key: global_disable/ext_auth
@@ -241,5 +241,6 @@ routes:
             transformationTemplate:
               dynamicMetadataValues:
               - key: global_disable/ext_auth
+                metadataNamespace: kgateway.transformation
                 value:
                   text: "false"
