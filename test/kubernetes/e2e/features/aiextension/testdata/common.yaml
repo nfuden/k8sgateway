@@ -17,7 +17,7 @@ spec:
       bootstrap:
         logLevel: debug
         componentLogLevels:
-          extproc: trace
+          ext_proc: trace
 ---
 kind: Gateway
 apiVersion: gateway.networking.k8s.io/v1
