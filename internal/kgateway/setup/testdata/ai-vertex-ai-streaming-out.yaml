@@ -79,7 +79,7 @@ clusters:
           filterMetadata:
             envoy.transport_socket_match:
               tls: "true"
-            io.solo.transformation:
+            kgateway.transformation:
               api_version: v1
               auth_token: mysecretkey
               location: us-central1
@@ -171,10 +171,10 @@ listeners:
             metadataOptions:
               forwardingNamespaces:
                 typed:
-                - envoy.filters.ai.solo.io
+                - envoy.filters.ai.kgateway
                 untyped:
-                - io.solo.transformation
-                - envoy.filters.ai.solo.io
+                - kgateway.transformation
+                - envoy.filters.ai.kgateway
               receivingNamespaces:
                 untyped:
                 - ai.kgateway.io
@@ -224,7 +224,7 @@ routes:
                   headers:
                     :path:
                       text: /{{host_metadata("api_version")}}/projects/{{host_metadata("project")}}/locations/{{host_metadata("location")}}/publishers/{{host_metadata("publisher")}}/models/{{host_metadata("model")}}:{%
-                        if dynamic_metadata("route_type") == "CHAT_STREAMING" %}streamGenerateContent?alt=sse{%
+                        if dynamic_metadata("route_type","kgateway.transformation") == "CHAT_STREAMING" %}streamGenerateContent?alt=sse{%
                         else %}generateContent{% endif %}
                     Authorization:
                       text: Bearer {% if host_metadata("auth_token") != "" %}{{host_metadata("auth_token")}}{%
@@ -251,6 +251,7 @@ routes:
                 transformationTemplate:
                   dynamicMetadataValues:
                   - key: route_type
+                    metadataNamespace: kgateway.transformation
                     value:
                       text: CHAT_STREAMING
                   mergeJsonKeys: {}

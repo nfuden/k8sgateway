@@ -252,9 +252,6 @@ spec:
                                   minLength: 1
                                   type: string
                                 metadataNamespace:
-                                  enum:
-                                  - envoy.filters.http.jwt_authn
-                                  - io.solo.transformation
                                   type: string
                                 name:
                                   minLength: 1

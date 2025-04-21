@@ -79,7 +79,7 @@ clusters:
           filterMetadata:
             envoy.transport_socket_match:
               tls: "true"
-            io.solo.transformation:
+            kgateway.transformation:
               auth_token: mysecretkey
               model: gpt-4o
     - lbEndpoints:
@@ -93,7 +93,7 @@ clusters:
           filterMetadata:
             envoy.transport_socket_match:
               tls: "true"
-            io.solo.transformation:
+            kgateway.transformation:
               auth_token: mysecretkey
               model: gpt-4.0-turbo
       priority: 1
@@ -182,10 +182,10 @@ listeners:
             metadataOptions:
               forwardingNamespaces:
                 typed:
-                - envoy.filters.ai.solo.io
+                - envoy.filters.ai.kgateway
                 untyped:
-                - io.solo.transformation
-                - envoy.filters.ai.solo.io
+                - kgateway.transformation
+                - envoy.filters.ai.kgateway
               receivingNamespaces:
                 untyped:
                 - ai.kgateway.io

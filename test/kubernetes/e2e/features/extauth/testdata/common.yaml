@@ -36,5 +36,5 @@ spec:
           total_duration: "%DURATION%"
           resp_upstream_service_time: "%RESP(X-ENVOY-UPSTREAM-SERVICE-TIME)%"
           request_id: "%REQ(X-REQUEST-ID)%"
-          metatransform: "%DYNAMIC_METADATA(io.solo.transformation)%"
+          metatransform: "%DYNAMIC_METADATA(kgateway.transformation)%"
 
