@@ -42,7 +42,7 @@ SOURCES := $(shell find . -name "*.go" | grep -v test.go)
 # ATTENTION: when updating to a new major version of Envoy, check if
 # universal header validation has been enabled and if so, we expect
 # failures in `test/e2e/header_validation_test.go`.
-export ENVOY_IMAGE ?= quay.io/solo-io/envoy-gloo:1.34.0-patch0
+export ENVOY_IMAGE ?= quay.io/solo-io/envoy-gloo:1.34.0-patch00
 export LDFLAGS := -X 'github.com/kgateway-dev/kgateway/v2/internal/version.Version=$(VERSION)'
 export GCFLAGS ?=
 
@@ -793,7 +793,7 @@ $(TEST_ASSET_DIR)/conformance/conformance_test.go:
 	cat $(shell go list -json -m sigs.k8s.io/gateway-api | jq -r '.Dir')/conformance/conformance_test.go >> $@
 	go fmt $@
 
-CONFORMANCE_SUPPORTED_FEATURES ?= -supported-features=Gateway,ReferenceGrant,HTTPRoute,HTTPRouteQueryParamMatching,HTTPRouteMethodMatching,HTTPRouteResponseHeaderModification,HTTPRoutePortRedirect,HTTPRouteHostRewrite,HTTPRouteSchemeRedirect,HTTPRoutePathRedirect,HTTPRouteHostRewrite,HTTPRoutePathRewrite,HTTPRouteRequestMirror,TLSRoute,HTTPRouteBackendProtocolH2C
+CONFORMANCE_SUPPORTED_FEATURES ?= -supported-features=Gateway,ReferenceGrant,HTTPRoute,HTTPRouteQueryParamMatching,HTTPRouteMethodMatching,HTTPRouteResponseHeaderModification,HTTPRoutePortRedirect,HTTPRouteHostRewrite,HTTPRouteSchemeRedirect,HTTPRoutePathRedirect,HTTPRouteHostRewrite,HTTPRoutePathRewrite,HTTPRouteRequestMirror,TLSRoute,HTTPRouteBackendProtocolH2C,HTTPRouteRequestTimeout,HTTPRouteBackendTimeout
 CONFORMANCE_SUPPORTED_PROFILES ?= -conformance-profiles=GATEWAY-HTTP
 CONFORMANCE_GATEWAY_CLASS ?= kgateway
 CONFORMANCE_REPORT_ARGS ?= -report-output=$(TEST_ASSET_DIR)/conformance/$(VERSION)-report.yaml -organization=kgateway-dev -project=kgateway -version=$(VERSION) -url=github.com/kgateway-dev/kgateway -contact=github.com/kgateway-dev/kgateway/issues/new/choose
