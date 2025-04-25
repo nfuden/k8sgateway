@@ -43,7 +43,7 @@ func (p *trafficPolicyPluginGwPass) processAITrafficPolicy(
 ) error {
 	if inIr.Transformation != nil {
 		configMap.AddTypedConfig(wellknown.AIPolicyTransformationFilterName, inIr.Transformation)
-	}
+	}fake
 
 	if inIr.Extproc != nil {
 		clonedExtProcFromIR := proto.Clone(inIr.Extproc).(*envoy_ext_proc_v3.ExtProcPerRoute)
