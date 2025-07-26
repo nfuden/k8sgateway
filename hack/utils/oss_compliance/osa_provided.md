@@ -4,7 +4,7 @@ Name|Version|License
 [avast/retry-go](https://github.com/avast/retry-go)|v2.4.3+incompatible|MIT License
 [retry-go/v4](https://github.com/avast/retry-go)|v4.3.3|MIT License
 [xds/go](https://github.com/cncf/xds)|v0.0.0-20250326154945-ae57f3c0d45f|Apache License 2.0
-[envoyproxy/go-control-plane](https://github.com/envoyproxy/go-control-plane)|v0.13.5-0.20250507123352-93990c5ec02f|Apache License 2.0
+[envoyproxy/go-control-plane](https://github.com/envoyproxy/go-control-plane)|v0.13.5-0.20250722125442-5321204dac14|Apache License 2.0
 [go-control-plane/contrib](https://github.com/envoyproxy/go-control-plane)|v1.32.5-0.20250507123352-93990c5ec02f|Apache License 2.0
 [go-control-plane/envoy](https://github.com/envoyproxy/go-control-plane)|v1.32.5-0.20250507123352-93990c5ec02f|Apache License 2.0
 [go-control-plane/ratelimit](https://github.com/envoyproxy/go-control-plane)|v0.1.1-0.20250507123352-93990c5ec02f|Apache License 2.0
