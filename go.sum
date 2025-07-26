@@ -583,6 +583,8 @@ github.com/envoyproxy/go-control-plane v0.9.9-0.20210512163311-63b5d3c536b0/go.m
 github.com/envoyproxy/go-control-plane v0.9.10-0.20210907150352-cf90f659a021/go.mod h1:AFq3mo9L8Lqqiid3OhADV3RfLJnjiw63cSpi+fDTRC0=
 github.com/envoyproxy/go-control-plane v0.13.5-0.20250507123352-93990c5ec02f h1:0SovjSoiK8Xd3WmmR0AJhCOUr9CFmHD1iurwL3/ChOY=
 github.com/envoyproxy/go-control-plane v0.13.5-0.20250507123352-93990c5ec02f/go.mod h1:0qUBm7c5rAt4tPgVIf20MXebCvZSoir1mQZIFMzHWtU=
+github.com/envoyproxy/go-control-plane v0.13.5-0.20250722125442-5321204dac14 h1:9cAEFdenu5vOVbXrzS9W9mxPbXVcRRs31T5Azq/GFZg=
+github.com/envoyproxy/go-control-plane v0.13.5-0.20250722125442-5321204dac14/go.mod h1:whHrEUXbTAzBJlzd3Gz4us5zEFP1gL6o3LbfA+a/xbg=
 github.com/envoyproxy/go-control-plane/contrib v1.32.5-0.20250507123352-93990c5ec02f h1:8Q48+OtVytah0PvjbMgDvAeTuPiOs4+d5q4kNPbsFnw=
 github.com/envoyproxy/go-control-plane/contrib v1.32.5-0.20250507123352-93990c5ec02f/go.mod h1:f+xWFgX4KgG6AO6OYv3iH35x01oxj5nU1PSbT3Xixyo=
 github.com/envoyproxy/go-control-plane/envoy v1.32.5-0.20250507123352-93990c5ec02f h1:EkvqIU8ltMRQcOUboGq22suL1jbI4lKkX8OxOrSwmeQ=
@@ -2447,8 +2449,12 @@ google.golang.org/genproto v0.0.0-20241118233622-e639e219e697 h1:ToEetK57OidYuqD
 google.golang.org/genproto v0.0.0-20241118233622-e639e219e697/go.mod h1:JJrvXBWRZaFMxBufik1a4RpFw4HhgVtBBWQeQgUj2cc=
 google.golang.org/genproto/googleapis/api v0.0.0-20250428153025-10db94c68c34 h1:0PeQib/pH3nB/5pEmFeVQJotzGohV0dq4Vcp09H5yhE=
 google.golang.org/genproto/googleapis/api v0.0.0-20250428153025-10db94c68c34/go.mod h1:0awUlEkap+Pb1UMeJwJQQAdJQrt3moU7J2moTy69irI=
+google.golang.org/genproto/googleapis/api v0.0.0-20250528174236-200df99c418a h1:SGktgSolFCo75dnHJF2yMvnns6jCmHFJ0vE4Vn2JKvQ=
+google.golang.org/genproto/googleapis/api v0.0.0-20250528174236-200df99c418a/go.mod h1:a77HrdMjoeKbnd2jmgcWdaS++ZLZAEq3orIOAEIKiVw=
 google.golang.org/genproto/googleapis/rpc v0.0.0-20250428153025-10db94c68c34 h1:h6p3mQqrmT1XkHVTfzLdNz1u7IhINeZkz67/xTbOuWs=
 google.golang.org/genproto/googleapis/rpc v0.0.0-20250428153025-10db94c68c34/go.mod h1:qQ0YXyHHx3XkvlzUtpXDkS29lDSafHMZBAZDc03LQ3A=
+google.golang.org/genproto/googleapis/rpc v0.0.0-20250528174236-200df99c418a h1:v2PbRU4K3llS09c7zodFpNePeamkAwG3mPrAery9VeE=
+google.golang.org/genproto/googleapis/rpc v0.0.0-20250528174236-200df99c418a/go.mod h1:qQ0YXyHHx3XkvlzUtpXDkS29lDSafHMZBAZDc03LQ3A=
 google.golang.org/grpc v1.19.0/go.mod h1:mqu4LbDTu4XGKhr4mRzUsmM4RtVoemTSY81AxZiDr8c=
 google.golang.org/grpc v1.20.0/go.mod h1:chYK+tFQF0nDUGJgXMSgLCQk3phJEuONr2DCgLDdAQM=
 google.golang.org/grpc v1.20.1/go.mod h1:10oTOabMzJvdu6/UiuZezV6QK5dSlG84ov/aaiqXj38=
