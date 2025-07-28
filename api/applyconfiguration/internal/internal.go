@@ -2145,6 +2145,9 @@ var schemaYAML = typed.YAMLObject(`types:
           elementType:
             scalar: string
           elementRelationship: atomic
+    - name: insecureSkipVerify
+      type:
+        scalar: boolean
     - name: oneWayTLS
       type:
         scalar: boolean

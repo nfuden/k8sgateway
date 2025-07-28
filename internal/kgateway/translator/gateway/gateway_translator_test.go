@@ -932,6 +932,14 @@ var _ = DescribeTable("Basic",
 			Name:      "example-gateway",
 		},
 	}),
+	Entry("Backend Config Policy with TLS and insecure skip verify", translatorTestCase{
+		inputFile:  "backendconfigpolicy/tls-insecureskipverify.yaml",
+		outputFile: "backendconfigpolicy/tls-insecureskipverify.yaml",
+		gwNN: types.NamespacedName{
+			Namespace: "default",
+			Name:      "example-gateway",
+		},
+	}),
 	Entry(
 		"TrafficPolicy with explicit generation",
 		translatorTestCase{
@@ -1062,7 +1070,7 @@ var _ = DescribeTable("Route Replacement",
 				Expect(accepted).NotTo(BeNil())
 				Expect(accepted.Status).To(Equal(metav1.ConditionTrue))
 				Expect(accepted.Reason).To(Equal(string(gwv1.RouteReasonAccepted)))
-				Expect(accepted.Message).To(Equal(""))
+				Expect(accepted.Message).To(Equal("Route is accepted"))
 				Expect(accepted.ObservedGeneration).To(Equal(int64(0)))
 
 				// Expect no PartiallyInvalid condition since template validation is skipped in standard mode
@@ -1099,7 +1107,7 @@ var _ = DescribeTable("Route Replacement",
 				Expect(accepted).NotTo(BeNil())
 				Expect(accepted.Status).To(Equal(metav1.ConditionTrue))
 				Expect(accepted.Reason).To(Equal(string(gwv1.RouteReasonAccepted)))
-				Expect(accepted.Message).To(Equal(""))
+				Expect(accepted.Message).To(Equal("Route is accepted"))
 				Expect(accepted.ObservedGeneration).To(Equal(int64(0)))
 
 				// Expect no PartiallyInvalid condition since template validation is skipped in standard mode
@@ -1135,7 +1143,7 @@ var _ = DescribeTable("Route Replacement",
 				Expect(accepted).NotTo(BeNil())
 				Expect(accepted.Status).To(Equal(metav1.ConditionTrue))
 				Expect(accepted.Reason).To(Equal(string(gwv1.RouteReasonAccepted)))
-				Expect(accepted.Message).To(Equal(""))
+				Expect(accepted.Message).To(Equal("Route is accepted"))
 				Expect(accepted.ObservedGeneration).To(Equal(int64(0)))
 
 				// Expect no PartiallyInvalid condition since template validation is skipped in standard mode
@@ -1324,7 +1332,7 @@ var _ = DescribeTable("Route Replacement",
 				Expect(accepted).NotTo(BeNil())
 				Expect(accepted.Status).To(Equal(metav1.ConditionTrue))
 				Expect(accepted.Reason).To(Equal(string(gwv1.RouteReasonAccepted)))
-				Expect(accepted.Message).To(Equal(""))
+				Expect(accepted.Message).To(Equal("Route is accepted"))
 				Expect(accepted.ObservedGeneration).To(Equal(int64(0)))
 
 				// Template is structurally valid (passes xDS validation) but would fail at runtime
