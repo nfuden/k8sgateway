@@ -10,7 +10,6 @@ import (
 	"reflect"
 	"sort"
 	"strings"
-	"time"
 
 	envoylistenerv3 "github.com/envoyproxy/go-control-plane/envoy/config/listener/v3"
 	envoyroutev3 "github.com/envoyproxy/go-control-plane/envoy/config/route/v3"
@@ -592,7 +591,7 @@ func (tc TestCase) Run(
 		Name:      "example-svc",
 	}, 80, "")
 	extensions.ContributesBackends[gk] = extensionsplug.BackendPlugin{
-		Backends: krt.NewStaticCollection([]ir.BackendObjectIR{
+		Backends: krt.NewStaticCollection(nil, []ir.BackendObjectIR{
 			testBackend,
 		}),
 		BackendInit: ir.BackendInit{
@@ -619,8 +618,6 @@ func (tc TestCase) Run(
 	for i, plug := range extraPlugs {
 		kubeclient.WaitForCacheSync(fmt.Sprintf("extra-%d", i), ctx.Done(), plug.HasSynced)
 	}
-
-	time.Sleep(1 * time.Second)
 
 	results := make(map[types.NamespacedName]ActualTestResult)
 
